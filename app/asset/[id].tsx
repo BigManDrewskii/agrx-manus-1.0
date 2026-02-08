@@ -35,6 +35,8 @@ import {
 import { FontFamily } from "@/constants/typography";
 import Svg, { Polyline, Defs, LinearGradient, Stop, Path } from "react-native-svg";
 import { useWatchlist } from "@/lib/watchlist-context";
+import { useNotifications } from "@/lib/notification-context";
+import { AddAlertModal } from "@/components/ui/add-alert-modal";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
@@ -149,6 +151,10 @@ export default function AssetDetailScreen() {
   const colors = useColors();
   const [activePeriod, setActivePeriod] = useState("1D");
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const { getAlertsForStock } = useNotifications();
+  const stockAlerts = getAlertsForStock(id ?? "");
+  const hasActiveAlerts = stockAlerts.some((a) => a.enabled);
 
   const { stock, isLoading: quoteLoading, isLive } = useStockQuote(id ?? "");
   const { isWatchlisted, toggle: toggleWatchlist } = useWatchlist();
@@ -210,6 +216,13 @@ export default function AssetDetailScreen() {
     setShowShareModal(true);
   }, []);
 
+  const handleAddAlert = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowAlertModal(true);
+  }, []);
+
   return (
     <ScreenContainer>
       <ScrollView
@@ -253,6 +266,20 @@ export default function AssetDetailScreen() {
                 name="star.fill"
                 size={18}
                 color={starred ? colors.gold : colors.muted}
+              />
+            </Pressable>
+            <Pressable
+              onPress={handleAddAlert}
+              style={({ pressed }) => [
+                styles.iconButton,
+                { backgroundColor: hasActiveAlerts ? colors.primary + "15" : colors.surface },
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <IconSymbol
+                name={hasActiveAlerts ? "bell.badge.fill" : "bell.fill"}
+                size={18}
+                color={hasActiveAlerts ? colors.primary : colors.muted}
               />
             </Pressable>
             <Pressable
@@ -561,6 +588,15 @@ export default function AssetDetailScreen() {
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
         data={shareCardData}
+      />
+
+      {/* Add Price Alert Modal */}
+      <AddAlertModal
+        visible={showAlertModal}
+        onClose={() => setShowAlertModal(false)}
+        stockId={id ?? ""}
+        stockName={name}
+        currentPrice={price}
       />
     </ScreenContainer>
   );

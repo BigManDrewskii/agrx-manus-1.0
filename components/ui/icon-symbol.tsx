@@ -24,6 +24,7 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   "magnifyingglass": "search",
   "bell.fill": "notifications",
+  "bell.badge.fill": "notifications-active",
   "gearshape.fill": "settings",
   "star.fill": "star",
   "flame.fill": "local-fire-department",

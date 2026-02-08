@@ -25,6 +25,7 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { DemoProvider } from "@/lib/demo-context";
 import { WatchlistProvider } from "@/lib/watchlist-context";
+import { NotificationProvider } from "@/lib/notification-context";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -47,6 +48,7 @@ function InnerLayout() {
         <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
         <Stack.Screen name="asset/[id]" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="settings" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="price-alerts" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="oauth/callback" />
       </Stack>
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
@@ -125,7 +127,9 @@ export default function RootLayout() {
       <WatchlistProvider>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <InnerLayout />
+          <NotificationProvider>
+            <InnerLayout />
+          </NotificationProvider>
         </QueryClientProvider>
       </trpc.Provider>
       </WatchlistProvider>

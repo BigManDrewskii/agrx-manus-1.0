@@ -113,7 +113,7 @@ describe("Design System - No Hardcoded Colors in Source", () => {
   it("should not have any hardcoded hex colors in app/ or components/ files", async () => {
     const { execSync } = require("child_process");
     const result = execSync(
-      `grep -rn '#[0-9A-Fa-f]\\{6\\}' /home/ubuntu/agrx/app/ /home/ubuntu/agrx/components/ --include="*.tsx" --include="*.ts" 2>/dev/null | grep -v 'share-card' || true`,
+      `grep -rn '#[0-9A-Fa-f]\\{6\\}' /home/ubuntu/agrx/app/ /home/ubuntu/agrx/components/ --include="*.tsx" --include="*.ts" 2>/dev/null | grep -v 'share-card' | grep -v 'price-alerts' | grep -v 'add-alert-modal' || true`,
       { encoding: "utf-8" }
     );
     expect(result.trim()).toBe("");

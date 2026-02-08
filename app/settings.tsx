@@ -175,6 +175,25 @@ export default function SettingsScreen() {
             colors={colors}
             isLast={false}
           />
+          <Pressable
+            onPress={() => router.push("/price-alerts" as any)}
+            style={({ pressed }) => [
+              styles.row,
+              {
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.border,
+              },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <View style={styles.rowLeft}>
+              <View>
+                <Subhead style={{ fontFamily: FontFamily.medium, color: colors.primary }}>Manage Price Alerts</Subhead>
+                <Caption1 color="muted" style={{ marginTop: 2 }}>View and edit your active price alerts</Caption1>
+              </View>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+          </Pressable>
           <NotifRow
             label="Daily Challenge"
             description="Reminder to complete your daily trading challenge"

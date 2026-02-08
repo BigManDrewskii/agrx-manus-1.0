@@ -124,3 +124,17 @@
 - [x] Verify all 25+ screens and components switch themes dynamically without reload
 - [x] Write 19 theme-switching tests covering pipeline integrity, provider, layout, and component reactivity
 - [x] Run full test suite: 103 tests passed, 0 TS errors
+- [x] Read backend docs (server/README.md) and understand push notification infrastructure
+- [x] Build server-side PriceAlertService (periodic price checks, threshold comparison, cooldown logic)
+- [x] Build server-side notification delivery via Expo Push Notifications API
+- [x] Create tRPC notificationRouter (registerDevice, getAlerts, addAlert, removeAlert, toggleAlert, updatePreferences)
+- [x] Build client-side NotificationProvider (permission request, push token registration, listeners)
+- [x] Build push token registration (Expo push token → server via tRPC)
+- [x] Build AddAlertModal (alert type selector, threshold input, smart placeholders)
+- [x] Build Price Alerts management screen (FlatList, toggle, delete, permission banner, empty state)
+- [x] Integrate price alert bell button on Asset Detail screen (active/inactive state)
+- [x] Add 'Manage Price Alerts' navigation to Settings screen
+- [x] Register price-alerts route in root layout
+- [x] Add bell.badge.fill icon mapping
+- [x] Write 71 push notification tests (service, router, context, UI integration)
+- [x] Run full test suite: 174 tests passed, 0 TS errors
