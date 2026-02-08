@@ -6,6 +6,8 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { ScreenContainer } from "@/components/screen-container";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useColors } from "@/hooks/use-colors";
@@ -34,10 +36,11 @@ import {
 
 const TABS = ["Feed", "Leaderboard", "Achievements"];
 
-function PostCard({ post }: { post: SocialPost }) {
+function PostCard({ post, index }: { post: SocialPost; index: number }) {
   const colors = useColors();
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.duration(250).delay(Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
       style={[
         styles.postCard,
         { backgroundColor: colors.surface, borderColor: colors.border },
@@ -92,17 +95,17 @@ function PostCard({ post }: { post: SocialPost }) {
           <IconSymbol name="square.and.arrow.up" size={16} color={colors.muted} />
         </AnimatedPressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
-function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
+function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: number }) {
   const colors = useColors();
   const isTop3 = entry.rank <= 3;
   const rankColors = ["", colors.gold, colors.silver, colors.bronze];
 
   return (
-    <View style={[styles.leaderRow, { borderBottomColor: colors.border }]}>
+    <Animated.View entering={FadeInDown.duration(250).delay(Math.min(index, STAGGER_MAX) * STAGGER_DELAY)} style={[styles.leaderRow, { borderBottomColor: colors.border }]}>
       <View style={styles.leaderRank}>
         <MonoSubhead
           style={{
@@ -135,16 +138,17 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
         </View>
       </View>
       <PnLText value={entry.returnPercent} size="md" showArrow={false} />
-    </View>
+    </Animated.View>
   );
 }
 
-function AchievementCard({ achievement }: { achievement: Achievement }) {
+function AchievementCard({ achievement, index }: { achievement: Achievement; index: number }) {
   const colors = useColors();
   const progressPercent = (achievement.progress / achievement.total) * 100;
 
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.duration(250).delay(Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
       style={[
         styles.achievementCard,
         {
@@ -194,7 +198,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
           </Caption2>
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -205,12 +209,12 @@ export default function SocialScreen() {
   return (
     <ScreenContainer>
       {/* Header */}
-      <View style={styles.header}>
+      <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
         <Title1>Community</Title1>
-      </View>
+      </Animated.View>
 
       {/* Tab Selector */}
-      <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
+      <Animated.View entering={FadeInDown.duration(250).delay(60)} style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
         {TABS.map((tab) => {
           const isActive = tab === activeTab;
           return (
@@ -232,7 +236,7 @@ export default function SocialScreen() {
             </AnimatedPressable>
           );
         })}
-      </View>
+      </Animated.View>
 
       {/* Content */}
       {activeTab === "Feed" && (
@@ -241,7 +245,7 @@ export default function SocialScreen() {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.feedContent}
-          renderItem={({ item }) => <PostCard post={item} />}
+          renderItem={({ item, index }) => <PostCard post={item} index={index} />}
         />
       )}
 
@@ -250,7 +254,8 @@ export default function SocialScreen() {
           contentContainerStyle={styles.leaderContent}
           showsVerticalScrollIndicator={false}
         >
-          <View
+          <Animated.View
+            entering={FadeInDown.duration(250).delay(60)}
             style={[
               styles.leaderHeader,
               { backgroundColor: colors.surface, borderColor: colors.border },
@@ -258,9 +263,9 @@ export default function SocialScreen() {
           >
             <Title3 style={{ marginBottom: 4 }}>Weekly Top Performers</Title3>
             <Footnote color="muted">Based on portfolio return percentage</Footnote>
-          </View>
-          {LEADERBOARD.map((entry) => (
-            <LeaderboardRow key={entry.rank} entry={entry} />
+          </Animated.View>
+          {LEADERBOARD.map((entry, index) => (
+            <LeaderboardRow key={entry.rank} entry={entry} index={index} />
           ))}
           <View style={{ height: 100 }} />
         </ScrollView>
@@ -272,8 +277,8 @@ export default function SocialScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.achievementsGrid}>
-            {ACHIEVEMENTS.map((achievement) => (
-              <AchievementCard key={achievement.id} achievement={achievement} />
+            {ACHIEVEMENTS.map((achievement, index) => (
+              <AchievementCard key={achievement.id} achievement={achievement} index={index} />
             ))}
           </View>
           <View style={{ height: 100 }} />

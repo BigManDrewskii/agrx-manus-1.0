@@ -8,6 +8,8 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -533,13 +535,13 @@ export default function TradeScreen() {
   return (
     <ScreenContainer>
       {/* Header */}
-      <View style={styles.header}>
+      <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
         <Title1>Trade</Title1>
         <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
-      </View>
+      </Animated.View>
 
       {/* Search */}
-      <View style={styles.searchContainer}>
+      <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.searchContainer}>
         <View
           style={[
             styles.searchBar,
@@ -556,10 +558,10 @@ export default function TradeScreen() {
             returnKeyType="done"
           />
         </View>
-      </View>
+      </Animated.View>
 
       {/* Quick Trade Label */}
-      <View style={styles.quickLabel}>
+      <Animated.View entering={FadeIn.duration(200).delay(120)} style={styles.quickLabel}>
         <Caption1
           color="muted"
           style={{
@@ -570,7 +572,7 @@ export default function TradeScreen() {
         >
           {search.trim() ? "Search results" : "Popular stocks"}
         </Caption1>
-      </View>
+      </Animated.View>
 
       {/* Stock List */}
       {isLoading ? (

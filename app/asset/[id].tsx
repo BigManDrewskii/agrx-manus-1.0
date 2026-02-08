@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Linking,
 } from "react-native";
+import ReAnimated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -230,7 +232,7 @@ export default function AssetDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <ReAnimated.View entering={FadeIn.duration(200)} style={styles.header}>
           <AnimatedPressable
             variant="icon"
             onPress={() => router.back()}
@@ -293,10 +295,10 @@ export default function AssetDetailScreen() {
               <IconSymbol name="square.and.arrow.up" size={18} color={colors.foreground} />
             </AnimatedPressable>
           </View>
-        </View>
+        </ReAnimated.View>
 
         {/* Price */}
-        <View style={styles.priceContainer}>
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(60)} style={styles.priceContainer}>
           {quoteLoading ? (
             <>
               <Skeleton width={120} height={36} borderRadius={8} />
@@ -314,19 +316,19 @@ export default function AssetDetailScreen() {
               </View>
             </>
           )}
-        </View>
+        </ReAnimated.View>
 
         {/* Chart */}
-        <View style={styles.chartContainer}>
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(120)} style={styles.chartContainer}>
           {chartLoading ? (
             <ChartSkeleton />
           ) : (
             <PriceChart data={chartData} width={360} height={200} positive={isPositive} />
           )}
-        </View>
+        </ReAnimated.View>
 
         {/* Time Period Selector */}
-        <View style={styles.periodRow}>
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(180)} style={styles.periodRow}>
           {TIME_PERIODS.map((period) => {
             const isActive = period === activePeriod;
             return (
@@ -351,10 +353,10 @@ export default function AssetDetailScreen() {
               </AnimatedPressable>
             );
           })}
-        </View>
+        </ReAnimated.View>
 
         {/* Key Stats */}
-        <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(240)} style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.statsGrid}>
             {[
               { label: "Market Cap", value: marketCap },
@@ -370,10 +372,10 @@ export default function AssetDetailScreen() {
               </View>
             ))}
           </View>
-        </View>
+        </ReAnimated.View>
 
         {/* AI Sentiment — Powered by Live News */}
-        <View style={styles.sentimentSection}>
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(300)} style={styles.sentimentSection}>
           <View style={styles.sectionTitleRow}>
             <Title3>Sentiment Analysis</Title3>
             {hasLiveNews && (
@@ -472,10 +474,10 @@ export default function AssetDetailScreen() {
               </Caption2>
             )}
           </View>
-        </View>
+        </ReAnimated.View>
 
         {/* Live News Feed */}
-        <View style={styles.newsSection}>
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(360)} style={styles.newsSection}>
           <View style={styles.sectionTitleRow}>
             <Title3>Latest News</Title3>
             {hasLiveNews && (
@@ -554,7 +556,7 @@ export default function AssetDetailScreen() {
               </Footnote>
             </View>
           )}
-        </View>
+        </ReAnimated.View>
 
         <View style={{ height: 120 }} />
       </ScrollView>

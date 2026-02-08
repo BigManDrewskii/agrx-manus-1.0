@@ -248,3 +248,7 @@
 - [x] Apply AGRX motion language to Markets screen (header FadeIn, search +60ms, sector chips +120ms, sort row +180ms)
 - [x] Apply AGRX motion language to Portfolio screen (header FadeIn, hero +60ms, balance +120ms, holdings header +180ms, holdings staggered +210ms, dividends +360ms)
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after animation rollout
+- [x] Apply AGRX motion language to Trade screen (stock picker: header FadeIn, search +60ms, label +120ms; order sheet: header, toggle +60ms, asset card +120ms, amount +180ms, chips +240ms; success: icon FadeIn+300ms, text +100ms, amount +150ms/+200ms)
+- [x] Apply AGRX motion language to Social screen (header FadeIn, tabs +60ms, PostCard/LeaderboardRow/AchievementCard all staggered FadeInDown with STAGGER_DELAY)
+- [x] Apply AGRX motion language to Asset Detail screen (header FadeIn, price +60ms, chart +120ms, periods +180ms, stats +240ms, sentiment +300ms, news +360ms)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after animation rollout
