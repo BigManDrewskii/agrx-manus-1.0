@@ -14,7 +14,7 @@ import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "@/components/ui/sparkline";
-import { PnLText } from "@/components/ui/pnl-text";
+
 import { TrendingCard } from "@/components/ui/trending-card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -631,7 +631,7 @@ export default function HomeScreen() {
                     <Caption2 color="muted">{post.timestamp}</Caption2>
                   </View>
                   {post.pnlPercent !== undefined && (
-                    <PnLText value={post.pnlPercent} size="sm" showArrow={false} />
+                    <AnimatedPnLNumber value={post.pnlPercent} size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
                   )}
                 </View>
                 <Subhead numberOfLines={2} style={{ marginBottom: 10 }}>

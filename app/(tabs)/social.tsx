@@ -11,7 +11,7 @@ import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { ScreenContainer } from "@/components/screen-container";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useColors } from "@/hooks/use-colors";
-import { PnLText } from "@/components/ui/pnl-text";
+import { AnimatedPnLNumber } from "@/components/ui/animated-number";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   Title1,
@@ -66,7 +66,7 @@ function PostCard({ post, index }: { post: SocialPost; index: number }) {
               },
             ]}
           >
-            <PnLText value={post.pnlPercent} size="sm" showArrow={false} />
+            <AnimatedPnLNumber value={post.pnlPercent} size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
           </View>
         )}
       </View>
@@ -137,7 +137,7 @@ function LeaderboardRow({ entry, index }: { entry: LeaderboardEntry; index: numb
           </Caption1>
         </View>
       </View>
-      <PnLText value={entry.returnPercent} size="md" showArrow={false} />
+      <AnimatedPnLNumber value={entry.returnPercent} size="md" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
     </Animated.View>
   );
 }

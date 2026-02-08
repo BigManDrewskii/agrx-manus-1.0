@@ -280,3 +280,8 @@
 - [x] Apply AnimatedPnLNumber to TrendingCard P&L percentage
 - [x] Removed unused PnLText and MonoSubhead imports from trending-card.tsx
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Audit all remaining PnLText imports and usages — found 3 instances: index.tsx (1), social.tsx (2)
+- [x] Migrate index.tsx social feed PnLText → AnimatedPnLNumber
+- [x] Migrate social.tsx PostCard and LeaderboardRow PnLText → AnimatedPnLNumber
+- [x] pnl-text.tsx now has zero imports (component definition retained as dead code)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
