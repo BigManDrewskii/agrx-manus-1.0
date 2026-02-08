@@ -298,3 +298,13 @@
 - [x] Auto-seed watchlist with 6 popular ATHEX blue-chip stocks for first-time users
 - [x] Delete unused pnl-text.tsx component (zero imports)
 - [x] Add filter-list and swap-vert icon mappings
+- [x] Refine Portfolio screen UI — audit and improve layout, spacing, typography, cards
+- [x] Improve Portfolio header visual hierarchy and balance (subtitle with holding count, 20px padding)
+- [x] Refine Portfolio hero section (P&L pill with tinted bg, uppercase label, responsive sparkline width)
+- [x] Improve Portfolio holdings cards/rows (grouped card container with hairline dividers, larger icons)
+- [x] Refine Portfolio empty state (circular icon container 80px, button with icon, better spacing)
+- [x] Polish Portfolio balance row (surface bg, 14px padding) / balance pill (wallet icon, Cash Available label)
+- [x] Ensure consistent visual quality across Simple and Pro modes
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after Portfolio refinements
+- [x] Add sector allocation bar + legend to Portfolio Pro mode
+- [x] Restructure dividend section with left-aligned ticker+date layout

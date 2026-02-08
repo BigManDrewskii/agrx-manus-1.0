@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   RefreshControl,
+  Dimensions,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
@@ -22,6 +23,7 @@ import type { ShareCardData } from "@/components/ui/share-card";
 import { useDemo, type DemoHolding, type LivePriceMap } from "@/lib/demo-context";
 import { useViewMode } from "@/lib/viewmode-context";
 import { GREEK_STOCKS, PORTFOLIO_SPARKLINE } from "@/lib/mock-data";
+import { getSector, SECTOR_ICONS, type Sector } from "@/lib/sectors";
 import {
   Title1,
   Title3,
@@ -29,12 +31,16 @@ import {
   Subhead,
   Footnote,
   Caption1,
+  Caption2,
   MonoLargeTitle,
   MonoSubhead,
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SPARKLINE_WIDTH = Math.min(SCREEN_WIDTH - 64, 340);
 
 interface EnrichedHolding {
   holding: DemoHolding;
@@ -101,6 +107,28 @@ export default function PortfolioScreen() {
   const portfolioCost = getPortfolioCost();
   const { pnl: portfolioPnl, pnlPercent: portfolioPnlPercent } = getPortfolioPnL(livePriceMap);
   const isPositive = portfolioPnl >= 0;
+
+  // Sector allocation for Pro mode
+  const sectorAllocation = useMemo(() => {
+    if (enrichedHoldings.length === 0) return [];
+    const totalValue = enrichedHoldings.reduce((sum, e) => sum + e.liveValue, 0);
+    if (totalValue === 0) return [];
+
+    const sectorMap: Record<string, number> = {};
+    for (const e of enrichedHoldings) {
+      const sector = getSector(e.holding.stockId);
+      sectorMap[sector] = (sectorMap[sector] ?? 0) + e.liveValue;
+    }
+
+    return Object.entries(sectorMap)
+      .map(([sector, value]) => ({
+        sector: sector as Sector,
+        value,
+        percent: (value / totalValue) * 100,
+        icon: SECTOR_ICONS[sector as Sector] ?? "🔀",
+      }))
+      .sort((a, b) => b.percent - a.percent);
+  }, [enrichedHoldings]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -169,16 +197,25 @@ export default function PortfolioScreen() {
           />
         }
       >
-        {/* Header */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            HEADER
+            ═══════════════════════════════════════════════════════════════════ */}
         <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
-          <Title1>Portfolio</Title1>
+          <View style={styles.headerLeft}>
+            <Title1 style={{ letterSpacing: -0.5 }}>Portfolio</Title1>
+            {hasHoldings && (
+              <Caption1 color="muted" style={{ marginTop: 2, fontFamily: FontFamily.medium }}>
+                {enrichedHoldings.length} holding{enrichedHoldings.length !== 1 ? "s" : ""}
+              </Caption1>
+            )}
+          </View>
           <View style={styles.headerRight}>
             {hasHoldings && (
               <AnimatedPressable
                 variant="icon"
                 onPress={handleSharePortfolio}
                 style={[
-                  styles.shareHeaderButton,
+                  styles.headerIconButton,
                   { backgroundColor: colors.surfaceSecondary },
                 ]}
               >
@@ -189,61 +226,73 @@ export default function PortfolioScreen() {
           </View>
         </Animated.View>
 
-        {/* ── Simple Mode: Clean Hero ── */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            SIMPLE MODE: HERO
+            ═══════════════════════════════════════════════════════════════════ */}
         {isSimple && (
           <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.simpleHero}>
-            <Footnote color="muted">Total Value</Footnote>
+            <Caption1
+              color="muted"
+              style={{ fontFamily: FontFamily.semibold, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}
+            >
+              Total Value
+            </Caption1>
             <AnimatedNumber
               value={portfolioTotal}
               prefix="€"
               decimals={2}
               style={{
-                fontSize: 36,
-                lineHeight: 44,
+                fontSize: 38,
+                lineHeight: 46,
                 fontFamily: "JetBrainsMono_700Bold",
                 color: colors.foreground,
-                textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 20,
               }}
             />
-            <View style={styles.heroPnl}>
-              <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-              <Footnote color="muted"> · </Footnote>
-              <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+            <View style={[styles.heroPnlRow, { marginTop: 8 }]}>
+              <View style={[styles.pnlPill, { backgroundColor: isPositive ? colors.successAlpha : colors.errorAlpha }]}>
+                <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+                <View style={[styles.pnlDot, { backgroundColor: colors.muted }]} />
+                <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+              </View>
             </View>
           </Animated.View>
         )}
 
-        {/* ── Pro Mode: Full Hero with Sparkline ── */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            PRO MODE: HERO WITH SPARKLINE
+            ═══════════════════════════════════════════════════════════════════ */}
         {isPro && (
           <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.proHero}>
-            <Footnote color="muted">Total Value</Footnote>
+            <Caption1
+              color="muted"
+              style={{ fontFamily: FontFamily.semibold, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}
+            >
+              Total Value
+            </Caption1>
             <AnimatedNumber
               value={portfolioTotal}
               prefix="€"
               decimals={2}
               style={{
-                fontSize: 40,
-                lineHeight: 48,
+                fontSize: 42,
+                lineHeight: 50,
                 fontFamily: "JetBrainsMono_700Bold",
                 color: colors.foreground,
-                textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 24,
               }}
             />
-            <View style={styles.heroPnl}>
-              <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-              <Footnote color="muted"> · </Footnote>
-              <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+            <View style={[styles.heroPnlRow, { marginTop: 8 }]}>
+              <View style={[styles.pnlPill, { backgroundColor: isPositive ? colors.successAlpha : colors.errorAlpha }]}>
+                <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+                <View style={[styles.pnlDot, { backgroundColor: colors.muted }]} />
+                <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+              </View>
             </View>
             {hasHoldings && (
               <View style={styles.sparklineContainer}>
                 <Sparkline
                   data={PORTFOLIO_SPARKLINE}
-                  width={320}
-                  height={56}
+                  width={SPARKLINE_WIDTH}
+                  height={64}
                   positive={isPositive}
                   strokeWidth={2}
                 />
@@ -252,14 +301,19 @@ export default function PortfolioScreen() {
           </Animated.View>
         )}
 
-        {/* Balance Info — Pro only shows full breakdown, Simple shows combined */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            BALANCE ROW — PRO
+            ═══════════════════════════════════════════════════════════════════ */}
         {isPro && (
-          <Animated.View entering={FadeInDown.duration(250).delay(120)} style={[styles.balanceRow, { borderColor: colors.border }]}>
+          <Animated.View
+            entering={FadeInDown.duration(250).delay(120)}
+            style={[styles.balanceRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
             <View style={styles.balanceItem}>
-              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 4 }}>
                 Cash Balance
               </Caption1>
-              <MonoSubhead>
+              <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
                 €{state.balance.toLocaleString("el-GR", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -268,10 +322,10 @@ export default function PortfolioScreen() {
             </View>
             <View style={[styles.balanceDivider, { backgroundColor: colors.border }]} />
             <View style={styles.balanceItem}>
-              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 4 }}>
                 Invested
               </Caption1>
-              <MonoSubhead>
+              <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
                 €{portfolioCost.toLocaleString("el-GR", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -281,10 +335,18 @@ export default function PortfolioScreen() {
           </Animated.View>
         )}
 
-        {/* Simple mode: compact balance pill */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            BALANCE PILL — SIMPLE
+            ═══════════════════════════════════════════════════════════════════ */}
         {isSimple && (
-          <Animated.View entering={FadeInDown.duration(250).delay(120)} style={[styles.simpleBalancePill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>Cash</Caption1>
+          <Animated.View
+            entering={FadeInDown.duration(250).delay(120)}
+            style={[styles.simpleBalancePill, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          >
+            <View style={styles.balancePillLeft}>
+              <IconSymbol name="briefcase.fill" size={16} color={colors.muted} />
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>Cash Available</Caption1>
+            </View>
             <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
               €{state.balance.toLocaleString("el-GR", {
                 minimumFractionDigits: 2,
@@ -294,7 +356,9 @@ export default function PortfolioScreen() {
           </Animated.View>
         )}
 
-        {/* Holdings Header */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            HOLDINGS SECTION
+            ═══════════════════════════════════════════════════════════════════ */}
         <Animated.View entering={FadeInDown.duration(250).delay(180)} style={styles.holdingsHeader}>
           <Caption1
             color="muted"
@@ -304,21 +368,13 @@ export default function PortfolioScreen() {
               letterSpacing: 0.5,
             }}
           >
-            {enrichedHoldings.length} Holdings
+            Holdings
           </Caption1>
           {state.trades.length > 0 && (
             <AnimatedPressable
               variant="chip"
               onPress={() => router.push("/trade-history" as any)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: 12,
-                backgroundColor: colors.surfaceSecondary,
-              }}
+              style={[styles.historyChip, { backgroundColor: colors.surfaceSecondary }]}
             >
               <IconSymbol name="clock" size={12} color={colors.muted} />
               <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
@@ -333,169 +389,270 @@ export default function PortfolioScreen() {
           {isLoading ? (
             <StockListSkeleton count={4} />
           ) : !hasHoldings ? (
+            /* ── Empty State ── */
             <View style={styles.emptyState}>
-              <IconSymbol name="chart.bar.fill" size={48} color={colors.muted} />
-              <Headline style={{ marginTop: 16, marginBottom: 8 }}>
+              <View style={[styles.emptyIconContainer, { backgroundColor: colors.surfaceSecondary }]}>
+                <IconSymbol name="chart.bar.fill" size={36} color={colors.muted} />
+              </View>
+              <Headline style={{ marginTop: 20, marginBottom: 8 }}>
                 No Holdings Yet
               </Headline>
-              <Footnote color="muted" style={{ textAlign: "center", maxWidth: 260 }}>
-                Start trading to build your portfolio. Your holdings will appear here.
+              <Footnote
+                color="muted"
+                style={{ textAlign: "center", maxWidth: 280, lineHeight: 20 }}
+              >
+                Start trading to build your portfolio. Your holdings and performance will appear here.
               </Footnote>
               <AnimatedPressable
                 variant="button"
                 onPress={() => router.push("/(tabs)/trade")}
-                style={[
-                  styles.startTradingButton,
-                  { backgroundColor: colors.primary },
-                ]}
+                style={[styles.startTradingButton, { backgroundColor: colors.primary }]}
               >
+                <IconSymbol name="plus.circle.fill" size={18} color={colors.onPrimary} />
                 <Subhead style={{ color: colors.onPrimary, fontFamily: FontFamily.semibold }}>
                   Start Trading
                 </Subhead>
               </AnimatedPressable>
             </View>
           ) : (
-            enrichedHoldings.map((enriched, index) => (
-              <Animated.View
-                key={enriched.holding.stockId}
-                entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
-              >
-                {/* ── Simple Mode: Clean Card ── */}
-                {isSimple && (
-                  <AnimatedPressable
-                    variant="card"
-                    onPress={() =>
-                      router.push({
-                        pathname: "/asset/[id]" as any,
-                        params: { id: enriched.holding.stockId },
-                      })
-                    }
-                    style={[
-                      styles.simpleCard,
-                      { backgroundColor: colors.surface, borderColor: colors.border },
-                    ]}
-                  >
-                    <View style={styles.simpleCardTop}>
-                      <View style={[styles.simpleCardIcon, { backgroundColor: colors.primaryAlpha }]}>
-                        <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 13 }}>
-                          {enriched.holding.ticker.slice(0, 2)}
-                        </Caption1>
-                      </View>
-                      <View style={styles.simpleCardInfo}>
-                        <Subhead style={{ fontFamily: FontFamily.semibold }}>
-                          {enriched.holding.ticker}
-                        </Subhead>
-                        <Caption1 color="muted" numberOfLines={1}>
-                          {enriched.holding.name}
-                        </Caption1>
-                      </View>
-                      <View style={styles.simpleCardValue}>
-                        <AnimatedNumber
-                          value={enriched.liveValue}
-                          prefix="€"
-                          decimals={2}
-                          style={{
-                            fontSize: 15,
-                            lineHeight: 20,
-                            fontFamily: FontFamily.monoMedium,
-                            color: colors.foreground,
-                          }}
-                        />
-                        <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-                      </View>
-                    </View>
-                  </AnimatedPressable>
-                )}
-
-                {/* ── Pro Mode: Detailed Row ── */}
-                {isPro && (
-                  <View style={[styles.holdingRow, { borderBottomColor: colors.border }]}>
-                    <AnimatedPressable
-                      variant="card"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/asset/[id]" as any,
-                          params: { id: enriched.holding.stockId },
-                        })
-                      }
-                      style={styles.holdingPressable}
+            <>
+              {/* ── Simple Mode: Cards ── */}
+              {isSimple && (
+                <View style={[styles.simpleCardList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  {enrichedHoldings.map((enriched, index) => (
+                    <Animated.View
+                      key={enriched.holding.stockId}
+                      entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
                     >
-                      <View style={styles.holdingLeft}>
-                        <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
-                          <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                      <AnimatedPressable
+                        variant="card"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/asset/[id]" as any,
+                            params: { id: enriched.holding.stockId },
+                          })
+                        }
+                        style={[
+                          styles.simpleCardRow,
+                          index < enrichedHoldings.length - 1 && {
+                            borderBottomWidth: StyleSheet.hairlineWidth,
+                            borderBottomColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <View style={[styles.simpleCardIcon, { backgroundColor: colors.primaryAlpha }]}>
+                          <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 13 }}>
                             {enriched.holding.ticker.slice(0, 2)}
                           </Caption1>
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
+                        <View style={styles.simpleCardInfo}>
+                          <Subhead style={{ fontFamily: FontFamily.semibold }}>
                             {enriched.holding.ticker}
                           </Subhead>
-                          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-                            {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 4)} shares · avg €{enriched.avgCost.toFixed(2)}
+                          <Caption1 color="muted" numberOfLines={1}>
+                            {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 2)} shares
                           </Caption1>
                         </View>
-                      </View>
-                      <View style={styles.holdingCenter}>
-                        <Sparkline
-                          data={enriched.liveSparkline}
-                          width={48}
-                          height={20}
-                          positive={enriched.livePnl >= 0}
-                        />
-                      </View>
-                      <View style={styles.holdingRight}>
-                        <AnimatedNumber
-                          value={enriched.liveValue}
-                          prefix="€"
-                          decimals={2}
-                          style={{
-                            fontSize: 15,
-                            lineHeight: 20,
-                            fontFamily: FontFamily.monoMedium,
-                            color: colors.foreground,
-                            marginBottom: 2,
-                          }}
-                        />
-                        <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-                      </View>
-                    </AnimatedPressable>
-                    {/* Share button for this holding */}
-                    <AnimatedPressable
-                      variant="icon"
-                      onPress={() => handleShareHolding(enriched)}
-                      style={[
-                        styles.holdingShareButton,
-                        { backgroundColor: colors.surfaceSecondary },
-                      ]}
+                        <View style={styles.simpleCardValue}>
+                          <AnimatedNumber
+                            value={enriched.liveValue}
+                            prefix="€"
+                            decimals={2}
+                            style={{
+                              fontSize: 15,
+                              lineHeight: 20,
+                              fontFamily: FontFamily.monoMedium,
+                              color: colors.foreground,
+                            }}
+                          />
+                          <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+                        </View>
+                      </AnimatedPressable>
+                    </Animated.View>
+                  ))}
+                </View>
+              )}
+
+              {/* ── Pro Mode: Detailed Rows ── */}
+              {isPro && (
+                <View style={[styles.proCardList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  {enrichedHoldings.map((enriched, index) => (
+                    <Animated.View
+                      key={enriched.holding.stockId}
+                      entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
                     >
-                      <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
-                    </AnimatedPressable>
-                  </View>
-                )}
-              </Animated.View>
-            ))
+                      <View
+                        style={[
+                          styles.holdingRow,
+                          index < enrichedHoldings.length - 1 && {
+                            borderBottomWidth: StyleSheet.hairlineWidth,
+                            borderBottomColor: colors.border,
+                          },
+                        ]}
+                      >
+                        <AnimatedPressable
+                          variant="card"
+                          onPress={() =>
+                            router.push({
+                              pathname: "/asset/[id]" as any,
+                              params: { id: enriched.holding.stockId },
+                            })
+                          }
+                          style={styles.holdingPressable}
+                        >
+                          <View style={styles.holdingLeft}>
+                            <View style={[styles.holdingIcon, { backgroundColor: colors.primaryAlpha }]}>
+                              <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                                {enriched.holding.ticker.slice(0, 2)}
+                              </Caption1>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 3 }}>
+                                {enriched.holding.ticker}
+                              </Subhead>
+                              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                                {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 4)} shares · avg €{enriched.avgCost.toFixed(2)}
+                              </Caption1>
+                            </View>
+                          </View>
+                          <View style={styles.holdingCenter}>
+                            <Sparkline
+                              data={enriched.liveSparkline}
+                              width={52}
+                              height={22}
+                              positive={enriched.livePnl >= 0}
+                            />
+                          </View>
+                          <View style={styles.holdingRight}>
+                            <AnimatedNumber
+                              value={enriched.liveValue}
+                              prefix="€"
+                              decimals={2}
+                              style={{
+                                fontSize: 15,
+                                lineHeight: 20,
+                                fontFamily: FontFamily.monoMedium,
+                                color: colors.foreground,
+                                marginBottom: 3,
+                              }}
+                            />
+                            <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+                          </View>
+                        </AnimatedPressable>
+                        {/* Share button */}
+                        <AnimatedPressable
+                          variant="icon"
+                          onPress={() => handleShareHolding(enriched)}
+                          style={[styles.holdingShareButton, { backgroundColor: colors.surfaceSecondary }]}
+                        >
+                          <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
+                        </AnimatedPressable>
+                      </View>
+                    </Animated.View>
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </View>
 
-        {/* Dividend Section — Pro only */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            SECTOR ALLOCATION — PRO ONLY
+            ═══════════════════════════════════════════════════════════════════ */}
+        {isPro && hasHoldings && sectorAllocation.length > 0 && (
+          <Animated.View entering={FadeInDown.duration(250).delay(330)} style={styles.allocationSection}>
+            <Caption1
+              color="muted"
+              style={{
+                fontFamily: FontFamily.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                paddingHorizontal: 16,
+                marginBottom: 12,
+              }}
+            >
+              Allocation
+            </Caption1>
+
+            {/* Allocation bar */}
+            <View style={[styles.allocationBar, { backgroundColor: colors.surfaceSecondary }]}>
+              {sectorAllocation.map((item, i) => {
+                const barColors = [colors.primary, colors.success, colors.accent, colors.warning, colors.error, colors.muted];
+                const barColor = barColors[i % barColors.length];
+                return (
+                  <View
+                    key={item.sector}
+                    style={{
+                      flex: item.percent,
+                      height: "100%" as any,
+                      backgroundColor: barColor,
+                      borderTopLeftRadius: i === 0 ? 4 : 0,
+                      borderBottomLeftRadius: i === 0 ? 4 : 0,
+                      borderTopRightRadius: i === sectorAllocation.length - 1 ? 4 : 0,
+                      borderBottomRightRadius: i === sectorAllocation.length - 1 ? 4 : 0,
+                    }}
+                  />
+                );
+              })}
+            </View>
+
+            {/* Allocation legend */}
+            <View style={styles.allocationLegend}>
+              {sectorAllocation.map((item, i) => {
+                const barColors = [colors.primary, colors.success, colors.accent, colors.warning, colors.error, colors.muted];
+                const barColor = barColors[i % barColors.length];
+                return (
+                  <View key={item.sector} style={styles.allocationLegendItem}>
+                    <View style={[styles.allocationDot, { backgroundColor: barColor }]} />
+                    <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
+                      {item.sector}
+                    </Caption1>
+                    <Caption1 style={{ fontFamily: FontFamily.monoMedium }}>
+                      {item.percent.toFixed(1)}%
+                    </Caption1>
+                  </View>
+                );
+              })}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            UPCOMING DIVIDENDS — PRO ONLY
+            ═══════════════════════════════════════════════════════════════════ */}
         {isPro && hasHoldings && (
-          <Animated.View entering={FadeInDown.duration(250).delay(360)} style={styles.dividendSection}>
-            <Title3 style={{ marginBottom: 12 }}>Upcoming Dividends</Title3>
+          <Animated.View entering={FadeInDown.duration(250).delay(390)} style={styles.dividendSection}>
+            <Caption1
+              color="muted"
+              style={{
+                fontFamily: FontFamily.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 12,
+              }}
+            >
+              Upcoming Dividends
+            </Caption1>
             <View style={[styles.dividendCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={styles.dividendRow}>
-                <Subhead style={{ fontFamily: FontFamily.semibold, width: 60 }}>OPAP</Subhead>
-                <Footnote color="muted" style={{ flex: 1, textAlign: "center" }}>Mar 15, 2026</Footnote>
-                <MonoSubhead color="success">€0.60/share</MonoSubhead>
+              <View style={[styles.dividendRow, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
+                <View style={styles.dividendLeft}>
+                  <Subhead style={{ fontFamily: FontFamily.semibold }}>OPAP</Subhead>
+                  <Caption2 color="muted">Mar 15, 2026</Caption2>
+                </View>
+                <MonoSubhead color="success" style={{ fontFamily: FontFamily.monoMedium }}>€0.60/share</MonoSubhead>
               </View>
               <View style={styles.dividendRow}>
-                <Subhead style={{ fontFamily: FontFamily.semibold, width: 60 }}>PPC</Subhead>
-                <Footnote color="muted" style={{ flex: 1, textAlign: "center" }}>Apr 02, 2026</Footnote>
-                <MonoSubhead color="success">€0.85/share</MonoSubhead>
+                <View style={styles.dividendLeft}>
+                  <Subhead style={{ fontFamily: FontFamily.semibold }}>PPC</Subhead>
+                  <Caption2 color="muted">Apr 02, 2026</Caption2>
+                </View>
+                <MonoSubhead color="success" style={{ fontFamily: FontFamily.monoMedium }}>€0.85/share</MonoSubhead>
               </View>
             </View>
           </Animated.View>
         )}
 
+        {/* Bottom Spacer for Tab Bar */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -515,52 +672,79 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
+
+  // ── Header ──
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
+    alignItems: "flex-start",
+    paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 10,
+    paddingBottom: 4,
+  },
+  headerLeft: {
+    gap: 0,
   },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    paddingTop: 4,
   },
-  shareHeaderButton: {
+  headerIconButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
+
   // ── Simple Hero ──
   simpleHero: {
     alignItems: "center",
-    paddingVertical: 16,
+    paddingTop: 20,
+    paddingBottom: 24,
   },
+
   // ── Pro Hero ──
   proHero: {
     alignItems: "center",
-    paddingVertical: 20,
+    paddingTop: 20,
+    paddingBottom: 24,
   },
-  heroPnl: {
+
+  // ── P&L Row (shared) ──
+  heroPnlRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
   },
+  pnlPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 2,
+  },
+  pnlDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    marginHorizontal: 6,
+  },
+
   sparklineContainer: {
-    marginTop: 16,
+    marginTop: 20,
   },
+
   // ── Pro Balance Row ──
   balanceRow: {
     flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
     borderWidth: 1,
   },
   balanceItem: {
@@ -569,47 +753,64 @@ const styles = StyleSheet.create({
   },
   balanceDivider: {
     width: 1,
-    marginVertical: 4,
+    marginVertical: 2,
   },
+
   // ── Simple Balance Pill ──
   simpleBalancePill: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    paddingVertical: 10,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
-  // ── Holdings ──
+  balancePillLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  // ── Holdings Header ──
   holdingsHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     marginBottom: 12,
+  },
+  historyChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
   holdingsContainer: {
     paddingTop: 0,
   },
-  // ── Simple Card ──
-  simpleCard: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 14,
+
+  // ── Simple Card List (grouped card) ──
+  simpleCardList: {
+    marginHorizontal: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 14,
+    overflow: "hidden",
   },
-  simpleCardTop: {
+  simpleCardRow: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   simpleCardIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
@@ -620,19 +821,26 @@ const styles = StyleSheet.create({
   simpleCardValue: {
     alignItems: "flex-end",
   },
-  // ── Pro Holding Row ──
+
+  // ── Pro Card List (grouped card) ──
+  proCardList: {
+    marginHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
   holdingRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingRight: 8,
-    borderBottomWidth: 0.5,
+    paddingRight: 10,
   },
   holdingPressable: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingLeft: 16,
+    paddingRight: 8,
   },
   holdingLeft: {
     flexDirection: "row",
@@ -640,51 +848,96 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   holdingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
   holdingCenter: {
-    marginHorizontal: 12,
+    marginHorizontal: 10,
   },
   holdingRight: {
     alignItems: "flex-end",
+    minWidth: 80,
   },
   holdingShareButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 4,
   },
+
+  // ── Empty State ──
   emptyState: {
     alignItems: "center",
-    paddingVertical: 48,
+    paddingVertical: 56,
     paddingHorizontal: 24,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   startTradingButton: {
-    marginTop: 20,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  dividendSection: {
-    paddingHorizontal: 16,
     marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  // ── Allocation (Pro) ──
+  allocationSection: {
+    marginTop: 28,
+  },
+  allocationBar: {
+    marginHorizontal: 20,
+    height: 8,
+    borderRadius: 4,
+    flexDirection: "row",
+    overflow: "hidden",
+  },
+  allocationLegend: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    gap: 10,
+  },
+  allocationLegendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  allocationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+
+  // ── Dividends (Pro) ──
+  dividendSection: {
+    paddingHorizontal: 20,
+    marginTop: 28,
   },
   dividendCard: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
+    overflow: "hidden",
   },
   dividendRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  dividendLeft: {
+    gap: 2,
   },
 });
