@@ -162,3 +162,15 @@
 - [x] Verified: no defaultProps, propTypes, string refs, legacy context, findDOMNode
 - [x] Verified: React Compiler enabled (app.config.ts experiments.reactCompiler: true)
 - [x] Run full test suite after React 19 fixes: 250 tests passed, 0 TS errors
+- [x] Audit DemoContext, Portfolio, Home, Trade screens to map all data flow dependencies
+- [x] Redesign DemoContext: holdings map (stockId → DemoHolding { shares, totalCost, avgPrice, ticker, name }), seeded from mock data, persisted with AsyncStorage
+- [x] Add executeTrade with balance validation (buy) and share validation (sell), returns { success, error }
+- [x] Add getPortfolioValue(livePrices) derivation to DemoContext
+- [x] Add getPortfolioPnL(livePrices) derivation (current value - total cost) to DemoContext
+- [x] Update Portfolio screen: derives holdings from DemoContext + live prices, no hardcoded mock data
+- [x] Update Home screen: totalAccountValue = portfolioValue + balance, P&L from getPortfolioPnL
+- [x] Update Home screen: removed PORTFOLIO_TOTAL_VALUE, PORTFOLIO_TOTAL_PNL, PORTFOLIO_PNL_PERCENT imports
+- [x] Update Trade screen: shows available balance (buy) / current shares (sell), balance-after preview
+- [x] Update Trade screen: error banner for insufficient funds/shares
+- [x] Write 42 unified data flow tests (DemoContext structure, Portfolio/Home/Trade integration, data flow integrity)
+- [x] Run full test suite: 292 tests passed, 0 TS errors

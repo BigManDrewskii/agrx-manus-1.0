@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   ScrollView,
   View,
@@ -22,6 +22,7 @@ import { LiveBadge } from "@/components/ui/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import { useNotifications } from "@/lib/notification-context";
+import { useDemo, type LivePriceMap } from "@/lib/demo-context";
 import { useMarketNews } from "@/hooks/use-news";
 import {
   Footnote,
@@ -37,9 +38,6 @@ import {
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
 import {
-  PORTFOLIO_TOTAL_VALUE,
-  PORTFOLIO_PNL_PERCENT,
-  PORTFOLIO_TOTAL_PNL,
   PORTFOLIO_SPARKLINE,
   DAILY_CHALLENGE,
   USER_STREAK,
@@ -57,7 +55,22 @@ export default function HomeScreen() {
   const newsLoading = marketNewsQuery.isLoading;
 
   const { unreadCount } = useNotifications();
-  const isPositive = PORTFOLIO_TOTAL_PNL >= 0;
+  const { getPortfolioValue, getPortfolioPnL, state: demoState } = useDemo();
+
+  // Build live price map from stock quotes
+  const livePriceMap: LivePriceMap = useMemo(() => {
+    const map: LivePriceMap = {};
+    for (const s of stocks) {
+      map[s.id] = s.price;
+    }
+    return map;
+  }, [stocks]);
+
+  // Derive portfolio values from DemoContext + live prices
+  const portfolioTotalValue = getPortfolioValue(livePriceMap);
+  const { pnl: portfolioPnl, pnlPercent: portfolioPnlPercent } = getPortfolioPnL(livePriceMap);
+  const totalAccountValue = portfolioTotalValue + demoState.balance;
+  const isPositive = portfolioPnl >= 0;
 
   // Get top 5 trending stocks by absolute change percent
   const trendingStocks = [...stocks]
@@ -160,26 +173,26 @@ export default function HomeScreen() {
               textShadowRadius: 20,
             }}
           >
-            €{PORTFOLIO_TOTAL_VALUE.toLocaleString("el-GR", {
+            €{totalAccountValue.toLocaleString("el-GR", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </MonoLargeTitle>
           <View style={styles.pnlRow}>
             <PnLText
-              value={PORTFOLIO_TOTAL_PNL}
+              value={portfolioPnl}
               format="currency"
               size="md"
               showArrow={true}
             />
             <Footnote color="muted"> · </Footnote>
             <PnLText
-              value={PORTFOLIO_PNL_PERCENT}
+              value={portfolioPnlPercent}
               format="percent"
               size="md"
               showArrow={false}
             />
-            <Footnote color="muted"> today</Footnote>
+            <Footnote color="muted"> all time</Footnote>
           </View>
           <View style={styles.sparklineContainer}>
             <Sparkline

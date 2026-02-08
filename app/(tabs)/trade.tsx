@@ -14,6 +14,7 @@ import { AssetRow } from "@/components/ui/asset-row";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes } from "@/hooks/use-stocks";
+import { useDemo } from "@/lib/demo-context";
 import { QUICK_AMOUNTS } from "@/lib/mock-data";
 import { ShareCardModal } from "@/components/ui/share-card-modal";
 import type { ShareCardData } from "@/components/ui/share-card";
@@ -54,7 +55,9 @@ export default function TradeScreen() {
   const [isBuy, setIsBuy] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [tradeError, setTradeError] = useState<string | null>(null);
   const { stocks, isLoading, isLive, lastUpdated } = useStockQuotes();
+  const { executeTrade, state: demoState, canBuy, canSell, getHolding } = useDemo();
 
   const filteredStocks = useMemo(() => {
     if (search.trim()) {
@@ -70,14 +73,33 @@ export default function TradeScreen() {
 
   const handleConfirm = useCallback(() => {
     if (!selectedAsset || !selectedAmount) return;
-    setShowSuccess(true);
-  }, [selectedAsset, selectedAmount]);
+    setTradeError(null);
+    const result = executeTrade({
+      stockId: selectedAsset.id,
+      ticker: selectedAsset.ticker,
+      name: selectedAsset.name,
+      type: isBuy ? "buy" : "sell",
+      amount: selectedAmount,
+      price: selectedAsset.price,
+    });
+    if (result.success) {
+      setShowSuccess(true);
+    } else {
+      setTradeError(result.error ?? "Trade failed");
+    }
+  }, [selectedAsset, selectedAmount, isBuy, executeTrade]);
 
   const handleDismissSuccess = useCallback(() => {
     setShowSuccess(false);
     setSelectedAsset(null);
     setSelectedAmount(null);
+    setTradeError(null);
   }, []);
+
+  // Compute current holding for sell validation
+  const currentHolding = selectedAsset ? getHolding(selectedAsset.id) : undefined;
+  const currentShares = currentHolding?.shares ?? 0;
+  const currentHoldingValue = selectedAsset ? currentShares * selectedAsset.price : 0;
 
   // Build share card data from the current trade
   const shareCardData: ShareCardData | null = useMemo(() => {
@@ -108,7 +130,7 @@ export default function TradeScreen() {
           </View>
           <Title1 style={{ marginBottom: 8 }}>Trade Executed!</Title1>
           <Callout color="muted" style={{ textAlign: "center", marginBottom: 8 }}>
-            You now own {shares} shares of {selectedAsset.ticker}
+            You {isBuy ? "bought" : "sold"} {shares} shares of {selectedAsset.ticker}
           </Callout>
           <MonoLargeTitle style={{ marginBottom: 32 }}>
             €{selectedAmount.toFixed(2)}
@@ -223,6 +245,21 @@ export default function TradeScreen() {
             {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
             {Math.abs(selectedAsset.changePercent).toFixed(2)}% today
           </MonoSubhead>
+          {/* Balance / Holdings Info */}
+          <View style={[styles.balanceInfo, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {isBuy ? (
+              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
+                Available: <MonoSubhead color="foreground">€{demoState.balance.toFixed(2)}</MonoSubhead>
+              </Footnote>
+            ) : (
+              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
+                You own: <MonoSubhead color="foreground">{currentShares.toFixed(currentShares % 1 === 0 ? 0 : 4)} shares</MonoSubhead>
+                {currentShares > 0 && (
+                  <Footnote color="muted"> (€{currentHoldingValue.toFixed(2)})</Footnote>
+                )}
+              </Footnote>
+            )}
+          </View>
         </View>
 
         {/* Quick Amounts */}
@@ -281,6 +318,22 @@ export default function TradeScreen() {
               <Subhead color="muted">Commission</Subhead>
               <MonoSubhead color="success">€0.00</MonoSubhead>
             </View>
+            {isBuy && (
+              <View style={styles.orderRow}>
+                <Subhead color="muted">Balance after</Subhead>
+                <MonoSubhead>€{(demoState.balance - selectedAmount).toFixed(2)}</MonoSubhead>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Trade Error */}
+        {tradeError && (
+          <View style={[styles.errorBanner, { backgroundColor: colors.errorAlpha }]}>
+            <IconSymbol name="xmark" size={14} color={colors.error} />
+            <Footnote color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
+              {tradeError}
+            </Footnote>
           </View>
         )}
 
@@ -505,6 +558,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
+  },
+  balanceInfo: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   // Success screen
   successContainer: {
