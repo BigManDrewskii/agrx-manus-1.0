@@ -107,3 +107,11 @@
 - [x] Update sentiment bar on Asset Detail to reflect live news sentiment
 - [x] Add Market News section to Home screen (4 articles with source + time)
 - [x] Test news integration end-to-end (63 tests passed, 5 news-specific tests)
+- [x] Build ShareCard component with 9:16 canvas (stock name, P&L, mini chart, sentiment, AGRX branding)
+- [x] Build share card generation service (ViewShot capture to image)
+- [x] Integrate native share sheet (expo-sharing)
+- [x] Add share trigger to Trade success confirmation screen
+- [x] Add share trigger to Portfolio holdings (per-stock share button)
+- [x] Add share trigger to Asset Detail screen
+- [x] Add time frame selector (Today/This Week/This Month/All Time) on share card
+- [x] Test share card rendering and share flow end-to-end (84 tests passed, 21 share-card tests)

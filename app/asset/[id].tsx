@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ScrollView,
   View,
@@ -17,6 +17,8 @@ import { ChartSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { useStockQuote, useStockChart } from "@/hooks/use-stocks";
 import { useStockNews } from "@/hooks/use-news";
 import { GREEK_STOCKS } from "@/lib/mock-data";
+import { ShareCardModal } from "@/components/ui/share-card-modal";
+import type { ShareCardData, ShareSentiment } from "@/components/ui/share-card";
 import {
   Title3,
   Headline,
@@ -146,6 +148,7 @@ export default function AssetDetailScreen() {
   const router = useRouter();
   const colors = useColors();
   const [activePeriod, setActivePeriod] = useState("1D");
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { stock, isLoading: quoteLoading, isLive } = useStockQuote(id ?? "");
   const { isWatchlisted, toggle: toggleWatchlist } = useWatchlist();
@@ -184,6 +187,28 @@ export default function AssetDetailScreen() {
 
   const articles = newsData?.articles ?? [];
   const hasLiveNews = articles.length > 0;
+
+  // Build share card data
+  const shareCardData: ShareCardData = {
+    ticker,
+    companyName: name,
+    price,
+    pnlAmount: change,
+    pnlPercent: changePercent,
+    sparkline: chartData.length > 0 ? chartData : (mockAsset?.sparkline ?? []),
+    timeFrame: "Today",
+    sentiment: (sentimentLabel === "Bullish" || sentimentLabel === "Bearish" || sentimentLabel === "Neutral"
+      ? sentimentLabel
+      : "Neutral") as ShareSentiment,
+    sentimentScore,
+  };
+
+  const handleShare = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShowShareModal(true);
+  }, []);
 
   return (
     <ScreenContainer>
@@ -231,6 +256,7 @@ export default function AssetDetailScreen() {
               />
             </Pressable>
             <Pressable
+              onPress={handleShare}
               style={({ pressed }) => [
                 styles.iconButton,
                 { backgroundColor: colors.surface },
@@ -529,6 +555,13 @@ export default function AssetDetailScreen() {
           <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>Sell</Callout>
         </Pressable>
       </View>
+
+      {/* Share Card Modal */}
+      <ShareCardModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        data={shareCardData}
+      />
     </ScreenContainer>
   );
 }

@@ -12,8 +12,11 @@ import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
 import { Sparkline } from "@/components/ui/sparkline";
 import { LiveBadge } from "@/components/ui/live-badge";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
+import { ShareCardModal } from "@/components/ui/share-card-modal";
+import type { ShareCardData } from "@/components/ui/share-card";
 import {
   Title1,
   Title3,
@@ -30,6 +33,8 @@ import {
   PORTFOLIO_SPARKLINE,
   type Holding,
 } from "@/lib/mock-data";
+import * as Haptics from "expo-haptics";
+import { Platform } from "react-native";
 
 const TABS = ["All", "Stocks", "Options", "Copied"];
 
@@ -50,6 +55,10 @@ export default function PortfolioScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
   const refreshCache = useRefreshCache();
+
+  // Share modal state
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareData, setShareData] = useState<ShareCardData | null>(null);
 
   // Enrich holdings with live prices
   const enrichedHoldings: EnrichedHolding[] = useMemo(() => {
@@ -94,6 +103,44 @@ export default function PortfolioScreen() {
     }
   }, [refreshCache, refetch]);
 
+  // Open share modal for a specific holding
+  const handleShareHolding = useCallback(
+    (holding: EnrichedHolding) => {
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setShareData({
+        ticker: holding.asset.ticker,
+        companyName: holding.asset.name,
+        price: holding.livePrice ?? holding.asset.price,
+        pnlAmount: holding.livePnl,
+        pnlPercent: holding.livePnlPercent,
+        sparkline: holding.liveSparkline,
+        timeFrame: "All Time",
+        shares: holding.shares,
+      });
+      setShowShareModal(true);
+    },
+    []
+  );
+
+  // Open share modal for the whole portfolio
+  const handleSharePortfolio = useCallback(() => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setShareData({
+      ticker: "PORTFOLIO",
+      companyName: `${enrichedHoldings.length} Holdings`,
+      price: portfolioTotal,
+      pnlAmount: portfolioPnl,
+      pnlPercent: portfolioPnlPercent,
+      sparkline: PORTFOLIO_SPARKLINE,
+      timeFrame: "All Time",
+    });
+    setShowShareModal(true);
+  }, [enrichedHoldings.length, portfolioTotal, portfolioPnl, portfolioPnlPercent]);
+
   return (
     <ScreenContainer>
       <ScrollView
@@ -111,7 +158,19 @@ export default function PortfolioScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Title1>Portfolio</Title1>
-          <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
+          <View style={styles.headerRight}>
+            <Pressable
+              onPress={handleSharePortfolio}
+              style={({ pressed }) => [
+                styles.shareHeaderButton,
+                { backgroundColor: colors.surface },
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <IconSymbol name="square.and.arrow.up" size={18} color={colors.primary} />
+            </Pressable>
+            <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
+          </View>
         </View>
 
         {/* Portfolio Value Hero */}
@@ -189,50 +248,61 @@ export default function PortfolioScreen() {
             <StockListSkeleton count={4} />
           ) : (
             enrichedHoldings.map((holding) => (
-              <Pressable
-                key={holding.asset.id}
-                onPress={() =>
-                  router.push({
-                    pathname: "/asset/[id]" as any,
-                    params: { id: holding.asset.id },
-                  })
-                }
-                style={({ pressed }) => [
-                  styles.holdingRow,
-                  { borderBottomColor: colors.border },
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <View style={styles.holdingLeft}>
-                  <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
-                    <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
-                      {holding.asset.ticker.slice(0, 2)}
-                    </Caption1>
+              <View key={holding.asset.id} style={[styles.holdingRow, { borderBottomColor: colors.border }]}>
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/asset/[id]" as any,
+                      params: { id: holding.asset.id },
+                    })
+                  }
+                  style={({ pressed }) => [
+                    styles.holdingPressable,
+                    pressed && { opacity: 0.7 },
+                  ]}
+                >
+                  <View style={styles.holdingLeft}>
+                    <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
+                      <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                        {holding.asset.ticker.slice(0, 2)}
+                      </Caption1>
+                    </View>
+                    <View>
+                      <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
+                        {holding.asset.ticker}
+                      </Subhead>
+                      <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                        {holding.shares} shares · avg €{holding.avgCost.toFixed(2)}
+                      </Caption1>
+                    </View>
                   </View>
-                  <View>
-                    <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
-                      {holding.asset.ticker}
-                    </Subhead>
-                    <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-                      {holding.shares} shares · avg €{holding.avgCost.toFixed(2)}
-                    </Caption1>
+                  <View style={styles.holdingCenter}>
+                    <Sparkline
+                      data={holding.liveSparkline}
+                      width={48}
+                      height={20}
+                      positive={holding.livePnl >= 0}
+                    />
                   </View>
-                </View>
-                <View style={styles.holdingCenter}>
-                  <Sparkline
-                    data={holding.liveSparkline}
-                    width={48}
-                    height={20}
-                    positive={holding.livePnl >= 0}
-                  />
-                </View>
-                <View style={styles.holdingRight}>
-                  <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
-                    €{holding.liveValue.toFixed(2)}
-                  </MonoSubhead>
-                  <PnLText value={holding.livePnlPercent} size="sm" showArrow={false} />
-                </View>
-              </Pressable>
+                  <View style={styles.holdingRight}>
+                    <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
+                      €{holding.liveValue.toFixed(2)}
+                    </MonoSubhead>
+                    <PnLText value={holding.livePnlPercent} size="sm" showArrow={false} />
+                  </View>
+                </Pressable>
+                {/* Share button for this holding */}
+                <Pressable
+                  onPress={() => handleShareHolding(holding)}
+                  style={({ pressed }) => [
+                    styles.holdingShareButton,
+                    { backgroundColor: colors.surfaceSecondary },
+                    pressed && { opacity: 0.6 },
+                  ]}
+                >
+                  <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
+                </Pressable>
+              </View>
             ))
           )}
         </View>
@@ -256,6 +326,15 @@ export default function PortfolioScreen() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+
+      {/* Share Card Modal */}
+      {shareData && (
+        <ShareCardModal
+          visible={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          data={shareData}
+        />
+      )}
     </ScreenContainer>
   );
 }
@@ -271,6 +350,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  shareHeaderButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroContainer: {
     alignItems: "center",
@@ -307,9 +398,15 @@ const styles = StyleSheet.create({
   holdingRow: {
     flexDirection: "row",
     alignItems: "center",
+    paddingRight: 8,
+    borderBottomWidth: 0.5,
+  },
+  holdingPressable: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
   },
   holdingLeft: {
     flexDirection: "row",
@@ -329,6 +426,14 @@ const styles = StyleSheet.create({
   },
   holdingRight: {
     alignItems: "flex-end",
+  },
+  holdingShareButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 4,
   },
   dividendSection: {
     paddingHorizontal: 16,

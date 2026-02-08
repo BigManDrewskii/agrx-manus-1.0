@@ -15,6 +15,8 @@ import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes } from "@/hooks/use-stocks";
 import { QUICK_AMOUNTS } from "@/lib/mock-data";
+import { ShareCardModal } from "@/components/ui/share-card-modal";
+import type { ShareCardData } from "@/components/ui/share-card";
 import {
   Title1,
   Title2,
@@ -51,6 +53,7 @@ export default function TradeScreen() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [isBuy, setIsBuy] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const { stocks, isLoading, isLive, lastUpdated } = useStockQuotes();
 
   const filteredStocks = useMemo(() => {
@@ -68,12 +71,31 @@ export default function TradeScreen() {
   const handleConfirm = useCallback(() => {
     if (!selectedAsset || !selectedAmount) return;
     setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      setSelectedAsset(null);
-      setSelectedAmount(null);
-    }, 3000);
   }, [selectedAsset, selectedAmount]);
+
+  const handleDismissSuccess = useCallback(() => {
+    setShowSuccess(false);
+    setSelectedAsset(null);
+    setSelectedAmount(null);
+  }, []);
+
+  // Build share card data from the current trade
+  const shareCardData: ShareCardData | null = useMemo(() => {
+    if (!selectedAsset || !selectedAmount) return null;
+    const shares = selectedAmount / selectedAsset.price;
+    return {
+      ticker: selectedAsset.ticker,
+      companyName: selectedAsset.name,
+      price: selectedAsset.price,
+      pnlAmount: 0, // Just executed, no P&L yet
+      pnlPercent: selectedAsset.changePercent,
+      sparkline: selectedAsset.sparkline,
+      timeFrame: "Today" as const,
+      tradeType: isBuy ? ("buy" as const) : ("sell" as const),
+      tradeAmount: selectedAmount,
+      shares,
+    };
+  }, [selectedAsset, selectedAmount, isBuy]);
 
   // ─── Success Screen ─────────────────────────────────────────────
   if (showSuccess && selectedAsset && selectedAmount) {
@@ -91,12 +113,14 @@ export default function TradeScreen() {
           <MonoLargeTitle style={{ marginBottom: 32 }}>
             €{selectedAmount.toFixed(2)}
           </MonoLargeTitle>
+
+          {/* Share Button — Primary CTA */}
           <Pressable
-            onPress={() => {}}
+            onPress={() => setShowShareModal(true)}
             style={({ pressed }) => [
               styles.shareTradeButton,
               { backgroundColor: colors.primary },
-              pressed && { opacity: 0.8 },
+              pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
             ]}
           >
             <IconSymbol name="square.and.arrow.up" size={18} color={colors.onPrimary} />
@@ -104,7 +128,29 @@ export default function TradeScreen() {
               Share with friends
             </Callout>
           </Pressable>
+
+          {/* Done Button — Secondary */}
+          <Pressable
+            onPress={handleDismissSuccess}
+            style={({ pressed }) => [
+              styles.doneButton,
+              pressed && { opacity: 0.6 },
+            ]}
+          >
+            <Subhead color="muted" style={{ fontFamily: FontFamily.medium }}>
+              Done
+            </Subhead>
+          </Pressable>
         </View>
+
+        {/* Share Card Modal */}
+        {shareCardData && (
+          <ShareCardModal
+            visible={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            data={shareCardData}
+          />
+        )}
       </ScreenContainer>
     );
   }
@@ -482,5 +528,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 28,
+    marginBottom: 16,
+  },
+  doneButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
   },
 });
