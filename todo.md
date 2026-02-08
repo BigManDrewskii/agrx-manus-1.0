@@ -257,3 +257,10 @@
 - [x] Apply AGRX motion language to Price Alerts screen (header FadeIn, permission banner FadeInDown+60ms, empty state FadeIn+120ms)
 - [x] Apply AGRX motion language to Notification History screen (header FadeIn, actions FadeInDown+60ms, empty state FadeIn+120ms)
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after final animation rollout
+- [x] Audit current P&L number display and XP bar implementations across Home and Portfolio
+- [x] Build AnimatedNumber component (useSharedValue + withSpring interpolation, formatted output via AnimatedTextInput)
+- [x] Apply AnimatedNumber to Home screen total balance and P&L values
+- [x] Apply AnimatedNumber to Portfolio screen total value and P&L values (both Simple and Pro heroes)
+- [x] Build AnimatedPnLNumber variant with color/sign/arrow formatting for P&L displays
+- [x] Animate XP bar fill width with SPRING_RESPONSIVE + animated XP counter with SPRING_BOUNCY
+- [x] Run tests and verify 0 regressions after animated value transitions (433 passed)

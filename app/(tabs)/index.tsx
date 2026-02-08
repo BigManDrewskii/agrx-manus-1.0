@@ -42,6 +42,7 @@ import {
   Subhead,
   Body,
 } from "@/components/ui/typography";
+import { AnimatedNumber, AnimatedPnLNumber } from "@/components/ui/animated-number";
 import { FontFamily } from "@/constants/typography";
 import {
   PORTFOLIO_SPARKLINE,
@@ -205,22 +206,40 @@ export default function HomeScreen() {
           <Footnote color="muted" style={{ letterSpacing: 0.3 }}>
             Total Balance
           </Footnote>
-          <MonoLargeTitle
+          <AnimatedNumber
+            value={totalAccountValue}
+            prefix="€"
+            decimals={2}
             style={{
+              fontSize: 34,
+              lineHeight: 42,
+              fontFamily: "JetBrainsMono_700Bold",
+              color: colors.foreground,
               textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
               textShadowOffset: { width: 0, height: 0 },
               textShadowRadius: 16,
             }}
-          >
-            €{totalAccountValue.toLocaleString("el-GR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </MonoLargeTitle>
+          />
           <View style={styles.pnlRow}>
-            <PnLText value={portfolioPnl} format="currency" size="md" showArrow={true} />
+            <AnimatedPnLNumber
+              value={portfolioPnl}
+              format="currency"
+              size="md"
+              showArrow={true}
+              successColor={colors.success}
+              errorColor={colors.error}
+              mutedColor={colors.muted}
+            />
             <Footnote color="muted"> · </Footnote>
-            <PnLText value={portfolioPnlPercent} format="percent" size="md" showArrow={false} />
+            <AnimatedPnLNumber
+              value={portfolioPnlPercent}
+              format="percent"
+              size="md"
+              showArrow={false}
+              successColor={colors.success}
+              errorColor={colors.error}
+              mutedColor={colors.muted}
+            />
             <Footnote color="muted"> all time</Footnote>
           </View>
 

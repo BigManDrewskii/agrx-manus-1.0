@@ -12,6 +12,7 @@ import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
+import { AnimatedNumber, AnimatedPnLNumber } from "@/components/ui/animated-number";
 import { Sparkline } from "@/components/ui/sparkline";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -193,23 +194,24 @@ export default function PortfolioScreen() {
         {isSimple && (
           <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.simpleHero}>
             <Footnote color="muted">Total Value</Footnote>
-            <MonoLargeTitle
+            <AnimatedNumber
+              value={portfolioTotal}
+              prefix="€"
+              decimals={2}
               style={{
                 fontSize: 36,
+                lineHeight: 44,
+                fontFamily: "JetBrainsMono_700Bold",
+                color: colors.foreground,
                 textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
                 textShadowOffset: { width: 0, height: 0 },
                 textShadowRadius: 20,
               }}
-            >
-              €{portfolioTotal.toLocaleString("el-GR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </MonoLargeTitle>
+            />
             <View style={styles.heroPnl}>
-              <PnLText value={portfolioPnl} format="currency" size="lg" showArrow={true} />
+              <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
               <Footnote color="muted"> · </Footnote>
-              <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
+              <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
             </View>
           </Animated.View>
         )}
@@ -218,23 +220,24 @@ export default function PortfolioScreen() {
         {isPro && (
           <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.proHero}>
             <Footnote color="muted">Total Value</Footnote>
-            <MonoLargeTitle
+            <AnimatedNumber
+              value={portfolioTotal}
+              prefix="€"
+              decimals={2}
               style={{
                 fontSize: 40,
+                lineHeight: 48,
+                fontFamily: "JetBrainsMono_700Bold",
+                color: colors.foreground,
                 textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
                 textShadowOffset: { width: 0, height: 0 },
                 textShadowRadius: 24,
               }}
-            >
-              €{portfolioTotal.toLocaleString("el-GR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </MonoLargeTitle>
+            />
             <View style={styles.heroPnl}>
-              <PnLText value={portfolioPnl} format="currency" size="lg" showArrow={true} />
+              <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
               <Footnote color="muted"> · </Footnote>
-              <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
+              <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
             </View>
             {hasHoldings && (
               <View style={styles.sparklineContainer}>

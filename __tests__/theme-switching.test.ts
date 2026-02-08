@@ -213,6 +213,7 @@ describe("Component Theme Reactivity", () => {
         !f.path.includes("haptic-tab.tsx") &&
         !f.path.includes("icon-symbol") &&
         !f.path.includes("animated-pressable.tsx") &&
+        !f.path.includes("animated-number.tsx") &&
         f.path.endsWith(".tsx")
     );
 
