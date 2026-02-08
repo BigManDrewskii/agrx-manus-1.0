@@ -32,6 +32,7 @@ const MAPPING = {
   "arrow.up.right": "call-made",
   "arrow.down.right": "call-received",
   "xmark": "close",
+  "xmark.circle.fill": "cancel",
   "checkmark": "check",
   "info.circle": "info",
   "exclamationmark.triangle": "warning",

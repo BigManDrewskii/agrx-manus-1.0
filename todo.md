@@ -86,3 +86,8 @@
 - [x] Build Settings screen with account/about section (demo mode, version, legal links)
 - [x] Add Settings route accessible from Home screen gear icon
 - [x] Test theme switching end-to-end and run all tests (58 passed, 0 TS errors)
+- [x] Research real ATHEX sector classifications for all 135 stocks (15 sectors mapped)
+- [x] Add sector field to LiveStockQuote interface and shared lib/sectors.ts module
+- [x] Build sector filter chips UI on Markets screen (horizontal scroll with counts + emoji icons)
+- [x] Add "All" default filter, sector-based grouping, and sort options (Gainers/Losers/Volume/A→Z)
+- [x] Test sector filtering end-to-end (58 tests passed, 0 TS errors)

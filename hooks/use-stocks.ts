@@ -8,6 +8,7 @@
 import { trpc } from "@/lib/trpc";
 import { GREEK_STOCKS, PORTFOLIO_HOLDINGS, generateChartData } from "@/lib/mock-data";
 import type { Asset } from "@/lib/mock-data";
+import { getSector, type Sector } from "@/lib/sectors";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 export interface LiveStockQuote {
@@ -19,6 +20,7 @@ export interface LiveStockQuote {
   changePercent: number;
   sparkline: number[];
   category: "blue-chip" | "growth" | "dividend";
+  sector: Sector;
   marketCap: string;
   dayHigh: number;
   dayLow: number;
@@ -42,6 +44,7 @@ function mockToQuote(s: Asset): LiveStockQuote {
     changePercent: s.changePercent,
     sparkline: s.sparkline,
     category: s.category,
+    sector: getSector(s.id),
     marketCap: s.marketCap ?? "N/A",
     dayHigh: s.price * 1.02,
     dayLow: s.price * 0.98,
@@ -82,6 +85,7 @@ export function useStockQuotes() {
         changePercent: q.changePercent,
         sparkline: q.sparkline,
         category: q.category,
+        sector: getSector(q.id),
         marketCap: q.marketCap,
         dayHigh: q.dayHigh,
         dayLow: q.dayLow,
@@ -130,6 +134,7 @@ export function useStockQuote(stockId: string) {
         changePercent: query.data!.data!.changePercent,
         sparkline: query.data!.data!.sparkline,
         category: query.data!.data!.category,
+        sector: getSector(query.data!.data!.id),
         marketCap: query.data!.data!.marketCap,
         dayHigh: query.data!.data!.dayHigh,
         dayLow: query.data!.data!.dayLow,

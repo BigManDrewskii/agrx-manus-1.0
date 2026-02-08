@@ -5,6 +5,7 @@ import {
   FlatList,
   StyleSheet,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -18,44 +19,43 @@ import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import {
   Title1,
   Caption1,
+  Caption2,
   Callout,
   Footnote,
-  Headline,
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
+import { SECTORS, SECTOR_ICONS, type Sector } from "@/lib/sectors";
 
-const CATEGORIES = ["All", "Blue Chips", "Gainers", "Losers", "Dividend", "Growth"];
+// ── Filter Types ────────────────────────────────────────────────────────────
+type SortMode = "default" | "gainers" | "losers" | "volume" | "alpha";
+
+const SORT_OPTIONS: { key: SortMode; label: string }[] = [
+  { key: "default", label: "Default" },
+  { key: "gainers", label: "Top Gainers" },
+  { key: "losers", label: "Top Losers" },
+  { key: "volume", label: "Volume" },
+  { key: "alpha", label: "A → Z" },
+];
 
 export default function MarketsScreen() {
   const colors = useColors();
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeSector, setActiveSector] = useState<Sector | "All">("All");
+  const [sortMode, setSortMode] = useState<SortMode>("default");
   const [refreshing, setRefreshing] = useState(false);
   const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
   const refreshCache = useRefreshCache();
 
   const filteredStocks = useMemo(() => {
     let filtered = [...stocks];
-    switch (activeCategory) {
-      case "Gainers":
-        filtered = filtered.filter((s) => s.changePercent > 0).sort((a, b) => b.changePercent - a.changePercent);
-        break;
-      case "Losers":
-        filtered = filtered.filter((s) => s.changePercent < 0).sort((a, b) => a.changePercent - b.changePercent);
-        break;
-      case "Blue Chips":
-        filtered = filtered.filter((s) => s.category === "blue-chip");
-        break;
-      case "Dividend":
-        filtered = filtered.filter((s) => s.category === "dividend");
-        break;
-      case "Growth":
-        filtered = filtered.filter((s) => s.category === "growth");
-        break;
-      default:
-        break;
+
+    // Sector filter
+    if (activeSector !== "All") {
+      filtered = filtered.filter((s) => s.sector === activeSector);
     }
+
+    // Search filter
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter(
@@ -64,8 +64,37 @@ export default function MarketsScreen() {
           s.ticker.toLowerCase().includes(q)
       );
     }
+
+    // Sort
+    switch (sortMode) {
+      case "gainers":
+        filtered.sort((a, b) => b.changePercent - a.changePercent);
+        break;
+      case "losers":
+        filtered.sort((a, b) => a.changePercent - b.changePercent);
+        break;
+      case "volume":
+        filtered.sort((a, b) => b.volume - a.volume);
+        break;
+      case "alpha":
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        // Default: blue-chip first, then by market cap hint
+        break;
+    }
+
     return filtered;
-  }, [stocks, search, activeCategory]);
+  }, [stocks, search, activeSector, sortMode]);
+
+  // Count stocks per sector for badge display
+  const sectorCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: stocks.length };
+    for (const s of stocks) {
+      counts[s.sector] = (counts[s.sector] ?? 0) + 1;
+    }
+    return counts;
+  }, [stocks]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -79,9 +108,11 @@ export default function MarketsScreen() {
     }
   }, [refreshCache, refetch]);
 
-  // Determine ATHEX market status based on current time (EEST)
+  // ATHEX market status
   const now = new Date();
-  const athensHour = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Athens" })).getHours();
+  const athensHour = new Date(
+    now.toLocaleString("en-US", { timeZone: "Europe/Athens" })
+  ).getHours();
   const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
   const isMarketOpen = isWeekday && athensHour >= 10 && athensHour < 17;
 
@@ -96,7 +127,11 @@ export default function MarketsScreen() {
             <View
               style={[
                 styles.statusDot,
-                { backgroundColor: isMarketOpen ? colors.success : colors.muted },
+                {
+                  backgroundColor: isMarketOpen
+                    ? colors.success
+                    : colors.muted,
+                },
               ]}
             />
             <Caption1
@@ -126,54 +161,147 @@ export default function MarketsScreen() {
               styles.searchInput,
               { color: colors.foreground, fontFamily: FontFamily.medium },
             ]}
-            placeholder="Search stocks, ETFs..."
+            placeholder="Search 135 ATHEX stocks..."
             placeholderTextColor={colors.muted}
             value={search}
             onChangeText={setSearch}
             returnKeyType="done"
           />
+          {search.length > 0 && (
+            <Pressable
+              onPress={() => setSearch("")}
+              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+            >
+              <IconSymbol name="xmark.circle.fill" size={18} color={colors.muted} />
+            </Pressable>
+          )}
         </View>
       </View>
 
-      {/* Category Chips */}
-      <View style={styles.chipContainer}>
-        <FlatList
-          data={CATEGORIES}
+      {/* Sector Chips — Horizontal Scrollable */}
+      <View style={styles.sectorContainer}>
+        <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipList}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => {
-            const isActive = item === activeCategory;
+          contentContainerStyle={styles.sectorList}
+        >
+          {/* "All" chip */}
+          <Pressable
+            onPress={() => setActiveSector("All")}
+            style={({ pressed }) => [
+              styles.sectorChip,
+              {
+                backgroundColor:
+                  activeSector === "All" ? colors.primary : colors.surface,
+                borderColor:
+                  activeSector === "All" ? colors.primary : colors.border,
+              },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Caption1
+              color={activeSector === "All" ? "onPrimary" : "foreground"}
+              style={{
+                fontFamily:
+                  activeSector === "All"
+                    ? FontFamily.bold
+                    : FontFamily.medium,
+              }}
+            >
+              All
+            </Caption1>
+            <Caption2
+              color={activeSector === "All" ? "onPrimary" : "muted"}
+              style={{ fontFamily: FontFamily.medium }}
+            >
+              {sectorCounts.All ?? 0}
+            </Caption2>
+          </Pressable>
+
+          {/* Sector chips */}
+          {SECTORS.map((sector) => {
+            const isActive = activeSector === sector;
+            const count = sectorCounts[sector] ?? 0;
+            if (count === 0) return null;
             return (
               <Pressable
-                onPress={() => setActiveCategory(item)}
+                key={sector}
+                onPress={() => setActiveSector(sector)}
                 style={({ pressed }) => [
-                  styles.chip,
+                  styles.sectorChip,
                   {
-                    backgroundColor: isActive ? colors.primary : colors.surface,
+                    backgroundColor: isActive
+                      ? colors.primary
+                      : colors.surface,
                     borderColor: isActive ? colors.primary : colors.border,
                   },
                   pressed && { opacity: 0.7 },
                 ]}
               >
                 <Caption1
-                  color={isActive ? "onPrimary" : "muted"}
-                  style={{ fontFamily: isActive ? FontFamily.bold : FontFamily.medium }}
+                  color={isActive ? "onPrimary" : "foreground"}
+                  style={{
+                    fontFamily: isActive
+                      ? FontFamily.bold
+                      : FontFamily.medium,
+                  }}
                 >
-                  {item}
+                  {SECTOR_ICONS[sector]} {sector}
                 </Caption1>
+                <Caption2
+                  color={isActive ? "onPrimary" : "muted"}
+                  style={{ fontFamily: FontFamily.medium }}
+                >
+                  {count}
+                </Caption2>
               </Pressable>
             );
-          }}
-        />
+          })}
+        </ScrollView>
       </View>
 
-      {/* Stock Count */}
-      <View style={styles.countRow}>
+      {/* Sort Row */}
+      <View style={styles.sortRow}>
         <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-          {filteredStocks.length} {filteredStocks.length === 1 ? "stock" : "stocks"}
+          {filteredStocks.length}{" "}
+          {filteredStocks.length === 1 ? "stock" : "stocks"}
         </Caption1>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sortChipList}
+        >
+          {SORT_OPTIONS.map((opt) => {
+            const isActive = sortMode === opt.key;
+            return (
+              <Pressable
+                key={opt.key}
+                onPress={() => setSortMode(opt.key)}
+                style={({ pressed }) => [
+                  styles.sortChip,
+                  {
+                    backgroundColor: isActive
+                      ? colors.primaryAlpha
+                      : "transparent",
+                    borderColor: isActive ? colors.primary : colors.border,
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Caption2
+                  color={isActive ? "primary" : "muted"}
+                  style={{
+                    fontFamily: isActive
+                      ? FontFamily.bold
+                      : FontFamily.medium,
+                  }}
+                >
+                  {opt.label}
+                </Caption2>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* Stock List */}
@@ -215,11 +343,24 @@ export default function MarketsScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <IconSymbol name="magnifyingglass" size={32} color={colors.muted} />
-              <Callout color="muted" style={{ fontFamily: FontFamily.semibold }}>
+              <IconSymbol
+                name="magnifyingglass"
+                size={32}
+                color={colors.muted}
+              />
+              <Callout
+                color="muted"
+                style={{ fontFamily: FontFamily.semibold }}
+              >
                 No stocks found
               </Callout>
-              <Footnote color="muted">Try a different search or category</Footnote>
+              <Footnote color="muted">
+                {search.trim()
+                  ? "Try a different search term"
+                  : activeSector !== "All"
+                  ? `No stocks in ${activeSector} sector`
+                  : "Try a different filter"}
+              </Footnote>
             </View>
           }
         />
@@ -268,22 +409,38 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
   },
-  chipContainer: {
+  sectorContainer: {
     marginBottom: 8,
   },
-  chipList: {
+  sectorList: {
     paddingHorizontal: 16,
     gap: 8,
   },
-  chip: {
-    paddingHorizontal: 16,
+  sectorChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
+    gap: 6,
   },
-  countRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 4,
+  sortRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 16,
+    paddingBottom: 6,
+    gap: 12,
+  },
+  sortChipList: {
+    gap: 6,
+    paddingRight: 16,
+  },
+  sortChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1,
   },
   listContent: {
     paddingBottom: 100,
