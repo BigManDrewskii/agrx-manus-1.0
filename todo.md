@@ -1,0 +1,35 @@
+# AGRX MVP TODO
+
+- [x] Configure AGRX color palette and design tokens in theme.config.js
+- [ ] Set up Inter and JetBrains Mono fonts
+- [x] Configure 5-tab navigation (Home, Markets, Trade, Portfolio, Social)
+- [x] Add icon mappings for all tab icons
+- [x] Build Home screen — portfolio value hero with P&L glow
+- [x] Build Home screen — mini sparkline chart
+- [x] Build Home screen — daily challenge card
+- [x] Build Home screen — trending stocks horizontal scroll
+- [x] Build Home screen — social feed preview
+- [x] Build Home screen — streak counter
+- [x] Build Markets screen — search bar with filter chips
+- [x] Build Markets screen — market status indicator
+- [x] Build Markets screen — asset list with sparklines
+- [x] Build Markets screen — categories section
+- [x] Build Asset Detail screen — price header and interactive chart
+- [x] Build Asset Detail screen — Buy/Sell CTAs
+- [x] Build Asset Detail screen — sentiment bar and news
+- [x] Build Trade bottom sheet — quick amounts and order flow
+- [x] Build Trade bottom sheet — swipe-to-confirm
+- [x] Build Trade bottom sheet — success animation and share prompt
+- [x] Build Portfolio screen — total value with P&L glow
+- [x] Build Portfolio screen — tab selector (All/Stocks/Options/Copied)
+- [x] Build Portfolio screen — holdings list
+- [x] Build Social screen — community feed
+- [x] Build Social screen — leaderboard
+- [x] Build Social screen — achievements/badges
+- [x] Build Demo mode toggle and persistent banner
+- [x] Build Onboarding flow (Welcome → Demo/Live choice)
+- [ ] Build P&L Share Card generation
+- [ ] Build Simple/Advanced mode toggle
+- [x] Generate custom app logo
+- [x] Update app.config.ts with AGRX branding
+- [x] Create checkpoint and deliver MVP
