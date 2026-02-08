@@ -276,3 +276,7 @@
 - [x] Animate P&L percentages on Markets screen with AnimatedPnLNumber (via AssetRow component)
 - [x] Removed unused PnLText and MonoSubhead imports from asset-row.tsx
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Apply AnimatedNumber to TrendingCard price display
+- [x] Apply AnimatedPnLNumber to TrendingCard P&L percentage
+- [x] Removed unused PnLText and MonoSubhead imports from trending-card.tsx
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass

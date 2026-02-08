@@ -3,8 +3,8 @@ import { View, StyleSheet } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { Sparkline } from "./sparkline";
-import { PnLText } from "./pnl-text";
-import { Subhead, Caption1, Caption2, MonoSubhead } from "@/components/ui/typography";
+import { AnimatedNumber, AnimatedPnLNumber } from "./animated-number";
+import { Subhead, Caption1, Caption2 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
 import type { Asset } from "@/lib/mock-data";
 
@@ -57,10 +57,18 @@ export function TrendingCard({ asset, onPress }: TrendingCardProps) {
       </View>
 
       <View style={styles.footer}>
-        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, fontSize: 14 }}>
-          €{asset.price.toFixed(2)}
-        </MonoSubhead>
-        <PnLText value={asset.changePercent} size="sm" showArrow={false} />
+        <AnimatedNumber
+          value={asset.price}
+          prefix="€"
+          decimals={2}
+          style={{
+            fontSize: 14,
+            lineHeight: 20,
+            fontFamily: FontFamily.monoMedium,
+            color: colors.foreground,
+          }}
+        />
+        <AnimatedPnLNumber value={asset.changePercent} format="percent" size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
       </View>
     </AnimatedPressable>
   );
