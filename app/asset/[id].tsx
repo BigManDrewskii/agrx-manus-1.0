@@ -29,6 +29,9 @@ import {
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
 import Svg, { Polyline, Defs, LinearGradient, Stop, Path } from "react-native-svg";
+import { useWatchlist } from "@/lib/watchlist-context";
+import * as Haptics from "expo-haptics";
+import { Platform } from "react-native";
 
 const TIME_PERIODS = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
@@ -101,6 +104,8 @@ export default function AssetDetailScreen() {
   const [activePeriod, setActivePeriod] = useState("1D");
 
   const { stock, isLoading: quoteLoading, isLive } = useStockQuote(id ?? "");
+  const { isWatchlisted, toggle: toggleWatchlist } = useWatchlist();
+  const starred = isWatchlisted(id ?? "");
   const { chartData, isLoading: chartLoading } = useStockChart(id ?? "", activePeriod);
 
   // Fallback to mock data if stock not found
@@ -168,15 +173,36 @@ export default function AssetDetailScreen() {
             </View>
             <Footnote color="muted">{name}</Footnote>
           </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.shareButton,
-              { backgroundColor: colors.surface },
-              pressed && { opacity: 0.6 },
-            ]}
-          >
-            <IconSymbol name="square.and.arrow.up" size={18} color={colors.foreground} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web") {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                toggleWatchlist(id ?? "");
+              }}
+              style={({ pressed }) => [
+                styles.shareButton,
+                { backgroundColor: colors.surface },
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <IconSymbol
+                name="star.fill"
+                size={18}
+                color={starred ? colors.gold : colors.muted}
+              />
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                styles.shareButton,
+                { backgroundColor: colors.surface },
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <IconSymbol name="square.and.arrow.up" size={18} color={colors.foreground} />
+            </Pressable>
+          </View>
         </View>
 
         {/* Price */}
@@ -355,6 +381,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

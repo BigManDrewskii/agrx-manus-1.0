@@ -1,21 +1,43 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import { Pressable } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "./sparkline";
 import { PnLText } from "./pnl-text";
 import { Subhead, Caption1, MonoSubhead } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
+import { IconSymbol } from "./icon-symbol";
 import type { Asset } from "@/lib/mock-data";
 
 interface AssetRowProps {
   asset: Asset;
   onPress?: () => void;
   showSparkline?: boolean;
+  /** Whether to show the star/watchlist toggle */
+  showStar?: boolean;
+  /** Whether this stock is currently watchlisted */
+  isWatchlisted?: boolean;
+  /** Callback when the star is toggled */
+  onToggleWatchlist?: () => void;
 }
 
-export function AssetRow({ asset, onPress, showSparkline = true }: AssetRowProps) {
+export function AssetRow({
+  asset,
+  onPress,
+  showSparkline = true,
+  showStar = false,
+  isWatchlisted = false,
+  onToggleWatchlist,
+}: AssetRowProps) {
   const colors = useColors();
+
+  const handleStarPress = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onToggleWatchlist?.();
+  };
 
   return (
     <Pressable
@@ -61,12 +83,30 @@ export function AssetRow({ asset, onPress, showSparkline = true }: AssetRowProps
         </View>
       )}
 
-      {/* Right: Price + Change */}
-      <View style={styles.right}>
-        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
-          €{asset.price.toFixed(2)}
-        </MonoSubhead>
-        <PnLText value={asset.changePercent} size="sm" showArrow={false} />
+      {/* Right: Price + Change + Star */}
+      <View style={styles.rightGroup}>
+        <View style={styles.right}>
+          <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
+            €{asset.price.toFixed(2)}
+          </MonoSubhead>
+          <PnLText value={asset.changePercent} size="sm" showArrow={false} />
+        </View>
+        {showStar && (
+          <Pressable
+            onPress={handleStarPress}
+            hitSlop={12}
+            style={({ pressed }) => [
+              styles.starButton,
+              pressed && { opacity: 0.5 },
+            ]}
+          >
+            <IconSymbol
+              name="star.fill"
+              size={18}
+              color={isWatchlisted ? colors.gold : colors.border}
+            />
+          </Pressable>
+        )}
       </View>
     </Pressable>
   );
@@ -99,7 +139,15 @@ const styles = StyleSheet.create({
   center: {
     marginHorizontal: 12,
   },
+  rightGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   right: {
     alignItems: "flex-end",
+  },
+  starButton: {
+    padding: 4,
   },
 });

@@ -91,3 +91,10 @@
 - [x] Build sector filter chips UI on Markets screen (horizontal scroll with counts + emoji icons)
 - [x] Add "All" default filter, sector-based grouping, and sort options (Gainers/Losers/Volume/A→Z)
 - [x] Test sector filtering end-to-end (58 tests passed, 0 TS errors)
+- [x] Create WatchlistContext with AsyncStorage persistence
+- [x] Wire WatchlistProvider into root layout
+- [x] Add star/favorite toggle button to AssetRow component (with haptic feedback)
+- [x] Add "Watchlist" as a sector filter chip on Markets screen (gold star chip with count)
+- [x] Add star toggle to Asset Detail screen header (gold/muted star + haptics)
+- [ ] Add watchlist section to Home screen (if user has watchlisted stocks)
+- [x] Test watchlist feature end-to-end (58 tests passed, 0 TS errors)

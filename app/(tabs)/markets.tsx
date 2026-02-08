@@ -25,8 +25,10 @@ import {
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
 import { SECTORS, SECTOR_ICONS, type Sector } from "@/lib/sectors";
+import { useWatchlist } from "@/lib/watchlist-context";
 
 // ── Filter Types ────────────────────────────────────────────────────────────
+type FilterMode = "All" | "Watchlist" | Sector;
 type SortMode = "default" | "gainers" | "losers" | "volume" | "alpha";
 
 const SORT_OPTIONS: { key: SortMode; label: string }[] = [
@@ -41,7 +43,8 @@ export default function MarketsScreen() {
   const colors = useColors();
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [activeSector, setActiveSector] = useState<Sector | "All">("All");
+  const [activeFilter, setActiveFilter] = useState<FilterMode>("All");
+  const { isWatchlisted, toggle: toggleWatchlist, count: watchlistCount } = useWatchlist();
   const [sortMode, setSortMode] = useState<SortMode>("default");
   const [refreshing, setRefreshing] = useState(false);
   const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
@@ -50,9 +53,11 @@ export default function MarketsScreen() {
   const filteredStocks = useMemo(() => {
     let filtered = [...stocks];
 
-    // Sector filter
-    if (activeSector !== "All") {
-      filtered = filtered.filter((s) => s.sector === activeSector);
+    // Watchlist or Sector filter
+    if (activeFilter === "Watchlist") {
+      filtered = filtered.filter((s) => isWatchlisted(s.id));
+    } else if (activeFilter !== "All") {
+      filtered = filtered.filter((s) => s.sector === activeFilter);
     }
 
     // Search filter
@@ -85,7 +90,7 @@ export default function MarketsScreen() {
     }
 
     return filtered;
-  }, [stocks, search, activeSector, sortMode]);
+  }, [stocks, search, activeFilter, sortMode, isWatchlisted]);
 
   // Count stocks per sector for badge display
   const sectorCounts = useMemo(() => {
@@ -187,23 +192,23 @@ export default function MarketsScreen() {
         >
           {/* "All" chip */}
           <Pressable
-            onPress={() => setActiveSector("All")}
+            onPress={() => setActiveFilter("All")}
             style={({ pressed }) => [
               styles.sectorChip,
               {
                 backgroundColor:
-                  activeSector === "All" ? colors.primary : colors.surface,
+                  activeFilter === "All" ? colors.primary : colors.surface,
                 borderColor:
-                  activeSector === "All" ? colors.primary : colors.border,
+                  activeFilter === "All" ? colors.primary : colors.border,
               },
               pressed && { opacity: 0.7 },
             ]}
           >
             <Caption1
-              color={activeSector === "All" ? "onPrimary" : "foreground"}
+              color={activeFilter === "All" ? "onPrimary" : "foreground"}
               style={{
                 fontFamily:
-                  activeSector === "All"
+                  activeFilter === "All"
                     ? FontFamily.bold
                     : FontFamily.medium,
               }}
@@ -211,22 +216,55 @@ export default function MarketsScreen() {
               All
             </Caption1>
             <Caption2
-              color={activeSector === "All" ? "onPrimary" : "muted"}
+              color={activeFilter === "All" ? "onPrimary" : "muted"}
               style={{ fontFamily: FontFamily.medium }}
             >
               {sectorCounts.All ?? 0}
             </Caption2>
           </Pressable>
 
+          {/* Watchlist chip */}
+          <Pressable
+            onPress={() => setActiveFilter("Watchlist")}
+            style={({ pressed }) => [
+              styles.sectorChip,
+              {
+                backgroundColor:
+                  activeFilter === "Watchlist" ? colors.gold : colors.surface,
+                borderColor:
+                  activeFilter === "Watchlist" ? colors.gold : colors.border,
+              },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Caption1
+              color={activeFilter === "Watchlist" ? "onPrimary" : "foreground"}
+              style={{
+                fontFamily:
+                  activeFilter === "Watchlist"
+                    ? FontFamily.bold
+                    : FontFamily.medium,
+              }}
+            >
+              ★ Watchlist
+            </Caption1>
+            <Caption2
+              color={activeFilter === "Watchlist" ? "onPrimary" : "muted"}
+              style={{ fontFamily: FontFamily.medium }}
+            >
+              {watchlistCount}
+            </Caption2>
+          </Pressable>
+
           {/* Sector chips */}
           {SECTORS.map((sector) => {
-            const isActive = activeSector === sector;
+            const isActive = activeFilter === sector;
             const count = sectorCounts[sector] ?? 0;
             if (count === 0) return null;
             return (
               <Pressable
                 key={sector}
-                onPress={() => setActiveSector(sector)}
+                onPress={() => setActiveFilter(sector)}
                 style={({ pressed }) => [
                   styles.sectorChip,
                   {
@@ -333,6 +371,9 @@ export default function MarketsScreen() {
                 sparkline: item.sparkline,
                 category: item.category,
               }}
+              showStar
+              isWatchlisted={isWatchlisted(item.id)}
+              onToggleWatchlist={() => toggleWatchlist(item.id)}
               onPress={() =>
                 router.push({
                   pathname: "/asset/[id]" as any,
@@ -357,8 +398,10 @@ export default function MarketsScreen() {
               <Footnote color="muted">
                 {search.trim()
                   ? "Try a different search term"
-                  : activeSector !== "All"
-                  ? `No stocks in ${activeSector} sector`
+                  : activeFilter === "Watchlist"
+                  ? "Star stocks to add them to your watchlist"
+                  : activeFilter !== "All"
+                  ? `No stocks in ${activeFilter} sector`
                   : "Try a different filter"}
               </Footnote>
             </View>
