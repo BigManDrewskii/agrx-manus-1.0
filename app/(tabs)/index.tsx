@@ -7,8 +7,8 @@ import {
   RefreshControl,
   Linking,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "@/components/ui/sparkline";
@@ -150,12 +150,12 @@ export default function HomeScreen() {
                   </Caption1>
                 </View>
               )}
-              <Pressable
+              <AnimatedPressable
+                variant="icon"
                 onPress={() => router.push("/notification-history" as any)}
-                style={({ pressed }) => [
+                style={[
                   styles.iconButton,
                   { backgroundColor: colors.surfaceSecondary },
-                  pressed && { opacity: 0.6 },
                 ]}
               >
                 <IconSymbol
@@ -177,17 +177,17 @@ export default function HomeScreen() {
                     </Caption2>
                   </View>
                 )}
-              </Pressable>
-              <Pressable
+              </AnimatedPressable>
+              <AnimatedPressable
+                variant="icon"
                 onPress={() => router.push("/settings" as any)}
-                style={({ pressed }) => [
+                style={[
                   styles.iconButton,
                   { backgroundColor: colors.surfaceSecondary },
-                  pressed && { opacity: 0.6 },
                 ]}
               >
                 <IconSymbol name="gearshape.fill" size={18} color={colors.muted} />
-              </Pressable>
+              </AnimatedPressable>
             </View>
           </View>
           {/* Mode toggle — sits below greeting row */}
@@ -236,12 +236,12 @@ export default function HomeScreen() {
               </View>
               <View style={styles.timePeriodRow}>
                 {["1D", "1W", "1M", "3M", "1Y", "ALL"].map((period, i) => (
-                  <Pressable
+                  <AnimatedPressable
                     key={period}
-                    style={({ pressed }) => [
+                    variant="chip"
+                    style={[
                       styles.timePeriodButton,
                       i === 0 && { backgroundColor: colors.primaryAlpha },
-                      pressed && { opacity: 0.6 },
                     ]}
                   >
                     <Caption1
@@ -253,7 +253,7 @@ export default function HomeScreen() {
                     >
                       {period}
                     </Caption1>
-                  </Pressable>
+                  </AnimatedPressable>
                 ))}
               </View>
             </>
@@ -265,41 +265,41 @@ export default function HomeScreen() {
             ═══════════════════════════════════════════════════════════════════ */}
         {isSimple && (
           <View style={styles.quickActions}>
-            <Pressable
+            <AnimatedPressable
+              variant="button"
               onPress={() => router.push("/(tabs)/trade")}
-              style={({ pressed }) => [
+              style={[
                 styles.quickActionButton,
                 { backgroundColor: colors.primary },
-                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
               ]}
             >
               <IconSymbol name="plus.circle.fill" size={20} color={colors.onPrimary} />
               <Subhead style={{ fontFamily: FontFamily.semibold, color: colors.onPrimary }}>
                 Trade
               </Subhead>
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
+              variant="button"
               onPress={() => router.push("/(tabs)/portfolio")}
-              style={({ pressed }) => [
+              style={[
                 styles.quickActionButton,
                 { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
               ]}
             >
               <IconSymbol name="briefcase.fill" size={20} color={colors.foreground} />
               <Subhead style={{ fontFamily: FontFamily.semibold }}>Portfolio</Subhead>
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
+              variant="button"
               onPress={() => router.push("/(tabs)/markets")}
-              style={({ pressed }) => [
+              style={[
                 styles.quickActionButton,
                 { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
               ]}
             >
               <IconSymbol name="chart.line.uptrend.xyaxis" size={20} color={colors.foreground} />
               <Subhead style={{ fontFamily: FontFamily.semibold }}>Markets</Subhead>
-            </Pressable>
+            </AnimatedPressable>
           </View>
         )}
 
@@ -313,14 +313,14 @@ export default function HomeScreen() {
             ═══════════════════════════════════════════════════════════════════ */}
         {isPro && (
           <View style={styles.section}>
-            <Pressable
-              style={({ pressed }) => [
+            <AnimatedPressable
+              variant="card"
+              style={[
                 styles.challengeCard,
                 {
                   backgroundColor: colors.warningAlpha,
                   borderColor: colors.warningAlpha,
                 },
-                pressed && { opacity: 0.7 },
               ]}
             >
               <View style={styles.challengeHeader}>
@@ -351,7 +351,7 @@ export default function HomeScreen() {
                   {DAILY_CHALLENGE.progress}/{DAILY_CHALLENGE.total}
                 </MonoCaption1>
               </View>
-            </Pressable>
+            </AnimatedPressable>
           </View>
         )}
 
@@ -388,12 +388,12 @@ export default function HomeScreen() {
         {isSimple && watchlistedStocks.length === 0 && !isLoading && (
           <View style={styles.section}>
             <SectionHeader title="Watchlist" />
-            <Pressable
+            <AnimatedPressable
+              variant="card"
               onPress={() => router.push("/(tabs)/markets")}
-              style={({ pressed }) => [
+              style={[
                 styles.emptyWatchlistCard,
                 { backgroundColor: colors.surface, borderColor: colors.border },
-                pressed && { opacity: 0.7 },
               ]}
             >
               <IconSymbol name="star.fill" size={24} color={colors.border} />
@@ -403,7 +403,7 @@ export default function HomeScreen() {
               <Caption1 color="primary" style={{ fontFamily: FontFamily.semibold, marginTop: 4 }}>
                 Browse Markets →
               </Caption1>
-            </Pressable>
+            </AnimatedPressable>
           </View>
         )}
 
@@ -533,15 +533,15 @@ export default function HomeScreen() {
             </View>
           ) : marketNews.length > 0 ? (
             marketNews.slice(0, isSimple ? 2 : 4).map((article, index) => (
-              <Pressable
+              <AnimatedPressable
                 key={`${article.url}-${index}`}
+                variant="card"
                 onPress={() => {
                   if (article.url) Linking.openURL(article.url).catch(() => {});
                 }}
-                style={({ pressed }) => [
+                style={[
                   styles.newsCard,
                   { backgroundColor: colors.surface, borderColor: colors.border },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <Subhead style={{ fontFamily: FontFamily.semibold, lineHeight: 20 }} numberOfLines={2}>
@@ -555,7 +555,7 @@ export default function HomeScreen() {
                     {article.relativeTime}
                   </Caption1>
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             ))
           ) : (
             <View
@@ -588,15 +588,15 @@ export default function HomeScreen() {
               onAction={() => router.push("/(tabs)/social")}
             />
             {SOCIAL_FEED.slice(0, 3).map((post) => (
-              <Pressable
+              <AnimatedPressable
                 key={post.id}
-                style={({ pressed }) => [
+                variant="card"
+                style={[
                   styles.socialCard,
                   {
                     backgroundColor: colors.surface,
                     borderColor: colors.border,
                   },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <View style={styles.socialHeader}>
@@ -630,7 +630,7 @@ export default function HomeScreen() {
                     </Caption1>
                   </View>
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             ))}
           </View>
         )}

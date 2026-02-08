@@ -7,8 +7,8 @@ import {
   Platform,
   Linking,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -106,16 +106,16 @@ export default function SettingsScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={() => router.back()}
-            style={({ pressed }) => [
+            style={[
               styles.backButton,
               { backgroundColor: colors.surfaceSecondary },
-              pressed && { opacity: 0.7 },
             ]}
           >
             <IconSymbol name="chevron.right" size={20} color={colors.foreground} style={{ transform: [{ scaleX: -1 }] }} />
-          </Pressable>
+          </AnimatedPressable>
           <LargeTitle style={{ letterSpacing: -0.5 }}>Settings</LargeTitle>
         </View>
 
@@ -145,16 +145,16 @@ export default function SettingsScreen() {
           {themeOptions.map((opt, i) => {
             const isSelected = preference === opt.value;
             return (
-              <Pressable
+              <AnimatedPressable
                 key={opt.value}
+                variant="card"
                 onPress={() => setPreference(opt.value)}
-                style={({ pressed }) => [
+                style={[
                   styles.row,
                   i < themeOptions.length - 1 && {
                     borderBottomWidth: StyleSheet.hairlineWidth,
                     borderBottomColor: colors.border,
                   },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <View style={styles.rowLeft}>
@@ -178,7 +178,7 @@ export default function SettingsScreen() {
                     />
                   )}
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             );
           })}
         </View>
@@ -196,15 +196,15 @@ export default function SettingsScreen() {
             colors={colors}
             isLast={false}
           />
-          <Pressable
+          <AnimatedPressable
+            variant="card"
             onPress={() => router.push("/price-alerts" as any)}
-            style={({ pressed }) => [
+            style={[
               styles.row,
               {
                 borderBottomWidth: StyleSheet.hairlineWidth,
                 borderBottomColor: colors.border,
               },
-              pressed && { opacity: 0.7 },
             ]}
           >
             <View style={styles.rowLeft}>
@@ -214,16 +214,16 @@ export default function SettingsScreen() {
               </View>
             </View>
             <IconSymbol name="chevron.right" size={16} color={colors.muted} />
-          </Pressable>
-          <Pressable
+          </AnimatedPressable>
+          <AnimatedPressable
+            variant="card"
             onPress={() => router.push("/notification-history" as any)}
-            style={({ pressed }) => [
+            style={[
               styles.row,
               {
                 borderBottomWidth: StyleSheet.hairlineWidth,
                 borderBottomColor: colors.border,
               },
-              pressed && { opacity: 0.7 },
             ]}
           >
             <View style={styles.rowLeft}>
@@ -233,7 +233,7 @@ export default function SettingsScreen() {
               </View>
             </View>
             <IconSymbol name="chevron.right" size={16} color={colors.muted} />
-          </Pressable>
+          </AnimatedPressable>
           <NotifRow
             label="Daily Challenge"
             description="Reminder to complete your daily trading challenge"
@@ -448,12 +448,12 @@ function SettingsRow({
 
   if (onPress) {
     return (
-      <Pressable
+      <AnimatedPressable
+        variant="card"
         onPress={onPress}
-        style={({ pressed }) => [pressed && { opacity: 0.7 }]}
       >
         {content}
-      </Pressable>
+      </AnimatedPressable>
     );
   }
 

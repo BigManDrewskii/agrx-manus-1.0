@@ -5,8 +5,8 @@ import {
   StyleSheet,
   RefreshControl,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
@@ -172,16 +172,16 @@ export default function PortfolioScreen() {
           <Title1>Portfolio</Title1>
           <View style={styles.headerRight}>
             {hasHoldings && (
-              <Pressable
+              <AnimatedPressable
+                variant="icon"
                 onPress={handleSharePortfolio}
-                style={({ pressed }) => [
+                style={[
                   styles.shareHeaderButton,
                   { backgroundColor: colors.surfaceSecondary },
-                  pressed && { opacity: 0.6 },
                 ]}
               >
                 <IconSymbol name="square.and.arrow.up" size={18} color={colors.primary} />
-              </Pressable>
+              </AnimatedPressable>
             )}
             <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
           </View>
@@ -317,35 +317,35 @@ export default function PortfolioScreen() {
               <Footnote color="muted" style={{ textAlign: "center", maxWidth: 260 }}>
                 Start trading to build your portfolio. Your holdings will appear here.
               </Footnote>
-              <Pressable
+              <AnimatedPressable
+                variant="button"
                 onPress={() => router.push("/(tabs)/trade")}
-                style={({ pressed }) => [
+                style={[
                   styles.startTradingButton,
                   { backgroundColor: colors.primary },
-                  pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
                 ]}
               >
                 <Subhead style={{ color: colors.onPrimary, fontFamily: FontFamily.semibold }}>
                   Start Trading
                 </Subhead>
-              </Pressable>
+              </AnimatedPressable>
             </View>
           ) : (
             enrichedHoldings.map((enriched) => (
               <View key={enriched.holding.stockId}>
                 {/* ── Simple Mode: Clean Card ── */}
                 {isSimple && (
-                  <Pressable
+                  <AnimatedPressable
+                    variant="card"
                     onPress={() =>
                       router.push({
                         pathname: "/asset/[id]" as any,
                         params: { id: enriched.holding.stockId },
                       })
                     }
-                    style={({ pressed }) => [
+                    style={[
                       styles.simpleCard,
                       { backgroundColor: colors.surface, borderColor: colors.border },
-                      pressed && { opacity: 0.7, transform: [{ scale: 0.98 }] },
                     ]}
                   >
                     <View style={styles.simpleCardTop}>
@@ -369,23 +369,21 @@ export default function PortfolioScreen() {
                         <PnLText value={enriched.livePnlPercent} size="sm" showArrow={true} />
                       </View>
                     </View>
-                  </Pressable>
+                  </AnimatedPressable>
                 )}
 
                 {/* ── Pro Mode: Detailed Row ── */}
                 {isPro && (
                   <View style={[styles.holdingRow, { borderBottomColor: colors.border }]}>
-                    <Pressable
+                    <AnimatedPressable
+                      variant="card"
                       onPress={() =>
                         router.push({
                           pathname: "/asset/[id]" as any,
                           params: { id: enriched.holding.stockId },
                         })
                       }
-                      style={({ pressed }) => [
-                        styles.holdingPressable,
-                        pressed && { opacity: 0.7 },
-                      ]}
+                      style={styles.holdingPressable}
                     >
                       <View style={styles.holdingLeft}>
                         <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
@@ -416,18 +414,18 @@ export default function PortfolioScreen() {
                         </MonoSubhead>
                         <PnLText value={enriched.livePnlPercent} size="sm" showArrow={false} />
                       </View>
-                    </Pressable>
+                    </AnimatedPressable>
                     {/* Share button for this holding */}
-                    <Pressable
+                    <AnimatedPressable
+                      variant="icon"
                       onPress={() => handleShareHolding(enriched)}
-                      style={({ pressed }) => [
+                      style={[
                         styles.holdingShareButton,
                         { backgroundColor: colors.surfaceSecondary },
-                        pressed && { opacity: 0.6 },
                       ]}
                     >
                       <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
-                    </Pressable>
+                    </AnimatedPressable>
                   </View>
                 )}
               </View>

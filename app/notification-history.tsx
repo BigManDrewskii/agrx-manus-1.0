@@ -13,8 +13,8 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useNotifications, type NotificationHistoryItem, type NotificationHistoryItemType } from "@/lib/notification-context";
@@ -225,9 +225,10 @@ export default function NotificationHistoryScreen() {
       const isUnread = !item.read;
 
       return (
-        <Pressable
+        <AnimatedPressable
+          variant="card"
           onPress={() => handleItemPress(item)}
-          style={({ pressed }) => [
+          style={[
             styles.notifRow,
             {
               backgroundColor: isUnread
@@ -235,7 +236,6 @@ export default function NotificationHistoryScreen() {
                 : colors.surface,
               borderColor: isUnread ? colors.primary + "20" : colors.border,
             },
-            pressed && { opacity: 0.7 },
           ]}
         >
           {/* Unread dot */}
@@ -299,16 +299,14 @@ export default function NotificationHistoryScreen() {
           </View>
 
           {/* Delete button */}
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={() => handleDelete(item)}
-            style={({ pressed }) => [
-              styles.deleteBtn,
-              pressed && { opacity: 0.5 },
-            ]}
+            style={styles.deleteBtn}
           >
             <IconSymbol name="xmark" size={14} color={colors.muted} />
-          </Pressable>
-        </Pressable>
+          </AnimatedPressable>
+        </AnimatedPressable>
       );
     },
     [colors, handleItemPress, handleDelete]
@@ -319,12 +317,12 @@ export default function NotificationHistoryScreen() {
       {/* ── Header ── */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={() => router.back()}
-            style={({ pressed }) => [
+            style={[
               styles.backButton,
               { backgroundColor: colors.surfaceSecondary },
-              pressed && { opacity: 0.7 },
             ]}
           >
             <IconSymbol
@@ -333,7 +331,7 @@ export default function NotificationHistoryScreen() {
               color={colors.foreground}
               style={{ transform: [{ scaleX: -1 }] }}
             />
-          </Pressable>
+          </AnimatedPressable>
           <View>
             <LargeTitle style={{ letterSpacing: -0.5 }}>Notifications</LargeTitle>
             {unreadCount > 0 && (
@@ -348,12 +346,12 @@ export default function NotificationHistoryScreen() {
         {history.length > 0 && (
           <View style={styles.headerActions}>
             {unreadCount > 0 && (
-              <Pressable
+              <AnimatedPressable
+                variant="chip"
                 onPress={markAllAsRead}
-                style={({ pressed }) => [
+                style={[
                   styles.headerActionBtn,
                   { backgroundColor: colors.primaryAlpha },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <Caption1
@@ -362,14 +360,14 @@ export default function NotificationHistoryScreen() {
                 >
                   Read All
                 </Caption1>
-              </Pressable>
+              </AnimatedPressable>
             )}
-            <Pressable
+            <AnimatedPressable
+              variant="destructive"
               onPress={handleClearAll}
-              style={({ pressed }) => [
+              style={[
                 styles.headerActionBtn,
                 { backgroundColor: colors.errorAlpha },
-                pressed && { opacity: 0.7 },
               ]}
             >
               <Caption1
@@ -378,7 +376,7 @@ export default function NotificationHistoryScreen() {
               >
                 Clear
               </Caption1>
-            </Pressable>
+            </AnimatedPressable>
           </View>
         )}
       </View>
@@ -408,12 +406,12 @@ export default function NotificationHistoryScreen() {
           >
             When your price alerts trigger or you receive updates, they'll appear here.
           </Body>
-          <Pressable
+          <AnimatedPressable
+            variant="button"
             onPress={() => router.push("/price-alerts" as any)}
-            style={({ pressed }) => [
+            style={[
               styles.emptyActionBtn,
               { backgroundColor: colors.primary },
-              pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
             ]}
           >
             <Caption1
@@ -424,7 +422,7 @@ export default function NotificationHistoryScreen() {
             >
               Set Up Price Alerts
             </Caption1>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       ) : (
         <FlatList

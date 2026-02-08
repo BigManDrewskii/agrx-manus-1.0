@@ -6,8 +6,8 @@ import {
   StyleSheet,
   type ViewToken,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -145,14 +145,14 @@ export default function OnboardingScreen() {
       <View style={styles.container}>
         {/* Skip Button */}
         <View style={styles.skipContainer}>
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={handleSkip}
-            style={({ pressed }) => [pressed && { opacity: 0.6 }]}
           >
             <Callout color="muted" style={{ fontFamily: FontFamily.semibold }}>
               Skip
             </Callout>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         {/* Slides */}
@@ -190,18 +190,18 @@ export default function OnboardingScreen() {
           </View>
 
           {/* CTA Button */}
-          <Pressable
+          <AnimatedPressable
+            variant="button"
             onPress={handleNext}
-            style={({ pressed }) => [
+            style={[
               styles.ctaButton,
               { backgroundColor: activeAccent },
-              pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
             ]}
           >
             <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>
               {activeIndex === SLIDES.length - 1 ? "Get Started" : "Continue"}
             </Callout>
-          </Pressable>
+          </AnimatedPressable>
 
           {/* Terms */}
           <Caption1

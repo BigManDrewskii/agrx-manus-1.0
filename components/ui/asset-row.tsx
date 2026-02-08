@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "./sparkline";
 import { PnLText } from "./pnl-text";
@@ -40,12 +40,12 @@ export function AssetRow({
   };
 
   return (
-    <Pressable
+    <AnimatedPressable
+      variant="card"
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.container,
         { borderBottomColor: colors.border },
-        pressed && { opacity: 0.7 },
       ]}
     >
       {/* Left: Icon + Name */}
@@ -92,23 +92,21 @@ export function AssetRow({
           <PnLText value={asset.changePercent} size="sm" showArrow={false} />
         </View>
         {showStar && (
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={handleStarPress}
             hitSlop={12}
-            style={({ pressed }) => [
-              styles.starButton,
-              pressed && { opacity: 0.5 },
-            ]}
+            style={styles.starButton}
           >
             <IconSymbol
               name="star.fill"
               size={18}
               color={isWatchlisted ? colors.gold : colors.border}
             />
-          </Pressable>
+          </AnimatedPressable>
         )}
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

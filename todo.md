@@ -216,3 +216,12 @@
 - [x] Redesign quick amount chips for cleaner, modern look
 - [x] Refine overall trade order sheet layout, spacing, and visual hierarchy
 - [x] Run tests and verify 0 regressions after UI refinement
+- [x] Read skill-creator guide to understand skill structure
+- [x] Deep audit all current animations across every screen and component
+- [x] Research iOS HIG spring curves, Stripe/Coinbase motion patterns, best-in-class mobile animation
+- [x] Design AGRX animation language spec (timing, easing, spring configs, categories)
+- [x] Build agrx-motion-language skill: SKILL.md + 3 reference docs (animations-module, animated-pressable, application-guide)
+- [x] Create lib/animations.ts — single source of truth for springs, timing, press feedback constants
+- [x] Create AnimatedPressable component — spring-based press feedback with 5 variants (button/card/chip/icon/toggle)
+- [x] Replace all Pressable/TouchableOpacity across 17 files with AnimatedPressable
+- [x] Run tests and verify 0 regressions after animation changes (395 passed)

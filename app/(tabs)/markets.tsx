@@ -7,8 +7,8 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { AssetRow } from "@/components/ui/asset-row";
@@ -175,12 +175,12 @@ export default function MarketsScreen() {
             returnKeyType="done"
           />
           {search.length > 0 && (
-            <Pressable
+            <AnimatedPressable
+              variant="icon"
               onPress={() => setSearch("")}
-              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             >
               <IconSymbol name="xmark.circle.fill" size={18} color={colors.muted} />
-            </Pressable>
+            </AnimatedPressable>
           )}
         </View>
       </View>
@@ -193,9 +193,10 @@ export default function MarketsScreen() {
           contentContainerStyle={styles.sectorList}
         >
           {/* "All" chip */}
-          <Pressable
+          <AnimatedPressable
+            variant="chip"
             onPress={() => setActiveFilter("All")}
-            style={({ pressed }) => [
+            style={[
               styles.sectorChip,
               {
                 backgroundColor:
@@ -203,7 +204,6 @@ export default function MarketsScreen() {
                 borderColor:
                   activeFilter === "All" ? colors.primary : colors.border,
               },
-              pressed && { opacity: 0.7 },
             ]}
           >
             <Caption1
@@ -223,12 +223,13 @@ export default function MarketsScreen() {
             >
               {sectorCounts.All ?? 0}
             </Caption2>
-          </Pressable>
+          </AnimatedPressable>
 
           {/* Watchlist chip */}
-          <Pressable
+          <AnimatedPressable
+            variant="chip"
             onPress={() => setActiveFilter("Watchlist")}
-            style={({ pressed }) => [
+            style={[
               styles.sectorChip,
               {
                 backgroundColor:
@@ -236,7 +237,6 @@ export default function MarketsScreen() {
                 borderColor:
                   activeFilter === "Watchlist" ? colors.gold : colors.border,
               },
-              pressed && { opacity: 0.7 },
             ]}
           >
             <Caption1
@@ -256,7 +256,7 @@ export default function MarketsScreen() {
             >
               {watchlistCount}
             </Caption2>
-          </Pressable>
+          </AnimatedPressable>
 
           {/* Sector chips */}
           {SECTORS.map((sector) => {
@@ -264,10 +264,11 @@ export default function MarketsScreen() {
             const count = sectorCounts[sector] ?? 0;
             if (count === 0) return null;
             return (
-              <Pressable
+              <AnimatedPressable
                 key={sector}
+                variant="chip"
                 onPress={() => setActiveFilter(sector)}
-                style={({ pressed }) => [
+                style={[
                   styles.sectorChip,
                   {
                     backgroundColor: isActive
@@ -275,7 +276,6 @@ export default function MarketsScreen() {
                       : colors.surface,
                     borderColor: isActive ? colors.primary : colors.border,
                   },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <Caption1
@@ -294,7 +294,7 @@ export default function MarketsScreen() {
                 >
                   {count}
                 </Caption2>
-              </Pressable>
+              </AnimatedPressable>
             );
           })}
         </ScrollView>
@@ -314,10 +314,11 @@ export default function MarketsScreen() {
           {SORT_OPTIONS.map((opt) => {
             const isActive = sortMode === opt.key;
             return (
-              <Pressable
+              <AnimatedPressable
                 key={opt.key}
+                variant="chip"
                 onPress={() => setSortMode(opt.key)}
-                style={({ pressed }) => [
+                style={[
                   styles.sortChip,
                   {
                     backgroundColor: isActive
@@ -325,7 +326,6 @@ export default function MarketsScreen() {
                       : "transparent",
                     borderColor: isActive ? colors.primary : colors.border,
                   },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <Caption2
@@ -338,7 +338,7 @@ export default function MarketsScreen() {
                 >
                   {opt.label}
                 </Caption2>
-              </Pressable>
+              </AnimatedPressable>
             );
           })}
         </ScrollView>

@@ -13,8 +13,8 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useNotifications } from "@/lib/notification-context";
 import {
   Title3,
@@ -144,7 +144,7 @@ export function AddAlertModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.overlay}
       >
-        <Pressable style={styles.backdrop} onPress={onClose} />
+        <AnimatedPressable variant="card" style={styles.backdrop} onPress={onClose} haptic={false} />
         <View
           style={[
             styles.sheet,
@@ -176,10 +176,11 @@ export function AddAlertModal({
             {ALERT_TYPES.map((opt) => {
               const isSelected = selectedType === opt.type;
               return (
-                <Pressable
+                <AnimatedPressable
                   key={opt.type}
+                  variant="chip"
                   onPress={() => setSelectedType(opt.type)}
-                  style={({ pressed }) => [
+                  style={[
                     styles.typeOption,
                     {
                       backgroundColor: isSelected
@@ -188,7 +189,6 @@ export function AddAlertModal({
                       borderColor: isSelected ? colors.primary : colors.border,
                       borderWidth: isSelected ? 1.5 : StyleSheet.hairlineWidth,
                     },
-                    pressed && { opacity: 0.7 },
                   ]}
                 >
                   <Body style={{ fontSize: 20 }}>{opt.icon}</Body>
@@ -205,7 +205,7 @@ export function AddAlertModal({
                   <Caption1 color="muted" style={{ textAlign: "center" }}>
                     {opt.description}
                   </Caption1>
-                </Pressable>
+                </AnimatedPressable>
               );
             })}
           </View>
@@ -263,16 +263,16 @@ export function AddAlertModal({
           </View>
 
           {/* Save Button */}
-          <Pressable
+          <AnimatedPressable
+            variant="button"
             onPress={handleSave}
             disabled={!isValid() || loading}
-            style={({ pressed }) => [
+            style={[
               styles.saveButton,
               {
                 backgroundColor:
                   isValid() && !loading ? colors.primary : colors.muted + "30",
               },
-              pressed && isValid() && !loading && { opacity: 0.8, transform: [{ scale: 0.97 }] },
             ]}
           >
             <Body
@@ -284,7 +284,7 @@ export function AddAlertModal({
             >
               {loading ? "Saving..." : "Set Alert"}
             </Body>
-          </Pressable>
+          </AnimatedPressable>
 
           {/* Bottom padding for safe area */}
           <View style={{ height: 20 }} />

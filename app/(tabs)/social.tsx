@@ -6,8 +6,8 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { Pressable } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -76,27 +76,21 @@ function PostCard({ post }: { post: SocialPost }) {
         </View>
       )}
       <View style={[styles.postFooter, { borderTopColor: colors.border }]}>
-        <Pressable
-          style={({ pressed }) => [styles.postAction, pressed && { opacity: 0.6 }]}
-        >
+        <AnimatedPressable variant="icon" style={styles.postAction}>
           <IconSymbol name="star.fill" size={16} color={colors.muted} />
           <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
             {post.likes}
           </Caption1>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.postAction, pressed && { opacity: 0.6 }]}
-        >
+        </AnimatedPressable>
+        <AnimatedPressable variant="icon" style={styles.postAction}>
           <IconSymbol name="paperplane.fill" size={16} color={colors.muted} />
           <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
             {post.comments}
           </Caption1>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.postAction, pressed && { opacity: 0.6 }]}
-        >
+        </AnimatedPressable>
+        <AnimatedPressable variant="icon" style={styles.postAction}>
           <IconSymbol name="square.and.arrow.up" size={16} color={colors.muted} />
-        </Pressable>
+        </AnimatedPressable>
       </View>
     </View>
   );
@@ -220,13 +214,13 @@ export default function SocialScreen() {
         {TABS.map((tab) => {
           const isActive = tab === activeTab;
           return (
-            <Pressable
+            <AnimatedPressable
               key={tab}
+              variant="toggle"
               onPress={() => setActiveTab(tab)}
-              style={({ pressed }) => [
+              style={[
                 styles.tab,
                 isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
-                pressed && { opacity: 0.6 },
               ]}
             >
               <Subhead
@@ -235,7 +229,7 @@ export default function SocialScreen() {
               >
                 {tab}
               </Subhead>
-            </Pressable>
+            </AnimatedPressable>
           );
         })}
       </View>

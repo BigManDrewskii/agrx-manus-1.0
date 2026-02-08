@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Platform } from "react-native";
-import { Pressable } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useViewMode, type ViewMode } from "@/lib/viewmode-context";
 import { Caption1 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
@@ -40,17 +40,18 @@ export function ViewModeToggle({ compact = false }: ViewModeToggleProps) {
       {MODES.map((m) => {
         const isActive = mode === m.key;
         return (
-          <Pressable
+          <AnimatedPressable
             key={m.key}
+            variant="toggle"
             onPress={() => handlePress(m.key)}
-            style={({ pressed }) => [
+            haptic={false}
+            style={[
               styles.segment,
               compact && styles.segmentCompact,
               isActive && [
                 styles.segmentActive,
                 { backgroundColor: colors.surface },
               ],
-              pressed && !isActive && { opacity: 0.6 },
             ]}
           >
             <Caption1
@@ -63,7 +64,7 @@ export function ViewModeToggle({ compact = false }: ViewModeToggleProps) {
             >
               {m.label}
             </Caption1>
-          </Pressable>
+          </AnimatedPressable>
         );
       })}
     </View>

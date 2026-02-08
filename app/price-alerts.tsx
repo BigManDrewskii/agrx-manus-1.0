@@ -14,8 +14,8 @@ import {
   FlatList,
   Alert,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useNotifications } from "@/lib/notification-context";
@@ -137,18 +137,18 @@ export default function PriceAlertsScreen() {
           }
           ios_backgroundColor={colors.surfaceSecondary}
         />
-        <Pressable
+        <AnimatedPressable
+          variant="destructive"
           onPress={() => handleDelete(item)}
-          style={({ pressed }) => [
+          style={[
             styles.deleteButton,
             { backgroundColor: colors.error + "15" },
-            pressed && { opacity: 0.7 },
           ]}
         >
           <Caption1 style={{ color: colors.error, fontFamily: FontFamily.semibold }}>
             Delete
           </Caption1>
-        </Pressable>
+        </AnimatedPressable>
       </View>
     </View>
   );
@@ -160,12 +160,12 @@ export default function PriceAlertsScreen() {
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Pressable
+        <AnimatedPressable
+          variant="icon"
           onPress={() => router.back()}
-          style={({ pressed }) => [
+          style={[
             styles.backButton,
             { backgroundColor: colors.surfaceSecondary },
-            pressed && { opacity: 0.7 },
           ]}
         >
           <IconSymbol
@@ -174,7 +174,7 @@ export default function PriceAlertsScreen() {
             color={colors.foreground}
             style={{ transform: [{ scaleX: -1 }] }}
           />
-        </Pressable>
+        </AnimatedPressable>
         <LargeTitle style={{ letterSpacing: -0.5 }}>Price Alerts</LargeTitle>
       </View>
 
@@ -195,18 +195,18 @@ export default function PriceAlertsScreen() {
               watchlisted stocks hit your targets.
             </Caption1>
           </View>
-          <Pressable
+          <AnimatedPressable
+            variant="button"
             onPress={requestPermission}
-            style={({ pressed }) => [
+            style={[
               styles.enableButton,
               { backgroundColor: colors.primary },
-              pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
             ]}
           >
             <Caption1 style={{ color: "#FFFFFF", fontFamily: FontFamily.semibold }}>
               Enable
             </Caption1>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       )}
 

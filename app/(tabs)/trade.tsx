@@ -8,8 +8,8 @@ import {
   Platform,
   Keyboard,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -200,32 +200,30 @@ export default function TradeScreen() {
           </MonoLargeTitle>
 
           {/* Share Button — Primary CTA */}
-          <Pressable
+          <AnimatedPressable
+            variant="button"
             onPress={() => setShowShareModal(true)}
-            style={({ pressed }) => [
+            style={[
               styles.shareTradeButton,
               { backgroundColor: colors.primary },
-              pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
             ]}
           >
             <IconSymbol name="square.and.arrow.up" size={18} color={colors.onPrimary} />
             <Callout color="onPrimary" style={{ fontFamily: FontFamily.semibold }}>
               Share with friends
             </Callout>
-          </Pressable>
+          </AnimatedPressable>
 
           {/* Done Button — Secondary */}
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={handleDismissSuccess}
-            style={({ pressed }) => [
-              styles.doneButton,
-              pressed && { opacity: 0.6 },
-            ]}
+            style={styles.doneButton}
           >
             <Subhead color="muted" style={{ fontFamily: FontFamily.medium }}>
               Done
             </Subhead>
-          </Pressable>
+          </AnimatedPressable>
         </View>
 
         {/* Share Card Modal */}
@@ -256,20 +254,20 @@ export default function TradeScreen() {
         >
           {/* ── Header ─────────────────────────────────────────── */}
           <View style={styles.sheetHeader}>
-            <Pressable
+            <AnimatedPressable
+              variant="icon"
               onPress={() => {
                 setSelectedAsset(null);
                 setAmountText("");
                 setTradeError(null);
               }}
-              style={({ pressed }) => [
+              style={[
                 styles.closeButton,
                 { backgroundColor: colors.surfaceSecondary },
-                pressed && { opacity: 0.6 },
               ]}
             >
               <IconSymbol name="xmark" size={16} color={colors.muted} />
-            </Pressable>
+            </AnimatedPressable>
             <View style={styles.sheetTitleRow}>
               <Subhead style={{ fontFamily: FontFamily.semibold }}>{selectedAsset.ticker}</Subhead>
               <LiveBadge isLive={isLive} />
@@ -279,12 +277,12 @@ export default function TradeScreen() {
 
           {/* ── Buy / Sell Toggle ───────────────────────────────── */}
           <View style={[styles.toggleContainer, { backgroundColor: colors.surfaceSecondary }]}>
-            <Pressable
+            <AnimatedPressable
+              variant="toggle"
               onPress={() => { setIsBuy(true); setTradeError(null); }}
-              style={({ pressed }) => [
+              style={[
                 styles.toggleButton,
                 isBuy && [styles.toggleActive, { backgroundColor: colors.success }],
-                pressed && { opacity: 0.8 },
               ]}
             >
               <Footnote
@@ -293,13 +291,13 @@ export default function TradeScreen() {
               >
                 Buy
               </Footnote>
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
+              variant="toggle"
               onPress={() => { setIsBuy(false); setTradeError(null); }}
-              style={({ pressed }) => [
+              style={[
                 styles.toggleButton,
                 !isBuy && [styles.toggleActive, { backgroundColor: colors.error }],
-                pressed && { opacity: 0.8 },
               ]}
             >
               <Footnote
@@ -308,7 +306,7 @@ export default function TradeScreen() {
               >
                 Sell
               </Footnote>
-            </Pressable>
+            </AnimatedPressable>
           </View>
 
           {/* ── Asset Info Card ─────────────────────────────────── */}
@@ -338,7 +336,8 @@ export default function TradeScreen() {
           </View>
 
           {/* ── Amount Hero ────────────────────────────────────── */}
-          <Pressable
+          <AnimatedPressable
+            variant="card"
             onPress={() => amountInputRef.current?.focus()}
             style={[
               styles.amountHero,
@@ -378,19 +377,19 @@ export default function TradeScreen() {
             </View>
 
             {/* MAX pill */}
-            <Pressable
+            <AnimatedPressable
+              variant="chip"
               onPress={handleMax}
-              style={({ pressed }) => [
+              style={[
                 styles.maxButton,
                 { backgroundColor: colors.primaryAlpha ?? colors.primary + "20" },
-                pressed && { opacity: 0.7 },
               ]}
             >
               <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 11 }}>
                 MAX
               </Caption1>
-            </Pressable>
-          </Pressable>
+            </AnimatedPressable>
+          </AnimatedPressable>
 
           {/* Available balance — right below amount */}
           <View style={styles.availableRow}>
@@ -430,10 +429,12 @@ export default function TradeScreen() {
               const isSelected = parsedAmount === amount;
               const isDisabled = amount > maxAmount;
               return (
-                <Pressable
+                <AnimatedPressable
                   key={amount}
-                  onPress={() => !isDisabled && handleQuickAmount(amount)}
-                  style={({ pressed }) => [
+                  variant="chip"
+                  disabled={isDisabled}
+                  onPress={() => handleQuickAmount(amount)}
+                  style={[
                     styles.quickChip,
                     {
                       backgroundColor: isSelected
@@ -442,9 +443,7 @@ export default function TradeScreen() {
                       borderColor: isSelected
                         ? (isBuy ? colors.success : colors.error)
                         : colors.border,
-                      opacity: isDisabled ? 0.35 : 1,
                     },
-                    pressed && !isDisabled && { opacity: 0.7 },
                   ]}
                 >
                   <MonoBody
@@ -456,7 +455,7 @@ export default function TradeScreen() {
                   >
                     €{amount}
                   </MonoBody>
-                </Pressable>
+                </AnimatedPressable>
               );
             })}
           </View>

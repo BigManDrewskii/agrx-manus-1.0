@@ -6,8 +6,8 @@ import {
   StyleSheet,
   Linking,
 } from "react-native";
-import { Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
@@ -231,16 +231,16 @@ export default function AssetDetailScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Pressable
+          <AnimatedPressable
+            variant="icon"
             onPress={() => router.back()}
-            style={({ pressed }) => [
+            style={[
               styles.backButton,
               { backgroundColor: colors.surface },
-              pressed && { opacity: 0.6 },
             ]}
           >
             <IconSymbol name="chevron.right" size={20} color={colors.foreground} style={{ transform: [{ scaleX: -1 }] }} />
-          </Pressable>
+          </AnimatedPressable>
           <View style={styles.headerCenter}>
             <View style={styles.headerTitleRow}>
               <Title3>{ticker}</Title3>
@@ -249,17 +249,17 @@ export default function AssetDetailScreen() {
             <Footnote color="muted">{name}</Footnote>
           </View>
           <View style={styles.headerActions}>
-            <Pressable
+            <AnimatedPressable
+              variant="icon"
               onPress={() => {
                 if (Platform.OS !== "web") {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }
                 toggleWatchlist(id ?? "");
               }}
-              style={({ pressed }) => [
+              style={[
                 styles.iconButton,
                 { backgroundColor: colors.surface },
-                pressed && { opacity: 0.6 },
               ]}
             >
               <IconSymbol
@@ -267,13 +267,13 @@ export default function AssetDetailScreen() {
                 size={18}
                 color={starred ? colors.gold : colors.muted}
               />
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
+              variant="icon"
               onPress={handleAddAlert}
-              style={({ pressed }) => [
+              style={[
                 styles.iconButton,
                 { backgroundColor: hasActiveAlerts ? colors.primary + "15" : colors.surface },
-                pressed && { opacity: 0.6 },
               ]}
             >
               <IconSymbol
@@ -281,17 +281,17 @@ export default function AssetDetailScreen() {
                 size={18}
                 color={hasActiveAlerts ? colors.primary : colors.muted}
               />
-            </Pressable>
-            <Pressable
+            </AnimatedPressable>
+            <AnimatedPressable
+              variant="icon"
               onPress={handleShare}
-              style={({ pressed }) => [
+              style={[
                 styles.iconButton,
                 { backgroundColor: colors.surface },
-                pressed && { opacity: 0.6 },
               ]}
             >
               <IconSymbol name="square.and.arrow.up" size={18} color={colors.foreground} />
-            </Pressable>
+            </AnimatedPressable>
           </View>
         </View>
 
@@ -330,13 +330,13 @@ export default function AssetDetailScreen() {
           {TIME_PERIODS.map((period) => {
             const isActive = period === activePeriod;
             return (
-              <Pressable
+              <AnimatedPressable
                 key={period}
+                variant="chip"
                 onPress={() => setActivePeriod(period)}
-                style={({ pressed }) => [
+                style={[
                   styles.periodButton,
                   isActive && { backgroundColor: colors.primaryAlpha },
-                  pressed && { opacity: 0.6 },
                 ]}
               >
                 <Caption1
@@ -348,7 +348,7 @@ export default function AssetDetailScreen() {
                 >
                   {period}
                 </Caption1>
-              </Pressable>
+              </AnimatedPressable>
             );
           })}
         </View>
@@ -489,17 +489,17 @@ export default function AssetDetailScreen() {
             <NewsSkeleton />
           ) : hasLiveNews ? (
             articles.map((article, index) => (
-              <Pressable
+              <AnimatedPressable
                 key={`${article.url}-${index}`}
+                variant="card"
                 onPress={() => {
                   if (article.url) {
                     Linking.openURL(article.url).catch(() => {});
                   }
                 }}
-                style={({ pressed }) => [
+                style={[
                   styles.newsCard,
                   { backgroundColor: colors.surface, borderColor: colors.border },
-                  pressed && { opacity: 0.7 },
                 ]}
               >
                 <View style={styles.newsContent}>
@@ -540,7 +540,7 @@ export default function AssetDetailScreen() {
                     </View>
                   </View>
                 </View>
-              </Pressable>
+              </AnimatedPressable>
             ))
           ) : (
             <View
@@ -561,26 +561,26 @@ export default function AssetDetailScreen() {
 
       {/* Bottom CTA */}
       <View style={[styles.ctaContainer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-        <Pressable
+        <AnimatedPressable
+          variant="button"
           onPress={() => router.push("/(tabs)/trade" as any)}
-          style={({ pressed }) => [
+          style={[
             styles.ctaButton,
             { backgroundColor: colors.success },
-            pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
           ]}
         >
           <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>Buy</Callout>
-        </Pressable>
-        <Pressable
+        </AnimatedPressable>
+        <AnimatedPressable
+          variant="button"
           onPress={() => router.push("/(tabs)/trade" as any)}
-          style={({ pressed }) => [
+          style={[
             styles.ctaButton,
             { backgroundColor: colors.error },
-            pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
           ]}
         >
           <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>Sell</Callout>
-        </Pressable>
+        </AnimatedPressable>
       </View>
 
       {/* Share Card Modal */}

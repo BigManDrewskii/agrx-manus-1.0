@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { Pressable } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { Sparkline } from "./sparkline";
 import { PnLText } from "./pnl-text";
 import { Subhead, Caption1, Caption2, MonoSubhead } from "@/components/ui/typography";
@@ -17,15 +17,15 @@ export function TrendingCard({ asset, onPress }: TrendingCardProps) {
   const colors = useColors();
 
   return (
-    <Pressable
+    <AnimatedPressable
+      variant="card"
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.card,
         {
           backgroundColor: colors.surface,
           borderColor: colors.border,
         },
-        pressed && { opacity: 0.7 },
       ]}
     >
       <View style={styles.header}>
@@ -62,7 +62,7 @@ export function TrendingCard({ asset, onPress }: TrendingCardProps) {
         </MonoSubhead>
         <PnLText value={asset.changePercent} size="sm" showArrow={false} />
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
