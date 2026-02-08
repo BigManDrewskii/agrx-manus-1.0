@@ -7,6 +7,8 @@ import {
   RefreshControl,
   Linking,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown, FadeInRight } from "react-native-reanimated";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -131,7 +133,7 @@ export default function HomeScreen() {
         {/* ═══════════════════════════════════════════════════════════════════
             HEADER — Greeting, mode toggle, bell, settings
             ═══════════════════════════════════════════════════════════════════ */}
-        <View style={styles.header}>
+        <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.headerLeft}>
               <Footnote color="muted">{greeting}</Footnote>
@@ -194,12 +196,12 @@ export default function HomeScreen() {
           <View style={styles.modeToggleRow}>
             <ViewModeToggle compact />
           </View>
-        </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             PORTFOLIO HERO
             ═══════════════════════════════════════════════════════════════════ */}
-        <View style={styles.portfolioHero}>
+        <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.portfolioHero}>
           <Footnote color="muted" style={{ letterSpacing: 0.3 }}>
             Total Balance
           </Footnote>
@@ -258,13 +260,13 @@ export default function HomeScreen() {
               </View>
             </>
           )}
-        </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             QUICK ACTIONS — Simple mode gets prominent action buttons
             ═══════════════════════════════════════════════════════════════════ */}
         {isSimple && (
-          <View style={styles.quickActions}>
+          <Animated.View entering={FadeInDown.duration(250).delay(120)} style={styles.quickActions}>
             <AnimatedPressable
               variant="button"
               onPress={() => router.push("/(tabs)/trade")}
@@ -300,7 +302,7 @@ export default function HomeScreen() {
               <IconSymbol name="chart.line.uptrend.xyaxis" size={20} color={colors.foreground} />
               <Subhead style={{ fontFamily: FontFamily.semibold }}>Markets</Subhead>
             </AnimatedPressable>
-          </View>
+          </Animated.View>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
@@ -312,7 +314,7 @@ export default function HomeScreen() {
             DAILY CHALLENGE — Pro only
             ═══════════════════════════════════════════════════════════════════ */}
         {isPro && (
-          <View style={styles.section}>
+          <Animated.View entering={FadeInDown.duration(250).delay(150)} style={styles.section}>
             <AnimatedPressable
               variant="card"
               style={[
@@ -352,14 +354,14 @@ export default function HomeScreen() {
                 </MonoCaption1>
               </View>
             </AnimatedPressable>
-          </View>
+          </Animated.View>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
             WATCHLIST — Both modes (if user has watchlisted stocks)
             ═══════════════════════════════════════════════════════════════════ */}
         {watchlistedStocks.length > 0 && (
-          <View style={styles.section}>
+          <Animated.View entering={FadeInDown.duration(250).delay(180)} style={styles.section}>
             <SectionHeader
               title="Watchlist"
               actionLabel="Edit"
@@ -381,12 +383,12 @@ export default function HomeScreen() {
                 />
               ))}
             </View>
-          </View>
+          </Animated.View>
         )}
 
         {/* Empty watchlist prompt — Simple mode only */}
         {isSimple && watchlistedStocks.length === 0 && !isLoading && (
-          <View style={styles.section}>
+          <Animated.View entering={FadeInDown.duration(250).delay(180)} style={styles.section}>
             <SectionHeader title="Watchlist" />
             <AnimatedPressable
               variant="card"
@@ -404,13 +406,13 @@ export default function HomeScreen() {
                 Browse Markets →
               </Caption1>
             </AnimatedPressable>
-          </View>
+          </Animated.View>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
             TRENDING ON ATHEX — Pro shows carousel, Simple shows top 3 rows
             ═══════════════════════════════════════════════════════════════════ */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.duration(250).delay(240)} style={styles.section}>
           <SectionHeader
             title={isSimple ? "Top Movers" : "Trending on ATHEX"}
             actionLabel="See All"
@@ -502,12 +504,12 @@ export default function HomeScreen() {
               ))}
             </View>
           )}
-        </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             MARKET NEWS — Simple: 2 articles, Pro: 4 articles
             ═══════════════════════════════════════════════════════════════════ */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.duration(250).delay(300)} style={styles.section}>
           <SectionHeader
             title="Market News"
             actionLabel={isPro && marketNews.length > 4 ? "See All" : undefined}
@@ -575,13 +577,13 @@ export default function HomeScreen() {
               </Footnote>
             </View>
           )}
-        </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SOCIAL FEED PREVIEW — Pro only
             ═══════════════════════════════════════════════════════════════════ */}
         {isPro && (
-          <View style={styles.section}>
+          <Animated.View entering={FadeInDown.duration(250).delay(360)} style={styles.section}>
             <SectionHeader
               title="Community"
               actionLabel="See All"
@@ -632,7 +634,7 @@ export default function HomeScreen() {
                 </View>
               </AnimatedPressable>
             ))}
-          </View>
+          </Animated.View>
         )}
 
         {/* Bottom Spacer for Tab Bar */}

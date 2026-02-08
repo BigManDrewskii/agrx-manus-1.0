@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -126,7 +127,7 @@ export default function MarketsScreen() {
   return (
     <ScreenContainer>
       {/* Header */}
-      <View style={styles.header}>
+      <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
         <Title1>Markets</Title1>
         <View style={styles.headerRight}>
           <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
@@ -149,10 +150,10 @@ export default function MarketsScreen() {
             </Caption1>
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Search */}
-      <View style={styles.searchContainer}>
+      <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.searchContainer}>
         <View
           style={[
             styles.searchBar,
@@ -183,10 +184,10 @@ export default function MarketsScreen() {
             </AnimatedPressable>
           )}
         </View>
-      </View>
+      </Animated.View>
 
       {/* Sector Chips — Horizontal Scrollable */}
-      <View style={styles.sectorContainer}>
+      <Animated.View entering={FadeInDown.duration(250).delay(120)} style={styles.sectorContainer}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -298,10 +299,10 @@ export default function MarketsScreen() {
             );
           })}
         </ScrollView>
-      </View>
+      </Animated.View>
 
       {/* Sort Row */}
-      <View style={styles.sortRow}>
+      <Animated.View entering={FadeInDown.duration(250).delay(180)} style={styles.sortRow}>
         <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
           {filteredStocks.length}{" "}
           {filteredStocks.length === 1 ? "stock" : "stocks"}
@@ -342,7 +343,7 @@ export default function MarketsScreen() {
             );
           })}
         </ScrollView>
-      </View>
+      </Animated.View>
 
       {/* Stock List */}
       {isLoading ? (

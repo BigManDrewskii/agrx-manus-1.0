@@ -5,6 +5,8 @@ import {
   StyleSheet,
   RefreshControl,
 } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -168,7 +170,7 @@ export default function PortfolioScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
           <Title1>Portfolio</Title1>
           <View style={styles.headerRight}>
             {hasHoldings && (
@@ -185,11 +187,11 @@ export default function PortfolioScreen() {
             )}
             <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Simple Mode: Clean Hero ── */}
         {isSimple && (
-          <View style={styles.simpleHero}>
+          <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.simpleHero}>
             <Footnote color="muted">Total Value</Footnote>
             <MonoLargeTitle
               style={{
@@ -209,12 +211,12 @@ export default function PortfolioScreen() {
               <Footnote color="muted"> · </Footnote>
               <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
             </View>
-          </View>
+          </Animated.View>
         )}
 
         {/* ── Pro Mode: Full Hero with Sparkline ── */}
         {isPro && (
-          <View style={styles.proHero}>
+          <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.proHero}>
             <Footnote color="muted">Total Value</Footnote>
             <MonoLargeTitle
               style={{
@@ -245,12 +247,12 @@ export default function PortfolioScreen() {
                 />
               </View>
             )}
-          </View>
+          </Animated.View>
         )}
 
         {/* Balance Info — Pro only shows full breakdown, Simple shows combined */}
         {isPro && (
-          <View style={[styles.balanceRow, { borderColor: colors.border }]}>
+          <Animated.View entering={FadeInDown.duration(250).delay(120)} style={[styles.balanceRow, { borderColor: colors.border }]}>
             <View style={styles.balanceItem}>
               <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
                 Cash Balance
@@ -274,12 +276,12 @@ export default function PortfolioScreen() {
                 })}
               </MonoSubhead>
             </View>
-          </View>
+          </Animated.View>
         )}
 
         {/* Simple mode: compact balance pill */}
         {isSimple && (
-          <View style={[styles.simpleBalancePill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Animated.View entering={FadeInDown.duration(250).delay(120)} style={[styles.simpleBalancePill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>Cash</Caption1>
             <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
               €{state.balance.toLocaleString("el-GR", {
@@ -287,11 +289,11 @@ export default function PortfolioScreen() {
                 maximumFractionDigits: 2,
               })}
             </MonoSubhead>
-          </View>
+          </Animated.View>
         )}
 
         {/* Holdings Header */}
-        <View style={styles.holdingsHeader}>
+        <Animated.View entering={FadeInDown.duration(250).delay(180)} style={styles.holdingsHeader}>
           <Caption1
             color="muted"
             style={{
@@ -322,7 +324,7 @@ export default function PortfolioScreen() {
               </Caption1>
             </AnimatedPressable>
           )}
-        </View>
+        </Animated.View>
 
         {/* Holdings List */}
         <View style={styles.holdingsContainer}>
@@ -351,8 +353,11 @@ export default function PortfolioScreen() {
               </AnimatedPressable>
             </View>
           ) : (
-            enrichedHoldings.map((enriched) => (
-              <View key={enriched.holding.stockId}>
+            enrichedHoldings.map((enriched, index) => (
+              <Animated.View
+                key={enriched.holding.stockId}
+                entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
+              >
                 {/* ── Simple Mode: Clean Card ── */}
                 {isSimple && (
                   <AnimatedPressable
@@ -448,14 +453,14 @@ export default function PortfolioScreen() {
                     </AnimatedPressable>
                   </View>
                 )}
-              </View>
+              </Animated.View>
             ))
           )}
         </View>
 
         {/* Dividend Section — Pro only */}
         {isPro && hasHoldings && (
-          <View style={styles.dividendSection}>
+          <Animated.View entering={FadeInDown.duration(250).delay(360)} style={styles.dividendSection}>
             <Title3 style={{ marginBottom: 12 }}>Upcoming Dividends</Title3>
             <View style={[styles.dividendCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.dividendRow}>
@@ -469,7 +474,7 @@ export default function PortfolioScreen() {
                 <MonoSubhead color="success">€0.85/share</MonoSubhead>
               </View>
             </View>
-          </View>
+          </Animated.View>
         )}
 
         <View style={{ height: 100 }} />

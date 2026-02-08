@@ -244,3 +244,7 @@
 - [x] Add FadeIn.duration(300) entering animation to empty state
 - [x] Import STAGGER_DELAY and STAGGER_MAX from lib/animations.ts for consistent stagger timing
 - [x] Verify TypeScript compiles (0 errors) and all tests pass (433 passed)
+- [x] Apply AGRX motion language to Home screen (header FadeIn, hero FadeInDown+60ms, quick actions +120ms, challenge +150ms, watchlist +180ms, trending +240ms, news +300ms, social +360ms)
+- [x] Apply AGRX motion language to Markets screen (header FadeIn, search +60ms, sector chips +120ms, sort row +180ms)
+- [x] Apply AGRX motion language to Portfolio screen (header FadeIn, hero +60ms, balance +120ms, holdings header +180ms, holdings staggered +210ms, dividends +360ms)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after animation rollout
