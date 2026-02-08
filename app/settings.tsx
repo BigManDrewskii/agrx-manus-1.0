@@ -14,6 +14,8 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useThemeContext, type ThemePreference } from "@/lib/theme-provider";
 import { useDemo } from "@/lib/demo-context";
+import { useViewMode } from "@/lib/viewmode-context";
+import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   LargeTitle,
@@ -50,6 +52,7 @@ export default function SettingsScreen() {
   const colors = useColors();
   const { preference, setPreference, isDark } = useThemeContext();
   const { state: demoState, resetDemo } = useDemo();
+  const { mode } = useViewMode();
 
   const [notifs, setNotifs] = useState<NotifState>({
     priceAlerts: true,
@@ -114,6 +117,24 @@ export default function SettingsScreen() {
             <IconSymbol name="chevron.right" size={20} color={colors.foreground} style={{ transform: [{ scaleX: -1 }] }} />
           </Pressable>
           <LargeTitle style={{ letterSpacing: -0.5 }}>Settings</LargeTitle>
+        </View>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            SECTION: View Mode
+            ═══════════════════════════════════════════════════════════════════ */}
+        <SectionLabel text="View Mode" />
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.row, { flexDirection: "column", alignItems: "flex-start", gap: 10 }]}>
+            <View>
+              <Subhead style={{ fontFamily: FontFamily.medium }}>Interface Complexity</Subhead>
+              <Caption1 color="muted" style={{ marginTop: 2 }}>
+                {mode === "simple"
+                  ? "Simple mode — clean, focused interface for beginners"
+                  : "Pro mode — full details, charts, and advanced features"}
+              </Caption1>
+            </View>
+            <ViewModeToggle />
+          </View>
         </View>
 
         {/* ═══════════════════════════════════════════════════════════════════

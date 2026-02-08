@@ -18,6 +18,7 @@ import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes } from "@/hooks/use-stocks";
 import { useDemo } from "@/lib/demo-context";
+import { useViewMode } from "@/lib/viewmode-context";
 import { ShareCardModal } from "@/components/ui/share-card-modal";
 import type { ShareCardData } from "@/components/ui/share-card";
 import {
@@ -51,6 +52,7 @@ interface SelectedStock {
 export default function TradeScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { isSimple, isPro } = useViewMode();
   const [search, setSearch] = useState("");
   const [selectedAsset, setSelectedAsset] = useState<SelectedStock | null>(null);
   const [amountText, setAmountText] = useState("");
@@ -461,8 +463,8 @@ export default function TradeScreen() {
             })}
           </ScrollView>
 
-          {/* Order Preview — compact card */}
-          {isValidAmount && (
+          {/* Order Preview — Pro: full detail, Simple: just balance after */}
+          {isValidAmount && isPro && (
             <View style={[styles.orderPreview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.orderRow}>
                 <Footnote color="muted">Est. shares</Footnote>
@@ -488,6 +490,17 @@ export default function TradeScreen() {
                   €{balanceAfter.toFixed(2)}
                 </MonoSubhead>
               </View>
+            </View>
+          )}
+          {isValidAmount && isSimple && (
+            <View style={styles.simplePreviewRow}>
+              <Footnote color="muted">Balance after trade</Footnote>
+              <MonoSubhead
+                color={balanceAfter >= 0 ? "foreground" : "error"}
+                style={{ fontSize: 13 }}
+              >
+                €{balanceAfter.toFixed(2)}
+              </MonoSubhead>
             </View>
           )}
 
@@ -807,6 +820,16 @@ const styles = StyleSheet.create({
   orderDivider: {
     height: StyleSheet.hairlineWidth,
     marginVertical: 3,
+  },
+
+  // Simple mode preview
+  simplePreviewRow: {
+    flexDirection: "row" as const,
+    justifyContent: "space-between" as const,
+    alignItems: "center" as const,
+    marginHorizontal: 16,
+    marginBottom: 14,
+    paddingHorizontal: 4,
   },
 
   // Error banner

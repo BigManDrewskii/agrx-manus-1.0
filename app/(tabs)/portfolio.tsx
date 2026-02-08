@@ -18,6 +18,7 @@ import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import { ShareCardModal } from "@/components/ui/share-card-modal";
 import type { ShareCardData } from "@/components/ui/share-card";
 import { useDemo, type DemoHolding, type LivePriceMap } from "@/lib/demo-context";
+import { useViewMode } from "@/lib/viewmode-context";
 import { GREEK_STOCKS, PORTFOLIO_SPARKLINE } from "@/lib/mock-data";
 import {
   Title1,
@@ -32,8 +33,6 @@ import {
 import { FontFamily } from "@/constants/typography";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
-
-const TABS = ["All", "Stocks", "Options", "Copied"];
 
 interface EnrichedHolding {
   holding: DemoHolding;
@@ -50,11 +49,11 @@ interface EnrichedHolding {
 export default function PortfolioScreen() {
   const colors = useColors();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("All");
+  const { isSimple, isPro } = useViewMode();
   const [refreshing, setRefreshing] = useState(false);
   const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
   const refreshCache = useRefreshCache();
-  const { holdingsArray, getPortfolioValue, getPortfolioCost, getPortfolioPnL } = useDemo();
+  const { state, holdingsArray, getPortfolioValue, getPortfolioCost, getPortfolioPnL } = useDemo();
 
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
@@ -177,7 +176,7 @@ export default function PortfolioScreen() {
                 onPress={handleSharePortfolio}
                 style={({ pressed }) => [
                   styles.shareHeaderButton,
-                  { backgroundColor: colors.surface },
+                  { backgroundColor: colors.surfaceSecondary },
                   pressed && { opacity: 0.6 },
                 ]}
               >
@@ -188,112 +187,131 @@ export default function PortfolioScreen() {
           </View>
         </View>
 
-        {/* Portfolio Value Hero */}
-        <View style={styles.heroContainer}>
-          <Footnote color="muted">Total Value</Footnote>
-          <MonoLargeTitle
+        {/* ── Simple Mode: Clean Hero ── */}
+        {isSimple && (
+          <View style={styles.simpleHero}>
+            <Footnote color="muted">Total Value</Footnote>
+            <MonoLargeTitle
+              style={{
+                fontSize: 36,
+                textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 20,
+              }}
+            >
+              €{portfolioTotal.toLocaleString("el-GR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </MonoLargeTitle>
+            <View style={styles.heroPnl}>
+              <PnLText value={portfolioPnl} format="currency" size="lg" showArrow={true} />
+              <Footnote color="muted"> · </Footnote>
+              <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
+            </View>
+          </View>
+        )}
+
+        {/* ── Pro Mode: Full Hero with Sparkline ── */}
+        {isPro && (
+          <View style={styles.proHero}>
+            <Footnote color="muted">Total Value</Footnote>
+            <MonoLargeTitle
+              style={{
+                fontSize: 40,
+                textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 24,
+              }}
+            >
+              €{portfolioTotal.toLocaleString("el-GR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </MonoLargeTitle>
+            <View style={styles.heroPnl}>
+              <PnLText value={portfolioPnl} format="currency" size="lg" showArrow={true} />
+              <Footnote color="muted"> · </Footnote>
+              <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
+            </View>
+            {hasHoldings && (
+              <View style={styles.sparklineContainer}>
+                <Sparkline
+                  data={PORTFOLIO_SPARKLINE}
+                  width={320}
+                  height={56}
+                  positive={isPositive}
+                  strokeWidth={2}
+                />
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Balance Info — Pro only shows full breakdown, Simple shows combined */}
+        {isPro && (
+          <View style={[styles.balanceRow, { borderColor: colors.border }]}>
+            <View style={styles.balanceItem}>
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
+                Cash Balance
+              </Caption1>
+              <MonoSubhead>
+                €{state.balance.toLocaleString("el-GR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </MonoSubhead>
+            </View>
+            <View style={[styles.balanceDivider, { backgroundColor: colors.border }]} />
+            <View style={styles.balanceItem}>
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
+                Invested
+              </Caption1>
+              <MonoSubhead>
+                €{portfolioCost.toLocaleString("el-GR", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </MonoSubhead>
+            </View>
+          </View>
+        )}
+
+        {/* Simple mode: compact balance pill */}
+        {isSimple && (
+          <View style={[styles.simpleBalancePill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>Cash</Caption1>
+            <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
+              €{state.balance.toLocaleString("el-GR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </MonoSubhead>
+          </View>
+        )}
+
+        {/* Holdings Header */}
+        <View style={styles.holdingsHeader}>
+          <Caption1
+            color="muted"
             style={{
-              fontSize: 40,
-              textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 24,
+              fontFamily: FontFamily.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
             }}
           >
-            €{portfolioTotal.toLocaleString("el-GR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </MonoLargeTitle>
-          <View style={styles.heroPnl}>
-            <PnLText value={portfolioPnl} format="currency" size="lg" showArrow={true} />
-            <Footnote color="muted"> · </Footnote>
-            <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
-          </View>
-          {hasHoldings && (
-            <View style={styles.sparklineContainer}>
-              <Sparkline
-                data={PORTFOLIO_SPARKLINE}
-                width={320}
-                height={56}
-                positive={isPositive}
-                strokeWidth={2}
-              />
-            </View>
-          )}
-        </View>
-
-        {/* Balance Info */}
-        <View style={[styles.balanceRow, { borderColor: colors.border }]}>
-          <View style={styles.balanceItem}>
-            <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
-              Cash Balance
-            </Caption1>
-            <MonoSubhead>
-              €{useDemo().state.balance.toLocaleString("el-GR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </MonoSubhead>
-          </View>
-          <View style={[styles.balanceDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.balanceItem}>
-            <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
-              Invested
-            </Caption1>
-            <MonoSubhead>
-              €{portfolioCost.toLocaleString("el-GR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </MonoSubhead>
-          </View>
-        </View>
-
-        {/* Tab Selector */}
-        <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
-          {TABS.map((tab) => {
-            const isActive = tab === activeTab;
-            return (
-              <Pressable
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                style={({ pressed }) => [
-                  styles.tab,
-                  isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
-                  pressed && { opacity: 0.6 },
-                ]}
-              >
-                <Subhead
-                  color={isActive ? "primary" : "muted"}
-                  style={{ fontFamily: isActive ? FontFamily.bold : FontFamily.medium }}
-                >
-                  {tab}
-                </Subhead>
-              </Pressable>
-            );
-          })}
+            {enrichedHoldings.length} Holdings
+          </Caption1>
         </View>
 
         {/* Holdings List */}
         <View style={styles.holdingsContainer}>
-          <View style={styles.holdingsHeader}>
-            <Caption1
-              color="muted"
-              style={{
-                fontFamily: FontFamily.semibold,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
-            >
-              {enrichedHoldings.length} Holdings
-            </Caption1>
-          </View>
           {isLoading ? (
             <StockListSkeleton count={4} />
           ) : !hasHoldings ? (
             <View style={styles.emptyState}>
               <IconSymbol name="chart.bar.fill" size={48} color={colors.muted} />
-              <Headline color="muted" style={{ marginTop: 16, marginBottom: 8 }}>
+              <Headline style={{ marginTop: 16, marginBottom: 8 }}>
                 No Holdings Yet
               </Headline>
               <Footnote color="muted" style={{ textAlign: "center", maxWidth: 260 }}>
@@ -314,67 +332,111 @@ export default function PortfolioScreen() {
             </View>
           ) : (
             enrichedHoldings.map((enriched) => (
-              <View key={enriched.holding.stockId} style={[styles.holdingRow, { borderBottomColor: colors.border }]}>
-                <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/asset/[id]" as any,
-                      params: { id: enriched.holding.stockId },
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.holdingPressable,
-                    pressed && { opacity: 0.7 },
-                  ]}
-                >
-                  <View style={styles.holdingLeft}>
-                    <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
-                      <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
-                        {enriched.holding.ticker.slice(0, 2)}
-                      </Caption1>
+              <View key={enriched.holding.stockId}>
+                {/* ── Simple Mode: Clean Card ── */}
+                {isSimple && (
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: "/asset/[id]" as any,
+                        params: { id: enriched.holding.stockId },
+                      })
+                    }
+                    style={({ pressed }) => [
+                      styles.simpleCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                      pressed && { opacity: 0.7, transform: [{ scale: 0.98 }] },
+                    ]}
+                  >
+                    <View style={styles.simpleCardTop}>
+                      <View style={[styles.simpleCardIcon, { backgroundColor: colors.primaryAlpha }]}>
+                        <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 13 }}>
+                          {enriched.holding.ticker.slice(0, 2)}
+                        </Caption1>
+                      </View>
+                      <View style={styles.simpleCardInfo}>
+                        <Subhead style={{ fontFamily: FontFamily.semibold }}>
+                          {enriched.holding.ticker}
+                        </Subhead>
+                        <Caption1 color="muted" numberOfLines={1}>
+                          {enriched.holding.name}
+                        </Caption1>
+                      </View>
+                      <View style={styles.simpleCardValue}>
+                        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
+                          €{enriched.liveValue.toFixed(2)}
+                        </MonoSubhead>
+                        <PnLText value={enriched.livePnlPercent} size="sm" showArrow={true} />
+                      </View>
                     </View>
-                    <View>
-                      <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
-                        {enriched.holding.ticker}
-                      </Subhead>
-                      <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-                        {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 4)} shares · avg €{enriched.avgCost.toFixed(2)}
-                      </Caption1>
-                    </View>
+                  </Pressable>
+                )}
+
+                {/* ── Pro Mode: Detailed Row ── */}
+                {isPro && (
+                  <View style={[styles.holdingRow, { borderBottomColor: colors.border }]}>
+                    <Pressable
+                      onPress={() =>
+                        router.push({
+                          pathname: "/asset/[id]" as any,
+                          params: { id: enriched.holding.stockId },
+                        })
+                      }
+                      style={({ pressed }) => [
+                        styles.holdingPressable,
+                        pressed && { opacity: 0.7 },
+                      ]}
+                    >
+                      <View style={styles.holdingLeft}>
+                        <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
+                          <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                            {enriched.holding.ticker.slice(0, 2)}
+                          </Caption1>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
+                            {enriched.holding.ticker}
+                          </Subhead>
+                          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                            {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 4)} shares · avg €{enriched.avgCost.toFixed(2)}
+                          </Caption1>
+                        </View>
+                      </View>
+                      <View style={styles.holdingCenter}>
+                        <Sparkline
+                          data={enriched.liveSparkline}
+                          width={48}
+                          height={20}
+                          positive={enriched.livePnl >= 0}
+                        />
+                      </View>
+                      <View style={styles.holdingRight}>
+                        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
+                          €{enriched.liveValue.toFixed(2)}
+                        </MonoSubhead>
+                        <PnLText value={enriched.livePnlPercent} size="sm" showArrow={false} />
+                      </View>
+                    </Pressable>
+                    {/* Share button for this holding */}
+                    <Pressable
+                      onPress={() => handleShareHolding(enriched)}
+                      style={({ pressed }) => [
+                        styles.holdingShareButton,
+                        { backgroundColor: colors.surfaceSecondary },
+                        pressed && { opacity: 0.6 },
+                      ]}
+                    >
+                      <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
+                    </Pressable>
                   </View>
-                  <View style={styles.holdingCenter}>
-                    <Sparkline
-                      data={enriched.liveSparkline}
-                      width={48}
-                      height={20}
-                      positive={enriched.livePnl >= 0}
-                    />
-                  </View>
-                  <View style={styles.holdingRight}>
-                    <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
-                      €{enriched.liveValue.toFixed(2)}
-                    </MonoSubhead>
-                    <PnLText value={enriched.livePnlPercent} size="sm" showArrow={false} />
-                  </View>
-                </Pressable>
-                {/* Share button for this holding */}
-                <Pressable
-                  onPress={() => handleShareHolding(enriched)}
-                  style={({ pressed }) => [
-                    styles.holdingShareButton,
-                    { backgroundColor: colors.surfaceSecondary },
-                    pressed && { opacity: 0.6 },
-                  ]}
-                >
-                  <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
-                </Pressable>
+                )}
               </View>
             ))
           )}
         </View>
 
-        {/* Dividend Section — only show if user has relevant holdings */}
-        {hasHoldings && (
+        {/* Dividend Section — Pro only */}
+        {isPro && hasHoldings && (
           <View style={styles.dividendSection}>
             <Title3 style={{ marginBottom: 12 }}>Upcoming Dividends</Title3>
             <View style={[styles.dividendCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -431,7 +493,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  heroContainer: {
+  // ── Simple Hero ──
+  simpleHero: {
+    alignItems: "center",
+    paddingVertical: 16,
+  },
+  // ── Pro Hero ──
+  proHero: {
     alignItems: "center",
     paddingVertical: 20,
   },
@@ -443,6 +511,7 @@ const styles = StyleSheet.create({
   sparklineContainer: {
     marginTop: 16,
   },
+  // ── Pro Balance Row ──
   balanceRow: {
     flexDirection: "row",
     marginHorizontal: 16,
@@ -460,26 +529,53 @@ const styles = StyleSheet.create({
     width: 1,
     marginVertical: 4,
   },
-  tabContainer: {
+  // ── Simple Balance Pill ──
+  simpleBalancePill: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
-    marginBottom: 8,
-  },
-  tab: {
-    flex: 1,
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  holdingsContainer: {
-    paddingTop: 8,
-  },
+  // ── Holdings ──
   holdingsHeader: {
     paddingHorizontal: 16,
     marginBottom: 8,
   },
+  holdingsContainer: {
+    paddingTop: 0,
+  },
+  // ── Simple Card ──
+  simpleCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+  },
+  simpleCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  simpleCardIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  simpleCardInfo: {
+    flex: 1,
+  },
+  simpleCardValue: {
+    alignItems: "flex-end",
+  },
+  // ── Pro Holding Row ──
   holdingRow: {
     flexDirection: "row",
     alignItems: "center",

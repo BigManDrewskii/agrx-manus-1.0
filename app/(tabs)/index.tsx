@@ -20,9 +20,13 @@ import { DemoBanner } from "@/components/ui/demo-banner";
 import { XPBar } from "@/components/ui/xp-bar";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AssetRow } from "@/components/ui/asset-row";
+import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import { useNotifications } from "@/lib/notification-context";
 import { useDemo, type LivePriceMap } from "@/lib/demo-context";
+import { useViewMode } from "@/lib/viewmode-context";
+import { useWatchlist } from "@/lib/watchlist-context";
 import { useMarketNews } from "@/hooks/use-news";
 import {
   Footnote,
@@ -56,6 +60,8 @@ export default function HomeScreen() {
 
   const { unreadCount } = useNotifications();
   const { getPortfolioValue, getPortfolioPnL, state: demoState } = useDemo();
+  const { isSimple, isPro } = useViewMode();
+  const { watchlist, isWatchlisted, toggle: toggleWatchlist } = useWatchlist();
 
   // Build live price map from stock quotes
   const livePriceMap: LivePriceMap = useMemo(() => {
@@ -73,9 +79,19 @@ export default function HomeScreen() {
   const isPositive = portfolioPnl >= 0;
 
   // Get top 5 trending stocks by absolute change percent
-  const trendingStocks = [...stocks]
-    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
-    .slice(0, 5);
+  const trendingStocks = useMemo(
+    () =>
+      [...stocks]
+        .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
+        .slice(0, 5),
+    [stocks],
+  );
+
+  // Get watchlisted stocks
+  const watchlistedStocks = useMemo(
+    () => stocks.filter((s) => isWatchlisted(s.id)),
+    [stocks, watchlist],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -88,6 +104,14 @@ export default function HomeScreen() {
       setRefreshing(false);
     }
   }, [refreshCache, refetch]);
+
+  // ── Greeting based on time of day ──
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 18) return "Good afternoon";
+    return "Good evening";
+  }, []);
 
   return (
     <ScreenContainer>
@@ -104,73 +128,86 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Header */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            HEADER — Greeting, mode toggle, bell, settings
+            ═══════════════════════════════════════════════════════════════════ */}
         <View style={styles.header}>
-          <View>
-            <Footnote color="muted">Good morning</Footnote>
-            <Title2>Andreas</Title2>
-          </View>
-          <View style={styles.headerRight}>
-            <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
-            <View style={styles.streakBadge}>
-              <IconSymbol name="flame.fill" size={16} color={colors.warning} />
-              <Callout
-                color="warning"
-                style={{ fontFamily: FontFamily.bold, fontVariant: ["tabular-nums"] }}
-              >
-                {USER_STREAK}
-              </Callout>
+          <View style={styles.headerTop}>
+            <View style={styles.headerLeft}>
+              <Footnote color="muted">{greeting}</Footnote>
+              <Title2>Andreas</Title2>
             </View>
-            <Pressable
-              onPress={() => router.push("/notification-history" as any)}
-              style={({ pressed }) => [
-                styles.notifButton,
-                { backgroundColor: colors.surface },
-                pressed && { opacity: 0.6 },
-              ]}
-            >
-              <IconSymbol name="bell.fill" size={20} color={unreadCount > 0 ? colors.primary : colors.muted} />
-              {unreadCount > 0 && (
-                <View
-                  style={[
-                    styles.badgeContainer,
-                    { backgroundColor: colors.error },
-                  ]}
-                >
-                  <Caption2
-                    style={{
-                      color: colors.onPrimary,
-                      fontFamily: FontFamily.bold,
-                      fontSize: 10,
-                      lineHeight: 14,
-                    }}
+            <View style={styles.headerActions}>
+              {isPro && <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />}
+              {isPro && (
+                <View style={styles.streakBadge}>
+                  <IconSymbol name="flame.fill" size={14} color={colors.warning} />
+                  <Caption1
+                    color="warning"
+                    style={{ fontFamily: FontFamily.bold, fontVariant: ["tabular-nums"] }}
                   >
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </Caption2>
+                    {USER_STREAK}
+                  </Caption1>
                 </View>
               )}
-            </Pressable>
-            <Pressable
-              onPress={() => router.push("/settings" as any)}
-              style={({ pressed }) => [
-                styles.notifButton,
-                { backgroundColor: colors.surface },
-                pressed && { opacity: 0.6 },
-              ]}
-            >
-              <IconSymbol name="gearshape.fill" size={20} color={colors.muted} />
-            </Pressable>
+              <Pressable
+                onPress={() => router.push("/notification-history" as any)}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceSecondary },
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <IconSymbol
+                  name="bell.fill"
+                  size={18}
+                  color={unreadCount > 0 ? colors.primary : colors.muted}
+                />
+                {unreadCount > 0 && (
+                  <View style={[styles.badge, { backgroundColor: colors.error }]}>
+                    <Caption2
+                      style={{
+                        color: colors.onPrimary,
+                        fontFamily: FontFamily.bold,
+                        fontSize: 9,
+                        lineHeight: 12,
+                      }}
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Caption2>
+                  </View>
+                )}
+              </Pressable>
+              <Pressable
+                onPress={() => router.push("/settings" as any)}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceSecondary },
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <IconSymbol name="gearshape.fill" size={18} color={colors.muted} />
+              </Pressable>
+            </View>
+          </View>
+          {/* Mode toggle — sits below greeting row */}
+          <View style={styles.modeToggleRow}>
+            <ViewModeToggle compact />
           </View>
         </View>
 
-        {/* Portfolio Hero */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            PORTFOLIO HERO
+            ═══════════════════════════════════════════════════════════════════ */}
         <View style={styles.portfolioHero}>
-          <Footnote color="muted">Portfolio Value</Footnote>
+          <Footnote color="muted" style={{ letterSpacing: 0.3 }}>
+            Total Balance
+          </Footnote>
           <MonoLargeTitle
             style={{
               textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
               textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 20,
+              textShadowRadius: 16,
             }}
           >
             €{totalAccountValue.toLocaleString("el-GR", {
@@ -179,124 +216,248 @@ export default function HomeScreen() {
             })}
           </MonoLargeTitle>
           <View style={styles.pnlRow}>
-            <PnLText
-              value={portfolioPnl}
-              format="currency"
-              size="md"
-              showArrow={true}
-            />
+            <PnLText value={portfolioPnl} format="currency" size="md" showArrow={true} />
             <Footnote color="muted"> · </Footnote>
-            <PnLText
-              value={portfolioPnlPercent}
-              format="percent"
-              size="md"
-              showArrow={false}
-            />
+            <PnLText value={portfolioPnlPercent} format="percent" size="md" showArrow={false} />
             <Footnote color="muted"> all time</Footnote>
           </View>
-          <View style={styles.sparklineContainer}>
-            <Sparkline
-              data={PORTFOLIO_SPARKLINE}
-              width={320}
-              height={48}
-              positive={isPositive}
-              strokeWidth={2}
-            />
-          </View>
-          {/* Time Period Selector */}
-          <View style={styles.timePeriodRow}>
-            {["1D", "1W", "1M", "3M", "1Y", "ALL"].map((period, i) => (
-              <Pressable
-                key={period}
-                style={({ pressed }) => [
-                  styles.timePeriodButton,
-                  i === 0 && { backgroundColor: colors.primaryAlpha },
-                  pressed && { opacity: 0.6 },
-                ]}
-              >
-                <Caption1
-                  color={i === 0 ? "primary" : "muted"}
-                  style={{
-                    fontFamily: i === 0 ? FontFamily.bold : FontFamily.medium,
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  {period}
-                </Caption1>
-              </Pressable>
-            ))}
-          </View>
-        </View>
 
-        {/* XP Progress */}
-        <XPBar />
-
-        {/* Daily Challenge */}
-        <View style={styles.section}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.challengeCard,
-              {
-                backgroundColor: colors.warningAlpha,
-                borderColor: colors.warningAlpha,
-              },
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <View style={styles.challengeHeader}>
-              <View style={styles.challengeLeft}>
-                <IconSymbol name="trophy.fill" size={20} color={colors.warning} />
-                <Headline>{DAILY_CHALLENGE.title}</Headline>
-              </View>
-              <View style={[styles.rewardBadge, { backgroundColor: colors.warningAlpha }]}>
-                <Caption1
-                  color="warning"
-                  style={{ fontFamily: FontFamily.bold }}
-                >
-                  {DAILY_CHALLENGE.reward}
-                </Caption1>
-              </View>
-            </View>
-            <Footnote color="muted">{DAILY_CHALLENGE.description}</Footnote>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { backgroundColor: colors.warningAlpha }]}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      backgroundColor: colors.warning,
-                      width: `${(DAILY_CHALLENGE.progress / DAILY_CHALLENGE.total) * 100}%`,
-                    },
-                  ]}
+          {/* Sparkline + time selectors — Pro only */}
+          {isPro && (
+            <>
+              <View style={styles.sparklineContainer}>
+                <Sparkline
+                  data={PORTFOLIO_SPARKLINE}
+                  width={320}
+                  height={44}
+                  positive={isPositive}
+                  strokeWidth={1.8}
                 />
               </View>
-              <MonoCaption1 color="muted">
-                {DAILY_CHALLENGE.progress}/{DAILY_CHALLENGE.total}
-              </MonoCaption1>
-            </View>
-          </Pressable>
+              <View style={styles.timePeriodRow}>
+                {["1D", "1W", "1M", "3M", "1Y", "ALL"].map((period, i) => (
+                  <Pressable
+                    key={period}
+                    style={({ pressed }) => [
+                      styles.timePeriodButton,
+                      i === 0 && { backgroundColor: colors.primaryAlpha },
+                      pressed && { opacity: 0.6 },
+                    ]}
+                  >
+                    <Caption1
+                      color={i === 0 ? "primary" : "muted"}
+                      style={{
+                        fontFamily: i === 0 ? FontFamily.bold : FontFamily.medium,
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {period}
+                    </Caption1>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          )}
         </View>
 
-        {/* Trending on ATHEX — Live Data */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            QUICK ACTIONS — Simple mode gets prominent action buttons
+            ═══════════════════════════════════════════════════════════════════ */}
+        {isSimple && (
+          <View style={styles.quickActions}>
+            <Pressable
+              onPress={() => router.push("/(tabs)/trade")}
+              style={({ pressed }) => [
+                styles.quickActionButton,
+                { backgroundColor: colors.primary },
+                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+              ]}
+            >
+              <IconSymbol name="plus.circle.fill" size={20} color={colors.onPrimary} />
+              <Subhead style={{ fontFamily: FontFamily.semibold, color: colors.onPrimary }}>
+                Trade
+              </Subhead>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/(tabs)/portfolio")}
+              style={({ pressed }) => [
+                styles.quickActionButton,
+                { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+              ]}
+            >
+              <IconSymbol name="briefcase.fill" size={20} color={colors.foreground} />
+              <Subhead style={{ fontFamily: FontFamily.semibold }}>Portfolio</Subhead>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push("/(tabs)/markets")}
+              style={({ pressed }) => [
+                styles.quickActionButton,
+                { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+              ]}
+            >
+              <IconSymbol name="chart.line.uptrend.xyaxis" size={20} color={colors.foreground} />
+              <Subhead style={{ fontFamily: FontFamily.semibold }}>Markets</Subhead>
+            </Pressable>
+          </View>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            XP PROGRESS — Pro only
+            ═══════════════════════════════════════════════════════════════════ */}
+        {isPro && <XPBar />}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            DAILY CHALLENGE — Pro only
+            ═══════════════════════════════════════════════════════════════════ */}
+        {isPro && (
+          <View style={styles.section}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.challengeCard,
+                {
+                  backgroundColor: colors.warningAlpha,
+                  borderColor: colors.warningAlpha,
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <View style={styles.challengeHeader}>
+                <View style={styles.challengeLeft}>
+                  <IconSymbol name="trophy.fill" size={18} color={colors.warning} />
+                  <Headline style={{ fontSize: 15 }}>{DAILY_CHALLENGE.title}</Headline>
+                </View>
+                <View style={[styles.rewardBadge, { backgroundColor: colors.warningAlpha }]}>
+                  <Caption1 color="warning" style={{ fontFamily: FontFamily.bold }}>
+                    {DAILY_CHALLENGE.reward}
+                  </Caption1>
+                </View>
+              </View>
+              <Footnote color="muted">{DAILY_CHALLENGE.description}</Footnote>
+              <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { backgroundColor: colors.warningAlpha }]}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        backgroundColor: colors.warning,
+                        width: `${(DAILY_CHALLENGE.progress / DAILY_CHALLENGE.total) * 100}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <MonoCaption1 color="muted">
+                  {DAILY_CHALLENGE.progress}/{DAILY_CHALLENGE.total}
+                </MonoCaption1>
+              </View>
+            </Pressable>
+          </View>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            WATCHLIST — Both modes (if user has watchlisted stocks)
+            ═══════════════════════════════════════════════════════════════════ */}
+        {watchlistedStocks.length > 0 && (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Watchlist"
+              actionLabel="Edit"
+              onAction={() => router.push("/(tabs)/markets")}
+            />
+            <View style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {watchlistedStocks.map((stock, i) => (
+                <AssetRow
+                  key={stock.id}
+                  asset={stock}
+                  showSparkline={isPro}
+                  showStar={false}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/asset/[id]" as any,
+                      params: { id: stock.id },
+                    })
+                  }
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Empty watchlist prompt — Simple mode only */}
+        {isSimple && watchlistedStocks.length === 0 && !isLoading && (
+          <View style={styles.section}>
+            <SectionHeader title="Watchlist" />
+            <Pressable
+              onPress={() => router.push("/(tabs)/markets")}
+              style={({ pressed }) => [
+                styles.emptyWatchlistCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <IconSymbol name="star.fill" size={24} color={colors.border} />
+              <Subhead color="muted" style={{ fontFamily: FontFamily.medium, marginTop: 8 }}>
+                Star stocks from Markets to add them here
+              </Subhead>
+              <Caption1 color="primary" style={{ fontFamily: FontFamily.semibold, marginTop: 4 }}>
+                Browse Markets →
+              </Caption1>
+            </Pressable>
+          </View>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            TRENDING ON ATHEX — Pro shows carousel, Simple shows top 3 rows
+            ═══════════════════════════════════════════════════════════════════ */}
         <View style={styles.section}>
           <SectionHeader
-            title="Trending on ATHEX"
+            title={isSimple ? "Top Movers" : "Trending on ATHEX"}
             actionLabel="See All"
             onAction={() => router.push("/(tabs)/markets")}
           />
           {isLoading ? (
-            <View style={styles.trendingLoading}>
-              {[1, 2, 3].map((i) => (
-                <View key={i} style={[styles.trendingSkeletonCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                  <Skeleton width={40} height={40} borderRadius={20} />
-                  <Skeleton width={60} height={14} style={{ marginTop: 8 }} />
-                  <Skeleton width={80} height={12} style={{ marginTop: 4 }} />
-                  <Skeleton width={50} height={30} style={{ marginTop: 12 }} />
-                  <Skeleton width={55} height={14} style={{ marginTop: 8 }} />
-                </View>
-              ))}
+            <View style={isPro ? styles.trendingLoading : { paddingHorizontal: 16, gap: 0 }}>
+              {(isPro ? [1, 2, 3] : [1, 2, 3]).map((i) =>
+                isPro ? (
+                  <View
+                    key={i}
+                    style={[
+                      styles.trendingSkeletonCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
+                    ]}
+                  >
+                    <Skeleton width={32} height={32} borderRadius={16} />
+                    <Skeleton width={60} height={12} style={{ marginTop: 8 }} />
+                    <Skeleton width={80} height={10} style={{ marginTop: 4 }} />
+                    <Skeleton width={50} height={28} style={{ marginTop: 10 }} />
+                    <Skeleton width={55} height={12} style={{ marginTop: 6 }} />
+                  </View>
+                ) : (
+                  <View
+                    key={i}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      paddingVertical: 12,
+                      paddingHorizontal: 16,
+                      gap: 12,
+                    }}
+                  >
+                    <Skeleton width={40} height={40} borderRadius={20} />
+                    <View style={{ flex: 1 }}>
+                      <Skeleton width={80} height={14} />
+                      <Skeleton width={50} height={10} style={{ marginTop: 4 }} />
+                    </View>
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Skeleton width={60} height={14} />
+                      <Skeleton width={40} height={10} style={{ marginTop: 4 }} />
+                    </View>
+                  </View>
+                ),
+              )}
             </View>
-          ) : (
+          ) : isPro ? (
             <FlatList
               data={trendingStocks}
               horizontal
@@ -324,16 +485,43 @@ export default function HomeScreen() {
                 />
               )}
             />
+          ) : (
+            <View style={[styles.listCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {trendingStocks.slice(0, 3).map((stock) => (
+                <AssetRow
+                  key={stock.id}
+                  asset={stock}
+                  showSparkline={false}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/asset/[id]" as any,
+                      params: { id: stock.id },
+                    })
+                  }
+                />
+              ))}
+            </View>
           )}
         </View>
 
-        {/* Market News */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            MARKET NEWS — Simple: 2 articles, Pro: 4 articles
+            ═══════════════════════════════════════════════════════════════════ */}
         <View style={styles.section}>
-          <SectionHeader title="Market News" actionLabel={marketNews.length > 3 ? "See All" : undefined} />
+          <SectionHeader
+            title="Market News"
+            actionLabel={isPro && marketNews.length > 4 ? "See All" : undefined}
+          />
           {newsLoading ? (
-            <View style={{ paddingHorizontal: 16, gap: 10 }}>
-              {[1, 2, 3].map((i) => (
-                <View key={i} style={[styles.newsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={{ paddingHorizontal: 16, gap: 8 }}>
+              {[1, 2].map((i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.newsCard,
+                    { backgroundColor: colors.surface, borderColor: colors.border },
+                  ]}
+                >
                   <Skeleton width="100%" height={14} borderRadius={4} />
                   <Skeleton width="70%" height={14} borderRadius={4} style={{ marginTop: 6 }} />
                   <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
@@ -344,7 +532,7 @@ export default function HomeScreen() {
               ))}
             </View>
           ) : marketNews.length > 0 ? (
-            marketNews.slice(0, 4).map((article, index) => (
+            marketNews.slice(0, isSimple ? 2 : 4).map((article, index) => (
               <Pressable
                 key={`${article.url}-${index}`}
                 onPress={() => {
@@ -370,65 +558,82 @@ export default function HomeScreen() {
               </Pressable>
             ))
           ) : (
-            <View style={[styles.newsCard, { backgroundColor: colors.surface, borderColor: colors.border, alignItems: "center", paddingVertical: 20, marginHorizontal: 16 }]}>
-              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>No market news available</Footnote>
+            <View
+              style={[
+                styles.newsCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  alignItems: "center",
+                  paddingVertical: 20,
+                  marginHorizontal: 16,
+                },
+              ]}
+            >
+              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
+                No market news available
+              </Footnote>
             </View>
           )}
         </View>
 
-        {/* Social Feed Preview */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Community"
-            actionLabel="See All"
-            onAction={() => router.push("/(tabs)/social")}
-          />
-          {SOCIAL_FEED.slice(0, 3).map((post) => (
-            <Pressable
-              key={post.id}
-              style={({ pressed }) => [
-                styles.socialCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <View style={styles.socialHeader}>
-                <View style={[styles.avatar, { backgroundColor: colors.primaryAlpha }]}>
-                  <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
-                    {post.avatar}
-                  </Caption1>
+        {/* ═══════════════════════════════════════════════════════════════════
+            SOCIAL FEED PREVIEW — Pro only
+            ═══════════════════════════════════════════════════════════════════ */}
+        {isPro && (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Community"
+              actionLabel="See All"
+              onAction={() => router.push("/(tabs)/social")}
+            />
+            {SOCIAL_FEED.slice(0, 3).map((post) => (
+              <Pressable
+                key={post.id}
+                style={({ pressed }) => [
+                  styles.socialCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <View style={styles.socialHeader}>
+                  <View style={[styles.avatar, { backgroundColor: colors.primaryAlpha }]}>
+                    <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                      {post.avatar}
+                    </Caption1>
+                  </View>
+                  <View style={styles.socialMeta}>
+                    <Subhead style={{ fontFamily: FontFamily.semibold }}>{post.username}</Subhead>
+                    <Caption2 color="muted">{post.timestamp}</Caption2>
+                  </View>
+                  {post.pnlPercent !== undefined && (
+                    <PnLText value={post.pnlPercent} size="sm" showArrow={false} />
+                  )}
                 </View>
-                <View style={styles.socialMeta}>
-                  <Subhead style={{ fontFamily: FontFamily.semibold }}>{post.username}</Subhead>
-                  <Caption2 color="muted">{post.timestamp}</Caption2>
+                <Subhead numberOfLines={2} style={{ marginBottom: 10 }}>
+                  {post.content}
+                </Subhead>
+                <View style={styles.socialFooter}>
+                  <View style={styles.socialStat}>
+                    <IconSymbol name="star.fill" size={14} color={colors.muted} />
+                    <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
+                      {post.likes}
+                    </Caption1>
+                  </View>
+                  <View style={styles.socialStat}>
+                    <IconSymbol name="paperplane.fill" size={14} color={colors.muted} />
+                    <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
+                      {post.comments}
+                    </Caption1>
+                  </View>
                 </View>
-                {post.pnlPercent !== undefined && (
-                  <PnLText value={post.pnlPercent} size="sm" showArrow={false} />
-                )}
-              </View>
-              <Subhead numberOfLines={2} style={{ marginBottom: 10 }}>
-                {post.content}
-              </Subhead>
-              <View style={styles.socialFooter}>
-                <View style={styles.socialStat}>
-                  <IconSymbol name="star.fill" size={14} color={colors.muted} />
-                  <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
-                    {post.likes}
-                  </Caption1>
-                </View>
-                <View style={styles.socialStat}>
-                  <IconSymbol name="paperplane.fill" size={14} color={colors.muted} />
-                  <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
-                    {post.comments}
-                  </Caption1>
-                </View>
-              </View>
-            </Pressable>
-          ))}
-        </View>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
         {/* Bottom Spacer for Tab Bar */}
         <View style={{ height: 100 }} />
@@ -441,45 +646,58 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
+
+  // ── Header ──
   header: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
   },
-  headerRight: {
+  headerLeft: {
+    gap: 2,
+  },
+  headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
   },
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 3,
   },
-  notifButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  iconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeContainer: {
+  badge: {
     position: "absolute",
-    top: 2,
-    right: 2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    top: 1,
+    right: 1,
+    minWidth: 15,
+    height: 15,
+    borderRadius: 7.5,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 3,
   },
+  modeToggleRow: {
+    marginTop: 12,
+    alignSelf: "flex-start",
+  },
+
+  // ── Portfolio Hero ──
   portfolioHero: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 16,
     alignItems: "center",
   },
   pnlRow: {
@@ -488,33 +706,71 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sparklineContainer: {
-    marginTop: 16,
+    marginTop: 14,
     alignItems: "center",
   },
   timePeriodRow: {
     flexDirection: "row",
-    marginTop: 12,
+    marginTop: 10,
     gap: 4,
   },
   timePeriodButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 8,
   },
-  section: {
-    marginTop: 24,
+
+  // ── Quick Actions (Simple mode) ──
+  quickActions: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    gap: 10,
+    marginBottom: 8,
   },
+  quickActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+
+  // ── Sections ──
+  section: {
+    marginTop: 20,
+  },
+
+  // ── List card (watchlist, simple trending) ──
+  listCard: {
+    marginHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+
+  // ── Empty watchlist ──
+  emptyWatchlistCard: {
+    marginHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: "center",
+  },
+
+  // ── Challenge (Pro) ──
   challengeCard: {
     marginHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 16,
+    padding: 14,
   },
   challengeHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   challengeLeft: {
     flexDirection: "row",
@@ -530,18 +786,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginTop: 12,
+    marginTop: 10,
   },
   progressBar: {
     flex: 1,
-    height: 6,
-    borderRadius: 3,
+    height: 5,
+    borderRadius: 2.5,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: 2.5,
   },
+
+  // ── Trending (Pro carousel) ──
   trendingList: {
     paddingHorizontal: 16,
   },
@@ -551,16 +809,33 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   trendingSkeletonCard: {
-    width: 150,
-    borderRadius: 16,
+    width: 148,
+    borderRadius: 14,
     borderWidth: 1,
     padding: 14,
     alignItems: "center",
   },
+
+  // ── News ──
+  newsCard: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+  },
+  newsMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  // ── Social (Pro) ──
   socialCard: {
     marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 16,
+    marginBottom: 8,
+    borderRadius: 14,
     borderWidth: 1,
     padding: 14,
   },
@@ -570,9 +845,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,
@@ -588,18 +863,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  newsCard: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-  },
-  newsMetaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 8,
   },
 });

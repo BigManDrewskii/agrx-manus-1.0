@@ -196,3 +196,15 @@
 - [x] Confirm button visible without scrolling: 50px height (was 56), 24px bottom padding (was 40)
 - [x] Verified on mobile preview: price fully visible, all content fits in viewport
 - [x] All 340 tests passing, 0 TS errors
+- [x] Deep audit Home screen UI: every element, spacing, hierarchy, visual weight
+- [x] Design Simple/Pro view mode system (Simple: clean, focused; Pro: full charts, XP, social)
+- [x] Build ViewModeContext with AsyncStorage persistence and Simple/Pro toggle
+- [x] Build ViewModeToggle component (animated segmented control with haptics)
+- [x] Refine Home screen UI: cleaner hero, tighter spacing, mode-aware sections
+- [x] Build Simple Home layout: portfolio hero (no sparkline), watchlist section, 2 news max, no XP/challenge/social
+- [x] Build Pro Home layout: full sparkline, XP bar, daily challenge, trending, 4 news, social feed
+- [x] Update Trade screen: Pro shows full order preview, Simple shows just balance-after
+- [x] Update Portfolio screen: Simple shows clean cards, Pro shows detailed table with avg cost/shares
+- [x] Add View Mode toggle section to Settings screen (with description per mode)
+- [x] Wire ViewModeProvider into root layout
+- [x] Run full test suite: 340 tests passed, 0 TS errors

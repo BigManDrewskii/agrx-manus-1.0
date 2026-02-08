@@ -377,7 +377,7 @@ describe("Notification History — Home Screen Bell Badge", () => {
   });
 
   it("should show badge count when unread > 0", () => {
-    expect(homeSrc).toContain("badgeContainer");
+    expect(homeSrc).toContain("styles.badge");
     expect(homeSrc).toContain("unreadCount > 0");
   });
 
@@ -385,8 +385,8 @@ describe("Notification History — Home Screen Bell Badge", () => {
     expect(homeSrc).toContain('unreadCount > 9 ? "9+"');
   });
 
-  it("should have badgeContainer style with absolute positioning", () => {
-    expect(homeSrc).toContain("badgeContainer");
+  it("should have badge style with absolute positioning", () => {
+    expect(homeSrc).toContain("badge");
     expect(homeSrc).toContain('position: "absolute"');
   });
 });
