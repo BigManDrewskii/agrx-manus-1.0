@@ -29,6 +29,8 @@ export function QuickActions() {
           styles.quickActionButton,
           { backgroundColor: colors.primary },
         ]}
+        accessibilityLabel="Navigate to Trade screen"
+        accessibilityHint="Buy and sell stocks"
       >
         <IconSymbol name="plus.circle.fill" size={20} color={colors.onPrimary} />
         <Subhead style={{ fontFamily: FontFamily.semibold, color: colors.onPrimary }}>
@@ -42,6 +44,8 @@ export function QuickActions() {
           styles.quickActionButton,
           { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
         ]}
+        accessibilityLabel="Navigate to Portfolio screen"
+        accessibilityHint="View your holdings and performance"
       >
         <IconSymbol name="briefcase.fill" size={20} color={colors.foreground} />
         <Subhead style={{ fontFamily: FontFamily.semibold }}>Portfolio</Subhead>
@@ -53,6 +57,8 @@ export function QuickActions() {
           styles.quickActionButton,
           { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
         ]}
+        accessibilityLabel="Navigate to Markets screen"
+        accessibilityHint="Browse and search all stocks"
       >
         <IconSymbol name="chart.line.uptrend.xyaxis" size={20} color={colors.foreground} />
         <Subhead style={{ fontFamily: FontFamily.semibold }}>Markets</Subhead>

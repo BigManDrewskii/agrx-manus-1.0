@@ -97,6 +97,8 @@ export function MarketNewsSection({ marketNews, isLoading, isSimple }: MarketNew
             styles.newsCard,
             { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
+          accessibilityLabel={`Read article: ${article.title}`}
+          accessibilityHint={`Opens in browser from ${article.source}`}
         >
           <Subhead style={{ fontFamily: FontFamily.semibold, lineHeight: 20 }} numberOfLines={2}>
             {article.title}
