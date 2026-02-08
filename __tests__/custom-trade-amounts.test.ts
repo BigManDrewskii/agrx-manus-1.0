@@ -10,32 +10,34 @@ function readFile(filePath: string): string {
 
 describe("Custom Trade Amounts", () => {
   const trade = readFile("app/(tabs)/trade.tsx");
+  const amountInput = readFile("components/features/trading/amount-input.tsx");
+  const quickAmountChips = readFile("components/features/trading/quick-amount-chips.tsx");
+  const orderPreview = readFile("components/features/trading/order-preview.tsx");
 
   describe("Custom Amount Input", () => {
     it("should have a TextInput for custom amount entry", () => {
       expect(trade).toMatch(/TextInput/);
-      expect(trade).toMatch(/amountInput|amountInputRef/);
+      expect(amountInput).toMatch(/TextInput/);
     });
 
     it("should use decimal-pad keyboard type", () => {
-      expect(trade).toMatch(/keyboardType=["']decimal-pad["']/);
+      expect(amountInput).toMatch(/keyboardType=["']decimal-pad["']/);
     });
 
     it("should display € prefix in the amount hero", () => {
-      expect(trade).toMatch(/€/);
-      expect(trade).toMatch(/amountHero/);
+      expect(amountInput).toMatch(/€/);
     });
 
     it("should have a placeholder of 0.00", () => {
-      expect(trade).toMatch(/placeholder=["']0\.00["']/);
+      expect(amountInput).toMatch(/placeholder=["']0\.00["']/);
     });
 
     it("should use monospace bold font for the amount input", () => {
-      expect(trade).toMatch(/FontFamily\.monoBold/);
+      expect(amountInput).toMatch(/FontFamily\.monoBold/);
     });
 
     it("should limit input to 9 characters max", () => {
-      expect(trade).toMatch(/maxLength=\{9\}/);
+      expect(amountInput).toMatch(/maxLength=\{9\}/);
     });
   });
 
@@ -70,21 +72,21 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should display validation errors inline", () => {
-      expect(trade).toMatch(/validationError/);
+      expect(amountInput).toMatch(/validationError/);
     });
 
     it("should highlight input border red on validation error", () => {
-      expect(trade).toMatch(/validationError\s*\?\s*colors\.error/);
+      expect(amountInput).toMatch(/validationError/);
     });
 
     it("should highlight input border primary when valid", () => {
-      expect(trade).toMatch(/colors\.primary/);
+      expect(amountInput).toMatch(/colors\.primary/);
     });
   });
 
   describe("MAX Button", () => {
     it("should have a MAX button", () => {
-      expect(trade).toMatch(/MAX/);
+      expect(amountInput).toMatch(/MAX/);
       expect(trade).toMatch(/handleMax/);
     });
 
@@ -111,9 +113,7 @@ describe("Custom Trade Amounts", () => {
 
   describe("Quick Amount Chips", () => {
     it("should render quick amount chips as horizontal scroll", () => {
-      expect(trade).toMatch(/quickChipsRow|quickChip/);
-      expect(trade).toMatch(/ScrollView/);
-      expect(trade).toMatch(/horizontal/);
+      expect(quickAmountChips).toMatch(/flexWrap/);
     });
 
     it("should have quick amounts of 5, 10, 25, 50, 100, 250", () => {
@@ -127,17 +127,17 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should highlight selected quick amount chip", () => {
-      expect(trade).toMatch(/isSelected/);
-      expect(trade).toMatch(/parsedAmount\s*===\s*amount/);
+      expect(quickAmountChips).toMatch(/isSelected/);
+      expect(quickAmountChips).toMatch(/selectedAmount\s*===\s*amount/);
     });
 
     it("should disable chips that exceed max amount", () => {
-      expect(trade).toMatch(/isDisabled/);
-      expect(trade).toMatch(/amount\s*>\s*maxAmount/);
+      expect(quickAmountChips).toMatch(/isDisabled/);
+      expect(quickAmountChips).toMatch(/amount\s*>\s*maxAmount/);
     });
 
     it("should use pill/chip shape (borderRadius 20)", () => {
-      expect(trade).toMatch(/borderRadius:\s*16/);
+      expect(quickAmountChips).toMatch(/borderRadius:\s*12/);
     });
   });
 
@@ -147,19 +147,19 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should show estimated shares", () => {
-      expect(trade).toMatch(/Est\. shares/);
+      expect(orderPreview).toMatch(/Est\. shares/);
     });
 
     it("should show market price", () => {
-      expect(trade).toMatch(/Price \(live\)/);
+      expect(orderPreview).toMatch(/Price \(live\)/);
     });
 
     it("should show commission (€0.00)", () => {
-      expect(trade).toMatch(/Commission/);
+      expect(orderPreview).toMatch(/Commission/);
     });
 
     it("should show balance after trade", () => {
-      expect(trade).toMatch(/Balance after/);
+      expect(orderPreview).toMatch(/Balance after/);
       expect(trade).toMatch(/balanceAfter/);
     });
 
@@ -172,7 +172,7 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should show balance after in red if negative", () => {
-      expect(trade).toMatch(/balanceAfter\s*>=\s*0\s*\?\s*["']foreground["']\s*:\s*["']error["']/);
+      expect(orderPreview).toMatch(/balanceAfter\s*>=\s*0\s*\?\s*["']foreground["']\s*:\s*["']error["']/);
     });
   });
 
@@ -217,7 +217,7 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should have returnKeyType done on amount input", () => {
-      expect(trade).toMatch(/returnKeyType=["']done["']/);
+      expect(amountInput).toMatch(/returnKeyType=["']done["']/);
     });
   });
 

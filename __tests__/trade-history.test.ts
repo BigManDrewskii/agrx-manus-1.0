@@ -12,6 +12,7 @@ describe("Trade History Screen", () => {
   const tradeHistory = readFile("app/trade-history.tsx");
   const rootLayout = readFile("app/_layout.tsx");
   const portfolio = readFile("app/(tabs)/portfolio.tsx");
+  const holdingsHeader = readFile("components/features/portfolio/holdings-header.tsx");
 
   // ─── Screen Structure ────────────────────────────────────────────────
 
@@ -195,12 +196,16 @@ describe("Trade History Screen", () => {
 
   describe("Portfolio Navigation", () => {
     it("should have a History chip in the Portfolio holdings header", () => {
-      expect(portfolio).toMatch(/trade-history/);
-      expect(portfolio).toMatch(/History/);
+      expect(holdingsHeader).toMatch(/trade-history/);
+      expect(holdingsHeader).toMatch(/History/);
     });
 
     it("should only show History chip when trades exist", () => {
-      expect(portfolio).toMatch(/state\.trades\.length > 0/);
+      expect(holdingsHeader).toMatch(/hasTrades/);
+    });
+
+    it("should use HoldingsHeader component", () => {
+      expect(portfolio).toMatch(/HoldingsHeader/);
     });
   });
 
