@@ -308,3 +308,7 @@
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after Portfolio refinements
 - [x] Add sector allocation bar + legend to Portfolio Pro mode
 - [x] Restructure dividend section with left-aligned ticker+date layout
+- [x] Fix Portfolio Pro mode: ticker text wrapping — switched to two-row layout (top: icon+ticker+value, bottom: shares+sparkline+share)
+- [x] Fix Portfolio Pro mode: share info text wrapping — moved to dedicated bottom row with full width
+- [x] Fix Portfolio Pro mode: holdings row layout — two-row card design gives each element breathing room
+- [x] Fix Portfolio Pro mode: sparkline + share button moved to bottom row, value stays top-right

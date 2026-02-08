@@ -481,49 +481,38 @@ export default function PortfolioScreen() {
                       key={enriched.holding.stockId}
                       entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
                     >
-                      <View
+                      <AnimatedPressable
+                        variant="card"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/asset/[id]" as any,
+                            params: { id: enriched.holding.stockId },
+                          })
+                        }
                         style={[
-                          styles.holdingRow,
+                          styles.holdingPressable,
                           index < enrichedHoldings.length - 1 && {
                             borderBottomWidth: StyleSheet.hairlineWidth,
                             borderBottomColor: colors.border,
                           },
                         ]}
                       >
-                        <AnimatedPressable
-                          variant="card"
-                          onPress={() =>
-                            router.push({
-                              pathname: "/asset/[id]" as any,
-                              params: { id: enriched.holding.stockId },
-                            })
-                          }
-                          style={styles.holdingPressable}
-                        >
-                          <View style={styles.holdingLeft}>
-                            <View style={[styles.holdingIcon, { backgroundColor: colors.primaryAlpha }]}>
-                              <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
-                                {enriched.holding.ticker.slice(0, 2)}
-                              </Caption1>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                              <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 3 }}>
-                                {enriched.holding.ticker}
-                              </Subhead>
-                              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-                                {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 4)} shares · avg €{enriched.avgCost.toFixed(2)}
-                              </Caption1>
-                            </View>
+                        {/* Top row: icon + ticker + value */}
+                        <View style={styles.holdingTopRow}>
+                          <View style={[styles.holdingIcon, { backgroundColor: colors.primaryAlpha }]}>
+                            <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                              {enriched.holding.ticker.slice(0, 2)}
+                            </Caption1>
                           </View>
-                          <View style={styles.holdingCenter}>
-                            <Sparkline
-                              data={enriched.liveSparkline}
-                              width={52}
-                              height={22}
-                              positive={enriched.livePnl >= 0}
-                            />
+                          <View style={styles.holdingNameCol}>
+                            <Subhead style={{ fontFamily: FontFamily.semibold }} numberOfLines={1}>
+                              {enriched.holding.ticker}
+                            </Subhead>
+                            <Caption1 color="muted" numberOfLines={1} style={{ fontFamily: FontFamily.medium }}>
+                              {enriched.holding.name}
+                            </Caption1>
                           </View>
-                          <View style={styles.holdingRight}>
+                          <View style={styles.holdingValueCol}>
                             <AnimatedNumber
                               value={enriched.liveValue}
                               prefix="€"
@@ -533,21 +522,33 @@ export default function PortfolioScreen() {
                                 lineHeight: 20,
                                 fontFamily: FontFamily.monoMedium,
                                 color: colors.foreground,
-                                marginBottom: 3,
                               }}
                             />
-                            <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
+                            <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
                           </View>
-                        </AnimatedPressable>
-                        {/* Share button */}
-                        <AnimatedPressable
-                          variant="icon"
-                          onPress={() => handleShareHolding(enriched)}
-                          style={[styles.holdingShareButton, { backgroundColor: colors.surfaceSecondary }]}
-                        >
-                          <IconSymbol name="square.and.arrow.up" size={14} color={colors.muted} />
-                        </AnimatedPressable>
-                      </View>
+                        </View>
+                        {/* Bottom row: shares info + sparkline + share btn */}
+                        <View style={styles.holdingBottomRow}>
+                          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                            {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 2)} shares · avg €{enriched.avgCost.toFixed(2)}
+                          </Caption1>
+                          <View style={styles.holdingBottomRight}>
+                            <Sparkline
+                              data={enriched.liveSparkline}
+                              width={48}
+                              height={18}
+                              positive={enriched.livePnl >= 0}
+                            />
+                            <AnimatedPressable
+                              variant="icon"
+                              onPress={() => handleShareHolding(enriched)}
+                              style={[styles.holdingShareButton, { backgroundColor: colors.surfaceSecondary }]}
+                            >
+                              <IconSymbol name="square.and.arrow.up" size={13} color={colors.muted} />
+                            </AnimatedPressable>
+                          </View>
+                        </View>
+                      </AnimatedPressable>
                     </Animated.View>
                   ))}
                 </View>
@@ -829,43 +830,45 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  holdingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingRight: 10,
-  },
   holdingPressable: {
-    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  holdingTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    paddingLeft: 16,
-    paddingRight: 8,
   },
-  holdingLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+  holdingNameCol: {
     flex: 1,
-  },
-  holdingIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
+    marginLeft: 12,
     marginRight: 12,
   },
-  holdingCenter: {
-    marginHorizontal: 10,
-  },
-  holdingRight: {
+  holdingValueCol: {
     alignItems: "flex-end",
-    minWidth: 80,
+  },
+  holdingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  holdingBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+    paddingLeft: 52,
+  },
+  holdingBottomRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   holdingShareButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
   },
