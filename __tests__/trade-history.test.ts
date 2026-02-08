@@ -31,9 +31,10 @@ describe("Trade History Screen", () => {
       expect(tradeHistory).toMatch(/LargeTitle/);
     });
 
-    it("should use FlatList for the trade list (not ScrollView with map)", () => {
+    it("should use FlatList for the main trade list", () => {
       expect(tradeHistory).toMatch(/FlatList/);
-      expect(tradeHistory).not.toMatch(/ScrollView/);
+      // ScrollView is used for horizontal filter chips, not for the trade list
+      expect(tradeHistory).toMatch(/ScrollView/);
     });
 
     it("should use AnimatedPressable for interactive elements", () => {

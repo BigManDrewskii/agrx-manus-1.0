@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 4,
+    paddingBottom: 10,
   },
   tabContainer: {
     flexDirection: "row",
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     width: "47%",
     borderRadius: 16,
     borderWidth: 1,
-    padding: 14,
+    padding: 16,
     alignItems: "center",
   },
   achievementIcon: {

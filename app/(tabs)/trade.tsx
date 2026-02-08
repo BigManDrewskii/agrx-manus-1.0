@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
   // ─── Order Sheet ──────────────────────────────────────────────
   sheetScroll: {
     flexGrow: 1,
-    paddingBottom: 8,
+    paddingBottom: 24,
   },
   sheetHeader: {
     flexDirection: "row",
@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     padding: 14,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   orderRow: {
     flexDirection: "row",

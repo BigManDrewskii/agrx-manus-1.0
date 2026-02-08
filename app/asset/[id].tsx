@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     paddingVertical: 12,
-    gap: 4,
+    gap: 6,
   },
   periodButton: {
     paddingHorizontal: 14,

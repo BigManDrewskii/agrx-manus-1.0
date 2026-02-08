@@ -9,6 +9,10 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const STORAGE_KEY = "@agrx/watchlist";
+const SEEDED_KEY = "@agrx/watchlist-seeded";
+
+// Popular ATHEX blue-chip stocks to auto-seed for new users
+const DEFAULT_WATCHLIST = ["eee", "eurob", "alpha", "hto", "opap", "mtln"];
 
 interface WatchlistContextValue {
   /** Set of stock IDs currently in the watchlist */
@@ -32,14 +36,19 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   const [watchlist, setWatchlist] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
 
-  // Load from AsyncStorage on mount
+  // Load from AsyncStorage on mount, auto-seed for first-time users
   useEffect(() => {
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        const seeded = await AsyncStorage.getItem(SEEDED_KEY);
         if (stored) {
           const ids: string[] = JSON.parse(stored);
           setWatchlist(new Set(ids));
+        } else if (!seeded) {
+          // First-time user: seed with popular ATHEX stocks
+          setWatchlist(new Set(DEFAULT_WATCHLIST));
+          await AsyncStorage.setItem(SEEDED_KEY, "true");
         }
       } catch {
         // Silently handle — start with empty watchlist

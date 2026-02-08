@@ -46,6 +46,8 @@ const MAPPING = {
   "arrow.up": "arrow-upward",
   "arrow.down": "arrow-downward",
   "percent": "percent",
+  "line.3.horizontal.decrease": "filter-list",
+  "arrow.up.arrow.down": "swap-vert",
 } as IconMapping;
 
 /**

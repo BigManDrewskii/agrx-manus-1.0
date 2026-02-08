@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 12,
+    paddingBottom: 16,
   },
   headerTop: {
     flexDirection: "row",
@@ -718,6 +718,7 @@ const styles = StyleSheet.create({
   // ── Portfolio Hero ──
   portfolioHero: {
     paddingHorizontal: 16,
+    paddingTop: 4,
     paddingBottom: 16,
     alignItems: "center",
   },
@@ -746,7 +747,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     gap: 10,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   quickActionButton: {
     flex: 1,
@@ -840,7 +841,7 @@ const styles = StyleSheet.create({
   // ── News ──
   newsCard: {
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 10,
     borderRadius: 12,
     borderWidth: 1,
     padding: 14,
@@ -866,9 +867,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 10,

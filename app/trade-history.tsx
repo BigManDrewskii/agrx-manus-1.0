@@ -13,8 +13,8 @@
  *   Trade rows: FadeInDown.duration(250).delay(stagger)
  *   Empty state: FadeIn.duration(300)
  */
-import React, { useMemo, useCallback } from "react";
-import { View, StyleSheet, FlatList } from "react-native";
+import React, { useMemo, useCallback, useState } from "react";
+import { View, StyleSheet, FlatList, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
@@ -80,6 +80,24 @@ function formatDateWithYear(timestamp: number): string {
   return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
 
+// ─── Filter & Sort Types ──────────────────────────────────────────────────
+
+type TradeFilter = "all" | "buy" | "sell";
+type TradeSort = "newest" | "oldest" | "largest" | "smallest";
+
+const FILTER_OPTIONS: { key: TradeFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "buy", label: "Buys" },
+  { key: "sell", label: "Sells" },
+];
+
+const SORT_OPTIONS: { key: TradeSort; label: string }[] = [
+  { key: "newest", label: "Newest" },
+  { key: "oldest", label: "Oldest" },
+  { key: "largest", label: "Largest" },
+  { key: "smallest", label: "Smallest" },
+];
+
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export default function TradeHistoryScreen() {
@@ -87,6 +105,8 @@ export default function TradeHistoryScreen() {
   const colors = useColors();
   const { state } = useDemo();
   const { stocks } = useStockQuotes();
+  const [filter, setFilter] = useState<TradeFilter>("all");
+  const [sort, setSort] = useState<TradeSort>("newest");
 
   // Build live price map
   const livePriceMap = useMemo(() => {
@@ -99,11 +119,28 @@ export default function TradeHistoryScreen() {
     return map;
   }, [stocks]);
 
-  // Sort trades newest first
-  const sortedTrades = useMemo(
-    () => [...state.trades].sort((a, b) => b.timestamp - a.timestamp),
-    [state.trades]
-  );
+  // Filter trades
+  const filteredTrades = useMemo(() => {
+    if (filter === "all") return state.trades;
+    return state.trades.filter((t) => t.type === filter);
+  }, [state.trades, filter]);
+
+  // Sort trades
+  const sortedTrades = useMemo(() => {
+    const trades = [...filteredTrades];
+    switch (sort) {
+      case "newest":
+        return trades.sort((a, b) => b.timestamp - a.timestamp);
+      case "oldest":
+        return trades.sort((a, b) => a.timestamp - b.timestamp);
+      case "largest":
+        return trades.sort((a, b) => b.amount - a.amount);
+      case "smallest":
+        return trades.sort((a, b) => a.amount - b.amount);
+      default:
+        return trades;
+    }
+  }, [filteredTrades, sort]);
 
   // Group trades by date
   const sections = useMemo<GroupedSection[]>(() => {
@@ -357,6 +394,76 @@ export default function TradeHistoryScreen() {
         </View>
       </Animated.View>
 
+      {/* ── Filter & Sort Controls ── */}
+      {state.trades.length > 0 && (
+        <Animated.View entering={FadeInDown.duration(250).delay(90)}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
+            {/* Filter chips */}
+            {FILTER_OPTIONS.map((opt) => {
+              const isActive = filter === opt.key;
+              return (
+                <AnimatedPressable
+                  key={opt.key}
+                  variant="chip"
+                  onPress={() => setFilter(opt.key)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: isActive ? colors.primary : colors.surface,
+                      borderColor: isActive ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Caption1
+                    style={{
+                      fontFamily: isActive ? FontFamily.bold : FontFamily.medium,
+                      color: isActive ? colors.onPrimary : colors.foreground,
+                    }}
+                  >
+                    {opt.label}
+                  </Caption1>
+                </AnimatedPressable>
+              );
+            })}
+
+            {/* Divider */}
+            <View style={[styles.filterDivider, { backgroundColor: colors.border }]} />
+
+            {/* Sort chips */}
+            {SORT_OPTIONS.map((opt) => {
+              const isActive = sort === opt.key;
+              return (
+                <AnimatedPressable
+                  key={opt.key}
+                  variant="chip"
+                  onPress={() => setSort(opt.key)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: isActive ? colors.surfaceSecondary : colors.surface,
+                      borderColor: isActive ? colors.muted : colors.border,
+                    },
+                  ]}
+                >
+                  <Caption1
+                    style={{
+                      fontFamily: isActive ? FontFamily.semibold : FontFamily.medium,
+                      color: isActive ? colors.foreground : colors.muted,
+                    }}
+                  >
+                    {opt.label}
+                  </Caption1>
+                </AnimatedPressable>
+              );
+            })}
+          </ScrollView>
+        </Animated.View>
+      )}
+
       {/* ── Summary Card ── */}
       {state.trades.length > 0 && (
         <Animated.View
@@ -479,7 +586,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 14,
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
@@ -567,5 +674,23 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 40,
+  },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterDivider: {
+    width: 1,
+    height: 20,
+    marginHorizontal: 4,
   },
 });

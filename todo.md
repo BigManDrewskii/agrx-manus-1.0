@@ -285,3 +285,16 @@
 - [x] Migrate social.tsx PostCard and LeaderboardRow PnLText → AnimatedPnLNumber
 - [x] pnl-text.tsx now has zero imports (component definition retained as dead code)
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Visual audit all screens for cramped/unbalanced layouts
+- [x] Fix spacing issues on Home screen (header +4px, hero +4px top, quickActions +8px, newsCard +2px, avatar +4px)
+- [x] Fix spacing issues on Markets screen (sectorContainer +4px, sortRow +4px)
+- [x] Fix spacing issues on Portfolio screen (header +6px, holdingsHeader +4px)
+- [x] Fix spacing issues on Trade screen (sheetScroll +16px, orderPreview +4px)
+- [x] Fix spacing issues on Social screen (header +6px, achievementCard +2px)
+- [x] Fix spacing issues on Asset Detail screen (periodRow gap +2px)
+- [x] Fix spacing issues on secondary screens (Trade History summaryCard +6px)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Add filter/sort controls to Trade History screen (All/Buys/Sells filter + Newest/Oldest/Largest/Smallest sort)
+- [x] Auto-seed watchlist with 6 popular ATHEX blue-chip stocks for first-time users
+- [x] Delete unused pnl-text.tsx component (zero imports)
+- [x] Add filter-list and swap-vert icon mappings

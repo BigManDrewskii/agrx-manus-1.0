@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 4,
+    paddingBottom: 10,
   },
   headerRight: {
     flexDirection: "row",
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   holdingsContainer: {
     paddingTop: 0,

@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   sectorContainer: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   sectorList: {
     paddingHorizontal: 16,
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingLeft: 16,
-    paddingBottom: 6,
+    paddingBottom: 10,
     gap: 12,
   },
   sortChipList: {
