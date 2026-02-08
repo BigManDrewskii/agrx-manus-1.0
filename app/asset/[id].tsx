@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -16,6 +15,19 @@ import { LiveBadge } from "@/components/ui/live-badge";
 import { ChartSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { useStockQuote, useStockChart } from "@/hooks/use-stocks";
 import { GREEK_STOCKS } from "@/lib/mock-data";
+import {
+  Title3,
+  Headline,
+  Body,
+  Callout,
+  Subhead,
+  Footnote,
+  Caption1,
+  MonoLargeTitle,
+  MonoBody,
+  MonoSubhead,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 import Svg, { Polyline, Defs, LinearGradient, Stop, Path } from "react-native-svg";
 
 const TIME_PERIODS = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
@@ -89,7 +101,7 @@ export default function AssetDetailScreen() {
   const [activePeriod, setActivePeriod] = useState("1D");
 
   const { stock, isLoading: quoteLoading, isLive } = useStockQuote(id ?? "");
-  const { chartData, isLoading: chartLoading, isLive: chartIsLive } = useStockChart(id ?? "", activePeriod);
+  const { chartData, isLoading: chartLoading } = useStockChart(id ?? "", activePeriod);
 
   // Fallback to mock data if stock not found
   const mockAsset = GREEK_STOCKS.find((s) => s.id === id);
@@ -151,14 +163,10 @@ export default function AssetDetailScreen() {
           </Pressable>
           <View style={styles.headerCenter}>
             <View style={styles.headerTitleRow}>
-              <Text style={[styles.headerTicker, { color: colors.foreground }]}>
-                {ticker}
-              </Text>
+              <Title3>{ticker}</Title3>
               <LiveBadge isLive={isLive} />
             </View>
-            <Text style={[styles.headerName, { color: colors.muted }]}>
-              {name}
-            </Text>
+            <Footnote color="muted">{name}</Footnote>
           </View>
           <Pressable
             style={({ pressed }) => [
@@ -180,23 +188,13 @@ export default function AssetDetailScreen() {
             </>
           ) : (
             <>
-              <Text style={[styles.price, { color: colors.foreground }]}>
+              <MonoLargeTitle style={{ fontSize: 36, letterSpacing: -1, marginBottom: 4 }}>
                 €{price.toFixed(2)}
-              </Text>
+              </MonoLargeTitle>
               <View style={styles.changeRow}>
-                <PnLText
-                  value={change}
-                  format="currency"
-                  size="md"
-                  showArrow={true}
-                />
-                <Text style={[styles.changeSep, { color: colors.muted }]}> · </Text>
-                <PnLText
-                  value={changePercent}
-                  format="percent"
-                  size="md"
-                  showArrow={false}
-                />
+                <PnLText value={change} format="currency" size="md" showArrow={true} />
+                <Footnote color="muted"> · </Footnote>
+                <PnLText value={changePercent} format="percent" size="md" showArrow={false} />
               </View>
             </>
           )}
@@ -207,12 +205,7 @@ export default function AssetDetailScreen() {
           {chartLoading ? (
             <ChartSkeleton />
           ) : (
-            <PriceChart
-              data={chartData}
-              width={360}
-              height={200}
-              positive={isPositive}
-            />
+            <PriceChart data={chartData} width={360} height={200} positive={isPositive} />
           )}
         </View>
 
@@ -230,29 +223,22 @@ export default function AssetDetailScreen() {
                   pressed && { opacity: 0.6 },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.periodText,
-                    {
-                      color: isActive ? colors.primary : colors.muted,
-                      fontWeight: isActive ? "700" : "500",
-                    },
-                  ]}
+                <Caption1
+                  color={isActive ? "primary" : "muted"}
+                  style={{
+                    fontFamily: isActive ? FontFamily.bold : FontFamily.medium,
+                    letterSpacing: 0.3,
+                  }}
                 >
                   {period}
-                </Text>
+                </Caption1>
               </Pressable>
             );
           })}
         </View>
 
         {/* Key Stats — Live Data */}
-        <View
-          style={[
-            styles.statsCard,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
+        <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.statsGrid}>
             {[
               { label: "Market Cap", value: marketCap },
@@ -261,12 +247,10 @@ export default function AssetDetailScreen() {
               { label: "52W Range", value: `€${fiftyTwoWeekLow.toFixed(2)} - €${fiftyTwoWeekHigh.toFixed(2)}` },
             ].map((stat) => (
               <View key={stat.label} style={styles.statItem}>
-                <Text style={[styles.statLabel, { color: colors.muted }]}>
+                <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 2 }}>
                   {stat.label}
-                </Text>
-                <Text style={[styles.statValue, { color: colors.foreground }]}>
-                  {stat.value}
-                </Text>
+                </Caption1>
+                <Subhead style={{ fontFamily: FontFamily.semibold }}>{stat.value}</Subhead>
               </View>
             ))}
           </View>
@@ -274,76 +258,45 @@ export default function AssetDetailScreen() {
 
         {/* Community Sentiment */}
         <View style={styles.sentimentSection}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Community Sentiment
-          </Text>
-          <View
-            style={[
-              styles.sentimentCard,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
-          >
+          <Title3 style={{ marginBottom: 12 }}>Community Sentiment</Title3>
+          <View style={[styles.sentimentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.sentimentBar}>
-              <View
-                style={[
-                  styles.sentimentFillBuy,
-                  {
-                    backgroundColor: colors.success,
-                    width: `${buyPercent}%`,
-                  },
-                ]}
-              />
-              <View
-                style={[
-                  styles.sentimentFillSell,
-                  {
-                    backgroundColor: colors.error,
-                    width: `${sellPercent}%`,
-                  },
-                ]}
-              />
+              <View style={[styles.sentimentFillBuy, { backgroundColor: colors.success, width: `${buyPercent}%` }]} />
+              <View style={[styles.sentimentFillSell, { backgroundColor: colors.error, width: `${sellPercent}%` }]} />
             </View>
             <View style={styles.sentimentLabels}>
-              <Text style={[styles.sentimentLabel, { color: colors.success }]}>
+              <Footnote color="success" style={{ fontFamily: FontFamily.semibold }}>
                 {buyPercent}% Buy
-              </Text>
-              <Text style={[styles.sentimentLabel, { color: colors.error }]}>
+              </Footnote>
+              <Footnote color="error" style={{ fontFamily: FontFamily.semibold }}>
                 {sellPercent}% Sell
-              </Text>
+              </Footnote>
             </View>
           </View>
         </View>
 
         {/* News */}
         <View style={styles.newsSection}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Latest News
-          </Text>
+          <Title3 style={{ marginBottom: 12 }}>Latest News</Title3>
           {NEWS.map((item) => (
             <Pressable
               key={item.id}
               style={({ pressed }) => [
                 styles.newsCard,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
+                { backgroundColor: colors.surface, borderColor: colors.border },
                 pressed && { opacity: 0.7 },
               ]}
             >
-              <Text
-                style={[styles.newsTitle, { color: colors.foreground }]}
-                numberOfLines={2}
-              >
+              <Subhead style={{ fontFamily: FontFamily.semibold, lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>
                 {item.title}
-              </Text>
+              </Subhead>
               <View style={styles.newsMeta}>
-                <Text style={[styles.newsSource, { color: colors.primary }]}>
+                <Caption1 color="primary" style={{ fontFamily: FontFamily.semibold }}>
                   {item.source}
-                </Text>
-                <Text style={[styles.newsTime, { color: colors.muted }]}>
+                </Caption1>
+                <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
                   {item.time}
-                </Text>
+                </Caption1>
               </View>
             </Pressable>
           ))}
@@ -353,12 +306,7 @@ export default function AssetDetailScreen() {
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View
-        style={[
-          styles.ctaContainer,
-          { backgroundColor: colors.background, borderTopColor: colors.border },
-        ]}
-      >
+      <View style={[styles.ctaContainer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <Pressable
           onPress={() => router.push("/(tabs)/trade" as any)}
           style={({ pressed }) => [
@@ -367,7 +315,7 @@ export default function AssetDetailScreen() {
             pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
           ]}
         >
-          <Text style={[styles.ctaText, { color: colors.onPrimary }]}>Buy</Text>
+          <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>Buy</Callout>
         </Pressable>
         <Pressable
           onPress={() => router.push("/(tabs)/trade" as any)}
@@ -377,7 +325,7 @@ export default function AssetDetailScreen() {
             pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
           ]}
         >
-          <Text style={[styles.ctaText, { color: colors.onPrimary }]}>Sell</Text>
+          <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>Sell</Callout>
         </Pressable>
       </View>
     </ScreenContainer>
@@ -411,14 +359,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  headerTicker: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  headerName: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
   shareButton: {
     width: 40,
     height: 40,
@@ -430,19 +370,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingBottom: 16,
   },
-  price: {
-    fontSize: 36,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    letterSpacing: -1,
-    marginBottom: 4,
-  },
   changeRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  changeSep: {
-    fontSize: 14,
   },
   chartContainer: {
     alignItems: "center",
@@ -459,10 +389,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
   },
-  periodText: {
-    fontSize: 13,
-    letterSpacing: 0.3,
-  },
   statsCard: {
     marginHorizontal: 16,
     borderRadius: 16,
@@ -478,23 +404,9 @@ const styles = StyleSheet.create({
     width: "50%",
     paddingVertical: 8,
   },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-    marginBottom: 2,
-  },
-  statValue: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
   sentimentSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 12,
   },
   sentimentCard: {
     borderRadius: 16,
@@ -522,10 +434,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  sentimentLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
   newsSection: {
     paddingHorizontal: 16,
   },
@@ -535,23 +443,9 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
   },
-  newsTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 20,
-    marginBottom: 8,
-  },
   newsMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  newsSource: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  newsTime: {
-    fontSize: 12,
-    fontWeight: "500",
   },
   ctaContainer: {
     position: "absolute",
@@ -571,9 +465,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-  },
-  ctaText: {
-    fontSize: 17,
-    fontWeight: "700",
   },
 });

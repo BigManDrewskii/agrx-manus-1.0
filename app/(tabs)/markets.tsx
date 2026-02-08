@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
-  Text,
   TextInput,
   FlatList,
   StyleSheet,
@@ -16,6 +15,14 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
+import {
+  Title1,
+  Caption1,
+  Callout,
+  Footnote,
+  Headline,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 
 const CATEGORIES = ["All", "Blue Chips", "Gainers", "Losers", "Dividend", "Growth"];
 
@@ -82,7 +89,7 @@ export default function MarketsScreen() {
     <ScreenContainer>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Markets</Text>
+        <Title1>Markets</Title1>
         <View style={styles.headerRight}>
           <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
           <View style={styles.marketStatus}>
@@ -92,14 +99,12 @@ export default function MarketsScreen() {
                 { backgroundColor: isMarketOpen ? colors.success : colors.muted },
               ]}
             />
-            <Text
-              style={[
-                styles.statusText,
-                { color: isMarketOpen ? colors.success : colors.muted },
-              ]}
+            <Caption1
+              color={isMarketOpen ? "success" : "muted"}
+              style={{ fontFamily: FontFamily.semibold }}
             >
               {isMarketOpen ? "ATHEX Open" : "ATHEX Closed"}
-            </Text>
+            </Caption1>
           </View>
         </View>
       </View>
@@ -117,7 +122,10 @@ export default function MarketsScreen() {
         >
           <IconSymbol name="magnifyingglass" size={18} color={colors.muted} />
           <TextInput
-            style={[styles.searchInput, { color: colors.foreground }]}
+            style={[
+              styles.searchInput,
+              { color: colors.foreground, fontFamily: FontFamily.medium },
+            ]}
             placeholder="Search stocks, ETFs..."
             placeholderTextColor={colors.muted}
             value={search}
@@ -143,27 +151,18 @@ export default function MarketsScreen() {
                 style={({ pressed }) => [
                   styles.chip,
                   {
-                    backgroundColor: isActive
-                      ? colors.primary
-                      : colors.surface,
-                    borderColor: isActive
-                      ? colors.primary
-                      : colors.border,
+                    backgroundColor: isActive ? colors.primary : colors.surface,
+                    borderColor: isActive ? colors.primary : colors.border,
                   },
                   pressed && { opacity: 0.7 },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    {
-                      color: isActive ? colors.onPrimary : colors.muted,
-                      fontWeight: isActive ? "700" : "500",
-                    },
-                  ]}
+                <Caption1
+                  color={isActive ? "onPrimary" : "muted"}
+                  style={{ fontFamily: isActive ? FontFamily.bold : FontFamily.medium }}
                 >
                   {item}
-                </Text>
+                </Caption1>
               </Pressable>
             );
           }}
@@ -172,9 +171,9 @@ export default function MarketsScreen() {
 
       {/* Stock Count */}
       <View style={styles.countRow}>
-        <Text style={[styles.countText, { color: colors.muted }]}>
+        <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
           {filteredStocks.length} {filteredStocks.length === 1 ? "stock" : "stocks"}
-        </Text>
+        </Caption1>
       </View>
 
       {/* Stock List */}
@@ -217,12 +216,10 @@ export default function MarketsScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <IconSymbol name="magnifyingglass" size={32} color={colors.muted} />
-              <Text style={[styles.emptyText, { color: colors.muted }]}>
+              <Callout color="muted" style={{ fontFamily: FontFamily.semibold }}>
                 No stocks found
-              </Text>
-              <Text style={[styles.emptySubtext, { color: colors.muted }]}>
-                Try a different search or category
-              </Text>
+              </Callout>
+              <Footnote color="muted">Try a different search or category</Footnote>
             </View>
           }
         />
@@ -240,11 +237,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
   headerRight: {
     alignItems: "flex-end",
     gap: 4,
@@ -258,10 +250,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -279,7 +267,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "500",
   },
   chipContainer: {
     marginBottom: 8,
@@ -294,16 +281,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
-  chipText: {
-    fontSize: 13,
-  },
   countRow: {
     paddingHorizontal: 16,
     paddingBottom: 4,
-  },
-  countText: {
-    fontSize: 12,
-    fontWeight: "500",
   },
   listContent: {
     paddingBottom: 100,
@@ -312,13 +292,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 40,
     gap: 8,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  emptySubtext: {
-    fontSize: 13,
-    fontWeight: "500",
   },
 });

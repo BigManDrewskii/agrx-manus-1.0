@@ -1,7 +1,7 @@
 # AGRX MVP TODO
 
 - [x] Configure AGRX color palette and design tokens in theme.config.js
-- [ ] Set up Inter and JetBrains Mono fonts
+- [x] Set up Inter and JetBrains Mono fonts
 - [x] Configure 5-tab navigation (Home, Markets, Trade, Portfolio, Social)
 - [x] Add icon mappings for all tab icons
 - [x] Build Home screen — portfolio value hero with P&L glow
@@ -72,3 +72,9 @@
 - [x] Update stockService.ts with all 135 verified symbols (18 blue-chip, 15 dividend, 102 growth)
 - [x] Update mock-data.ts GREEK_STOCKS to cover all 135 stocks with representative prices
 - [x] Test full API integration with complete ATHEX list (58 tests passing, 0 TS errors)
+- [x] Install Inter and JetBrains Mono fonts via @expo-google-fonts
+- [x] Configure font loading in root layout with splash screen hold
+- [x] Define typographic scale: 12 levels (LargeTitle→Caption2 + 4 mono variants)
+- [x] Create reusable Typography text components (14 named exports)
+- [x] Update all screens + shared components to use Typography components
+- [x] Test font rendering and run all tests (58 passed, 0 TS errors)

@@ -1,6 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { Caption2 } from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 
 interface LiveBadgeProps {
   isLive: boolean;
@@ -20,16 +22,19 @@ export function LiveBadge({ isLive, lastUpdated }: LiveBadgeProps) {
           { backgroundColor: isLive ? colors.success : colors.warning },
         ]}
       />
-      <Text
-        style={[
-          styles.text,
-          { color: isLive ? colors.success : colors.warning },
-        ]}
+      <Caption2
+        style={{
+          color: isLive ? colors.success : colors.warning,
+          fontFamily: FontFamily.bold,
+          letterSpacing: 0.3,
+        }}
       >
         {isLive ? "LIVE" : "DEMO DATA"}
-      </Text>
+      </Caption2>
       {timeAgo && (
-        <Text style={[styles.time, { color: colors.muted }]}>{timeAgo}</Text>
+        <Caption2 color="muted" style={{ fontFamily: FontFamily.medium }}>
+          {timeAgo}
+        </Caption2>
       )}
     </View>
   );
@@ -54,14 +59,5 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-  },
-  text: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-  time: {
-    fontSize: 11,
-    fontWeight: "500",
   },
 });

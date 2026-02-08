@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
-  Text,
   TextInput,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -17,6 +15,22 @@ import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes } from "@/hooks/use-stocks";
 import { QUICK_AMOUNTS } from "@/lib/mock-data";
+import {
+  Title1,
+  Title2,
+  Title3,
+  Headline,
+  Body,
+  Callout,
+  Subhead,
+  Footnote,
+  Caption1,
+  MonoLargeTitle,
+  MonoHeadline,
+  MonoBody,
+  MonoSubhead,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 
 interface SelectedStock {
   id: string;
@@ -61,28 +75,22 @@ export default function TradeScreen() {
     }, 3000);
   }, [selectedAsset, selectedAmount]);
 
+  // ─── Success Screen ─────────────────────────────────────────────
   if (showSuccess && selectedAsset && selectedAmount) {
     const shares = (selectedAmount / selectedAsset.price).toFixed(4);
     return (
       <ScreenContainer>
         <View style={styles.successContainer}>
-          <View
-            style={[
-              styles.successIcon,
-              { backgroundColor: colors.successAlpha },
-            ]}
-          >
+          <View style={[styles.successIcon, { backgroundColor: colors.successAlpha }]}>
             <IconSymbol name="checkmark" size={48} color={colors.success} />
           </View>
-          <Text style={[styles.successTitle, { color: colors.foreground }]}>
-            Trade Executed!
-          </Text>
-          <Text style={[styles.successSubtitle, { color: colors.muted }]}>
+          <Title1 style={{ marginBottom: 8 }}>Trade Executed!</Title1>
+          <Callout color="muted" style={{ textAlign: "center", marginBottom: 8 }}>
             You now own {shares} shares of {selectedAsset.ticker}
-          </Text>
-          <Text style={[styles.successAmount, { color: colors.foreground }]}>
+          </Callout>
+          <MonoLargeTitle style={{ marginBottom: 32 }}>
             €{selectedAmount.toFixed(2)}
-          </Text>
+          </MonoLargeTitle>
           <Pressable
             onPress={() => {}}
             style={({ pressed }) => [
@@ -92,13 +100,16 @@ export default function TradeScreen() {
             ]}
           >
             <IconSymbol name="square.and.arrow.up" size={18} color={colors.onPrimary} />
-            <Text style={[styles.shareButtonText, { color: colors.onPrimary }]}>Share with friends</Text>
+            <Callout color="onPrimary" style={{ fontFamily: FontFamily.semibold }}>
+              Share with friends
+            </Callout>
           </Pressable>
         </View>
       </ScreenContainer>
     );
   }
 
+  // ─── Order Sheet ────────────────────────────────────────────────
   if (selectedAsset) {
     return (
       <ScreenContainer>
@@ -113,21 +124,14 @@ export default function TradeScreen() {
             <IconSymbol name="xmark" size={22} color={colors.muted} />
           </Pressable>
           <View style={styles.sheetTitleRow}>
-            <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
-              {selectedAsset.ticker}
-            </Text>
+            <Title3>{selectedAsset.ticker}</Title3>
             <LiveBadge isLive={isLive} />
           </View>
           <View style={{ width: 22 }} />
         </View>
 
         {/* Buy/Sell Toggle */}
-        <View
-          style={[
-            styles.toggleContainer,
-            { backgroundColor: colors.surface },
-          ]}
-        >
+        <View style={[styles.toggleContainer, { backgroundColor: colors.surface }]}>
           <Pressable
             onPress={() => setIsBuy(true)}
             style={({ pressed }) => [
@@ -136,14 +140,12 @@ export default function TradeScreen() {
               pressed && { opacity: 0.8 },
             ]}
           >
-            <Text
-              style={[
-                styles.toggleText,
-                { color: isBuy ? colors.onPrimary : colors.muted },
-              ]}
+            <Subhead
+              color={isBuy ? "onPrimary" : "muted"}
+              style={{ fontFamily: FontFamily.semibold }}
             >
               Buy
-            </Text>
+            </Subhead>
           </Pressable>
           <Pressable
             onPress={() => setIsBuy(false)}
@@ -153,56 +155,43 @@ export default function TradeScreen() {
               pressed && { opacity: 0.8 },
             ]}
           >
-            <Text
-              style={[
-                styles.toggleText,
-                { color: !isBuy ? colors.onPrimary : colors.muted },
-              ]}
+            <Subhead
+              color={!isBuy ? "onPrimary" : "muted"}
+              style={{ fontFamily: FontFamily.semibold }}
             >
               Sell
-            </Text>
+            </Subhead>
           </Pressable>
         </View>
 
         {/* Asset Info with Live Price */}
         <View style={styles.assetInfo}>
-          <View
-            style={[
-              styles.assetIcon,
-              { backgroundColor: colors.surfaceSecondary },
-            ]}
-          >
-            <Text style={[styles.assetIconText, { color: colors.primary }]}>
-              {selectedAsset.ticker.slice(0, 2)}
-            </Text>
+          <View style={[styles.assetIcon, { backgroundColor: colors.surfaceSecondary }]}>
+            <Headline color="primary">{selectedAsset.ticker.slice(0, 2)}</Headline>
           </View>
-          <Text style={[styles.assetName, { color: colors.foreground }]}>
-            {selectedAsset.name}
-          </Text>
-          <Text style={[styles.assetPrice, { color: colors.foreground }]}>
+          <Title3 style={{ marginBottom: 4 }}>{selectedAsset.name}</Title3>
+          <MonoHeadline style={{ fontSize: 24, marginBottom: 2 }}>
             €{selectedAsset.price.toFixed(2)}
-          </Text>
-          <Text
-            style={[
-              styles.assetChange,
-              {
-                color:
-                  selectedAsset.changePercent >= 0
-                    ? colors.success
-                    : colors.error,
-              },
-            ]}
-          >
+          </MonoHeadline>
+          <MonoSubhead color={selectedAsset.changePercent >= 0 ? "success" : "error"}>
             {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
             {Math.abs(selectedAsset.changePercent).toFixed(2)}% today
-          </Text>
+          </MonoSubhead>
         </View>
 
         {/* Quick Amounts */}
         <View style={styles.amountsContainer}>
-          <Text style={[styles.amountsLabel, { color: colors.muted }]}>
+          <Caption1
+            color="muted"
+            style={{
+              fontFamily: FontFamily.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              marginBottom: 12,
+            }}
+          >
             Select amount
-          </Text>
+          </Caption1>
           <View style={styles.amountsGrid}>
             {QUICK_AMOUNTS.map((amount) => {
               const isSelected = selectedAmount === amount;
@@ -213,27 +202,18 @@ export default function TradeScreen() {
                   style={({ pressed }) => [
                     styles.amountButton,
                     {
-                      backgroundColor: isSelected
-                        ? colors.primary
-                        : colors.surfaceSecondary,
-                      borderColor: isSelected
-                        ? colors.primary
-                        : colors.border,
+                      backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
+                      borderColor: isSelected ? colors.primary : colors.border,
                     },
                     pressed && { opacity: 0.7 },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.amountText,
-                      {
-                        color: isSelected ? colors.onPrimary : colors.foreground,
-                        fontWeight: isSelected ? "700" : "600",
-                      },
-                    ]}
+                  <MonoBody
+                    color={isSelected ? "onPrimary" : "foreground"}
+                    style={{ fontFamily: isSelected ? FontFamily.monoBold : FontFamily.monoMedium }}
                   >
                     €{amount}
-                  </Text>
+                  </MonoBody>
                 </Pressable>
               );
             })}
@@ -242,38 +222,18 @@ export default function TradeScreen() {
 
         {/* Order Preview */}
         {selectedAmount && (
-          <View
-            style={[
-              styles.orderPreview,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          >
+          <View style={[styles.orderPreview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.orderRow}>
-              <Text style={[styles.orderLabel, { color: colors.muted }]}>
-                Estimated shares
-              </Text>
-              <Text style={[styles.orderValue, { color: colors.foreground }]}>
-                {(selectedAmount / selectedAsset.price).toFixed(4)}
-              </Text>
+              <Subhead color="muted">Estimated shares</Subhead>
+              <MonoSubhead>{(selectedAmount / selectedAsset.price).toFixed(4)}</MonoSubhead>
             </View>
             <View style={styles.orderRow}>
-              <Text style={[styles.orderLabel, { color: colors.muted }]}>
-                Market price (live)
-              </Text>
-              <Text style={[styles.orderValue, { color: colors.foreground }]}>
-                €{selectedAsset.price.toFixed(2)}
-              </Text>
+              <Subhead color="muted">Market price (live)</Subhead>
+              <MonoSubhead>€{selectedAsset.price.toFixed(2)}</MonoSubhead>
             </View>
             <View style={styles.orderRow}>
-              <Text style={[styles.orderLabel, { color: colors.muted }]}>
-                Commission
-              </Text>
-              <Text style={[styles.orderValue, { color: colors.success }]}>
-                €0.00
-              </Text>
+              <Subhead color="muted">Commission</Subhead>
+              <MonoSubhead color="success">€0.00</MonoSubhead>
             </View>
           </View>
         )}
@@ -286,39 +246,33 @@ export default function TradeScreen() {
             style={({ pressed }) => [
               styles.confirmButton,
               {
-                backgroundColor:
-                  selectedAmount
-                    ? isBuy
-                      ? colors.success
-                      : colors.error
-                    : colors.surfaceSecondary,
+                backgroundColor: selectedAmount
+                  ? isBuy ? colors.success : colors.error
+                  : colors.surfaceSecondary,
               },
               pressed && selectedAmount ? { transform: [{ scale: 0.97 }], opacity: 0.9 } : undefined,
             ]}
           >
-            <Text
-              style={[
-                styles.confirmText,
-                {
-                  color: selectedAmount ? colors.onPrimary : colors.muted,
-                },
-              ]}
+            <Callout
+              color={selectedAmount ? "onPrimary" : "muted"}
+              style={{ fontFamily: FontFamily.bold }}
             >
               {selectedAmount
                 ? `${isBuy ? "Buy" : "Sell"} €${selectedAmount} of ${selectedAsset.ticker}`
                 : "Select an amount"}
-            </Text>
+            </Callout>
           </Pressable>
         </View>
       </ScreenContainer>
     );
   }
 
+  // ─── Stock Picker ───────────────────────────────────────────────
   return (
     <ScreenContainer>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Trade</Text>
+        <Title1>Trade</Title1>
         <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
       </View>
 
@@ -327,15 +281,12 @@ export default function TradeScreen() {
         <View
           style={[
             styles.searchBar,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            },
+            { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
           <IconSymbol name="magnifyingglass" size={18} color={colors.muted} />
           <TextInput
-            style={[styles.searchInput, { color: colors.foreground }]}
+            style={[styles.searchInput, { color: colors.foreground, fontFamily: FontFamily.medium }]}
             placeholder="Search for a stock to trade..."
             placeholderTextColor={colors.muted}
             value={search}
@@ -347,9 +298,16 @@ export default function TradeScreen() {
 
       {/* Quick Trade Label */}
       <View style={styles.quickLabel}>
-        <Text style={[styles.quickLabelText, { color: colors.muted }]}>
+        <Caption1
+          color="muted"
+          style={{
+            fontFamily: FontFamily.semibold,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
           {search.trim() ? "Search results" : "Popular stocks"}
-        </Text>
+        </Caption1>
       </View>
 
       {/* Stock List */}
@@ -378,9 +336,7 @@ export default function TradeScreen() {
           )}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={[styles.emptyText, { color: colors.muted }]}>
-                No stocks found
-              </Text>
+              <Callout color="muted">No stocks found</Callout>
             </View>
           }
         />
@@ -398,11 +354,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
   searchContainer: {
     paddingHorizontal: 16,
     marginBottom: 12,
@@ -419,17 +370,10 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontWeight: "500",
   },
   quickLabel: {
     paddingHorizontal: 16,
     marginBottom: 8,
-  },
-  quickLabelText: {
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   listContent: {
     paddingBottom: 100,
@@ -437,10 +381,6 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: "center",
     paddingTop: 40,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontWeight: "500",
   },
   // Sheet styles
   sheetHeader: {
@@ -456,10 +396,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  sheetTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
   toggleContainer: {
     flexDirection: "row",
     marginHorizontal: 16,
@@ -473,10 +409,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  toggleText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
   assetInfo: {
     alignItems: "center",
     paddingBottom: 24,
@@ -489,35 +421,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  assetIconText: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  assetName: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  assetPrice: {
-    fontSize: 24,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    marginBottom: 2,
-  },
-  assetChange: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
   amountsContainer: {
     paddingHorizontal: 16,
     marginBottom: 20,
-  },
-  amountsLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 12,
   },
   amountsGrid: {
     flexDirection: "row",
@@ -531,10 +437,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: "center",
   },
-  amountText: {
-    fontSize: 16,
-    fontVariant: ["tabular-nums"],
-  },
   orderPreview: {
     marginHorizontal: 16,
     borderRadius: 16,
@@ -547,15 +449,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 8,
   },
-  orderLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  orderValue: {
-    fontSize: 14,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-  },
   confirmContainer: {
     paddingHorizontal: 16,
     marginTop: "auto",
@@ -566,10 +459,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-  },
-  confirmText: {
-    fontSize: 16,
-    fontWeight: "700",
   },
   // Success screen
   successContainer: {
@@ -586,23 +475,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 24,
   },
-  successTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  successSubtitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  successAmount: {
-    fontSize: 36,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    marginBottom: 32,
-  },
   shareTradeButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -610,9 +482,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 28,
-  },
-  shareButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
   },
 });

@@ -1,12 +1,10 @@
 import React, { useState, useCallback } from "react";
 import {
   ScrollView,
-  Text,
   View,
   FlatList,
   StyleSheet,
   RefreshControl,
-  ActivityIndicator,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -22,6 +20,19 @@ import { XPBar } from "@/components/ui/xp-bar";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
+import {
+  Footnote,
+  Title2,
+  Caption1,
+  Caption2,
+  Callout,
+  Headline,
+  MonoLargeTitle,
+  MonoCaption1,
+  Subhead,
+  Body,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 import {
   PORTFOLIO_TOTAL_VALUE,
   PORTFOLIO_PNL_PERCENT,
@@ -40,7 +51,6 @@ export default function HomeScreen() {
   const refreshCache = useRefreshCache();
 
   const isPositive = PORTFOLIO_TOTAL_PNL >= 0;
-  const glowColor = isPositive ? colors.success : colors.error;
 
   // Get top 5 trending stocks by absolute change percent
   const trendingStocks = [...stocks]
@@ -77,20 +87,19 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: colors.muted }]}>
-              Good morning
-            </Text>
-            <Text style={[styles.username, { color: colors.foreground }]}>
-              Andreas
-            </Text>
+            <Footnote color="muted">Good morning</Footnote>
+            <Title2>Andreas</Title2>
           </View>
           <View style={styles.headerRight}>
             <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
             <View style={styles.streakBadge}>
               <IconSymbol name="flame.fill" size={16} color={colors.warning} />
-              <Text style={[styles.streakText, { color: colors.warning }]}>
+              <Callout
+                color="warning"
+                style={{ fontFamily: FontFamily.bold, fontVariant: ["tabular-nums"] }}
+              >
                 {USER_STREAK}
-              </Text>
+              </Callout>
             </View>
             <Pressable
               style={({ pressed }) => [
@@ -106,27 +115,19 @@ export default function HomeScreen() {
 
         {/* Portfolio Hero */}
         <View style={styles.portfolioHero}>
-          <Text style={[styles.portfolioLabel, { color: colors.muted }]}>
-            Portfolio Value
-          </Text>
-          <View style={styles.portfolioValueRow}>
-            <Text
-              style={[
-                styles.portfolioValue,
-                {
-                  color: colors.foreground,
-                  textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
-                  textShadowOffset: { width: 0, height: 0 },
-                  textShadowRadius: 20,
-                },
-              ]}
-            >
-              €{PORTFOLIO_TOTAL_VALUE.toLocaleString("el-GR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </Text>
-          </View>
+          <Footnote color="muted">Portfolio Value</Footnote>
+          <MonoLargeTitle
+            style={{
+              textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 20,
+            }}
+          >
+            €{PORTFOLIO_TOTAL_VALUE.toLocaleString("el-GR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </MonoLargeTitle>
           <View style={styles.pnlRow}>
             <PnLText
               value={PORTFOLIO_TOTAL_PNL}
@@ -134,18 +135,14 @@ export default function HomeScreen() {
               size="md"
               showArrow={true}
             />
-            <Text style={[styles.pnlSeparator, { color: colors.muted }]}>
-              {" · "}
-            </Text>
+            <Footnote color="muted"> · </Footnote>
             <PnLText
               value={PORTFOLIO_PNL_PERCENT}
               format="percent"
               size="md"
               showArrow={false}
             />
-            <Text style={[styles.timePeriod, { color: colors.muted }]}>
-              {" "}today
-            </Text>
+            <Footnote color="muted"> today</Footnote>
           </View>
           <View style={styles.sparklineContainer}>
             <Sparkline
@@ -163,23 +160,19 @@ export default function HomeScreen() {
                 key={period}
                 style={({ pressed }) => [
                   styles.timePeriodButton,
-                  i === 0 && {
-                    backgroundColor: colors.primaryAlpha,
-                  },
+                  i === 0 && { backgroundColor: colors.primaryAlpha },
                   pressed && { opacity: 0.6 },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.timePeriodText,
-                    {
-                      color: i === 0 ? colors.primary : colors.muted,
-                      fontWeight: i === 0 ? "700" : "500",
-                    },
-                  ]}
+                <Caption1
+                  color={i === 0 ? "primary" : "muted"}
+                  style={{
+                    fontFamily: i === 0 ? FontFamily.bold : FontFamily.medium,
+                    letterSpacing: 0.3,
+                  }}
                 >
                   {period}
-                </Text>
+                </Caption1>
               </Pressable>
             ))}
           </View>
@@ -203,31 +196,20 @@ export default function HomeScreen() {
             <View style={styles.challengeHeader}>
               <View style={styles.challengeLeft}>
                 <IconSymbol name="trophy.fill" size={20} color={colors.warning} />
-                <Text style={[styles.challengeTitle, { color: colors.foreground }]}>
-                  {DAILY_CHALLENGE.title}
-                </Text>
+                <Headline>{DAILY_CHALLENGE.title}</Headline>
               </View>
-              <View
-                style={[
-                  styles.rewardBadge,
-                  { backgroundColor: colors.warningAlpha },
-                ]}
-              >
-                <Text style={[styles.rewardText, { color: colors.warning }]}>
+              <View style={[styles.rewardBadge, { backgroundColor: colors.warningAlpha }]}>
+                <Caption1
+                  color="warning"
+                  style={{ fontFamily: FontFamily.bold }}
+                >
                   {DAILY_CHALLENGE.reward}
-                </Text>
+                </Caption1>
               </View>
             </View>
-            <Text style={[styles.challengeDesc, { color: colors.muted }]}>
-              {DAILY_CHALLENGE.description}
-            </Text>
+            <Footnote color="muted">{DAILY_CHALLENGE.description}</Footnote>
             <View style={styles.progressContainer}>
-              <View
-                style={[
-                  styles.progressBar,
-                  { backgroundColor: colors.warningAlpha },
-                ]}
-              >
+              <View style={[styles.progressBar, { backgroundColor: colors.warningAlpha }]}>
                 <View
                   style={[
                     styles.progressFill,
@@ -238,9 +220,9 @@ export default function HomeScreen() {
                   ]}
                 />
               </View>
-              <Text style={[styles.progressText, { color: colors.muted }]}>
+              <MonoCaption1 color="muted">
                 {DAILY_CHALLENGE.progress}/{DAILY_CHALLENGE.total}
-              </Text>
+              </MonoCaption1>
             </View>
           </Pressable>
         </View>
@@ -315,46 +297,34 @@ export default function HomeScreen() {
               ]}
             >
               <View style={styles.socialHeader}>
-                <View
-                  style={[
-                    styles.avatar,
-                    { backgroundColor: colors.primaryAlpha },
-                  ]}
-                >
-                  <Text style={[styles.avatarText, { color: colors.primary }]}>
+                <View style={[styles.avatar, { backgroundColor: colors.primaryAlpha }]}>
+                  <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
                     {post.avatar}
-                  </Text>
+                  </Caption1>
                 </View>
                 <View style={styles.socialMeta}>
-                  <Text style={[styles.socialUsername, { color: colors.foreground }]}>
-                    {post.username}
-                  </Text>
-                  <Text style={[styles.socialTime, { color: colors.muted }]}>
-                    {post.timestamp}
-                  </Text>
+                  <Subhead style={{ fontFamily: FontFamily.semibold }}>{post.username}</Subhead>
+                  <Caption2 color="muted">{post.timestamp}</Caption2>
                 </View>
                 {post.pnlPercent !== undefined && (
                   <PnLText value={post.pnlPercent} size="sm" showArrow={false} />
                 )}
               </View>
-              <Text
-                style={[styles.socialContent, { color: colors.foreground }]}
-                numberOfLines={2}
-              >
+              <Subhead numberOfLines={2} style={{ marginBottom: 10 }}>
                 {post.content}
-              </Text>
+              </Subhead>
               <View style={styles.socialFooter}>
                 <View style={styles.socialStat}>
                   <IconSymbol name="star.fill" size={14} color={colors.muted} />
-                  <Text style={[styles.socialStatText, { color: colors.muted }]}>
+                  <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
                     {post.likes}
-                  </Text>
+                  </Caption1>
                 </View>
                 <View style={styles.socialStat}>
                   <IconSymbol name="paperplane.fill" size={14} color={colors.muted} />
-                  <Text style={[styles.socialStatText, { color: colors.muted }]}>
+                  <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
                     {post.comments}
-                  </Text>
+                  </Caption1>
                 </View>
               </View>
             </Pressable>
@@ -380,16 +350,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
-  greeting: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginBottom: 2,
-  },
-  username: {
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
@@ -399,11 +359,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  streakText: {
-    fontSize: 16,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
   },
   notifButton: {
     width: 40,
@@ -417,32 +372,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     alignItems: "center",
   },
-  portfolioLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-  portfolioValueRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  portfolioValue: {
-    fontSize: 38,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    letterSpacing: -1,
-  },
   pnlRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
-  },
-  pnlSeparator: {
-    fontSize: 14,
-  },
-  timePeriod: {
-    fontSize: 13,
-    fontWeight: "500",
   },
   sparklineContainer: {
     marginTop: 16,
@@ -457,10 +390,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 8,
-  },
-  timePeriodText: {
-    fontSize: 13,
-    letterSpacing: 0.3,
   },
   section: {
     marginTop: 24,
@@ -482,28 +411,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  challengeTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
   rewardBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  rewardText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  challengeDesc: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
   progressContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    marginTop: 12,
   },
   progressBar: {
     flex: 1,
@@ -514,11 +431,6 @@ const styles = StyleSheet.create({
   progressFill: {
     height: "100%",
     borderRadius: 3,
-  },
-  progressText: {
-    fontSize: 12,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
   },
   trendingList: {
     paddingHorizontal: 16,
@@ -555,25 +467,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
-  avatarText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
   socialMeta: {
     flex: 1,
-  },
-  socialUsername: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  socialTime: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  socialContent: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 10,
   },
   socialFooter: {
     flexDirection: "row",
@@ -583,9 +478,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  socialStatText: {
-    fontSize: 12,
-    fontWeight: "600",
   },
 });

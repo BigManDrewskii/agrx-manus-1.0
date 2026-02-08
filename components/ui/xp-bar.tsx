@@ -1,7 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useDemo } from "@/lib/demo-context";
+import { Footnote, MonoCaption1 } from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 
 export function XPBar() {
   const colors = useColors();
@@ -12,12 +14,12 @@ export function XPBar() {
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        <Text style={[styles.level, { color: colors.primary }]}>
+        <Footnote color="primary" style={{ fontFamily: FontFamily.bold }}>
           Level {state.level}
-        </Text>
-        <Text style={[styles.xp, { color: colors.muted }]}>
+        </Footnote>
+        <MonoCaption1 color="muted" style={{ fontFamily: FontFamily.monoMedium }}>
           {xpInLevel}/100 XP
-        </Text>
+        </MonoCaption1>
       </View>
       <View style={[styles.bar, { backgroundColor: colors.surfaceSecondary }]}>
         <View
@@ -43,15 +45,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 6,
-  },
-  level: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  xp: {
-    fontSize: 12,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
   },
   bar: {
     height: 6,

@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, StyleSheet, View } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { FontFamily } from "@/constants/typography";
 
 interface PnLTextProps {
   value: number;
@@ -78,8 +79,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   mono: {
-    fontFamily: "JetBrains Mono",
-    fontWeight: "600",
+    fontFamily: FontFamily.monoMedium,
     fontVariant: ["tabular-nums"],
   },
 });

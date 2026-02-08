@@ -6,6 +6,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Platform } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { FontFamily } from "@/constants/typography";
 
 export default function TabLayout() {
   const colors = useColors();
@@ -22,7 +23,7 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "600",
+          fontFamily: FontFamily.semibold,
           letterSpacing: 0.2,
         },
         tabBarStyle: {

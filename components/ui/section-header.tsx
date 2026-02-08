@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Pressable } from "react-native";
-import { useColors } from "@/hooks/use-colors";
+import { Title3, Subhead } from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 
 interface SectionHeaderProps {
   title: string;
@@ -10,19 +11,17 @@ interface SectionHeaderProps {
 }
 
 export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderProps) {
-  const colors = useColors();
-
   return (
     <View style={styles.container}>
-      <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
+      <Title3 style={{ fontSize: 18, letterSpacing: -0.3 }}>{title}</Title3>
       {actionLabel && onAction && (
         <Pressable
           onPress={onAction}
           style={({ pressed }) => [pressed && { opacity: 0.6 }]}
         >
-          <Text style={[styles.action, { color: colors.primary }]}>
+          <Subhead color="primary" style={{ fontFamily: FontFamily.semibold, fontSize: 14 }}>
             {actionLabel}
-          </Text>
+          </Subhead>
         </Pressable>
       )}
     </View>
@@ -36,14 +35,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "700",
-    letterSpacing: -0.3,
-  },
-  action: {
-    fontSize: 14,
-    fontWeight: "600",
   },
 });

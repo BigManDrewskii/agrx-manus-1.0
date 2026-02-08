@@ -1,9 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Pressable } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "./sparkline";
 import { PnLText } from "./pnl-text";
+import { Subhead, Caption1, MonoSubhead } from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 import type { Asset } from "@/lib/mock-data";
 
 interface AssetRowProps {
@@ -27,17 +29,23 @@ export function AssetRow({ asset, onPress, showSparkline = true }: AssetRowProps
       {/* Left: Icon + Name */}
       <View style={styles.left}>
         <View style={[styles.iconCircle, { backgroundColor: colors.surfaceSecondary }]}>
-          <Text style={[styles.iconText, { color: colors.primary }]}>
+          <Caption1
+            color="primary"
+            style={{ fontFamily: FontFamily.bold, letterSpacing: 0.5 }}
+          >
             {asset.ticker.slice(0, 2)}
-          </Text>
+          </Caption1>
         </View>
         <View style={styles.nameContainer}>
-          <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>
+          <Subhead
+            style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}
+            numberOfLines={1}
+          >
             {asset.name}
-          </Text>
-          <Text style={[styles.ticker, { color: colors.muted }]}>
+          </Subhead>
+          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
             {asset.ticker}
-          </Text>
+          </Caption1>
         </View>
       </View>
 
@@ -55,9 +63,9 @@ export function AssetRow({ asset, onPress, showSparkline = true }: AssetRowProps
 
       {/* Right: Price + Change */}
       <View style={styles.right}>
-        <Text style={[styles.price, { color: colors.foreground }]}>
+        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
           €{asset.price.toFixed(2)}
-        </Text>
+        </MonoSubhead>
         <PnLText value={asset.changePercent} size="sm" showArrow={false} />
       </View>
     </Pressable>
@@ -85,33 +93,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
-  iconText: {
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
   nameContainer: {
     flex: 1,
-  },
-  name: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  ticker: {
-    fontSize: 12,
-    fontWeight: "500",
   },
   center: {
     marginHorizontal: 12,
   },
   right: {
     alignItems: "flex-end",
-  },
-  price: {
-    fontSize: 15,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-    marginBottom: 2,
   },
 });

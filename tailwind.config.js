@@ -22,6 +22,15 @@ module.exports = {
   theme: {
     extend: {
       colors: tailwindColors,
+      fontFamily: {
+        sans: ["Inter_400Regular"],
+        "sans-medium": ["Inter_500Medium"],
+        "sans-semibold": ["Inter_600SemiBold"],
+        "sans-bold": ["Inter_700Bold"],
+        mono: ["JetBrainsMono_400Regular"],
+        "mono-medium": ["JetBrainsMono_500Medium"],
+        "mono-bold": ["JetBrainsMono_700Bold"],
+      },
     },
   },
   plugins: [

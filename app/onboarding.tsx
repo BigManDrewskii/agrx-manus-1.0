@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  Text,
   FlatList,
   Dimensions,
   StyleSheet,
@@ -12,13 +11,15 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  Title1,
+  Callout,
+  Caption1,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-/**
- * Each slide maps its accent to a semantic token key so colors adapt to light/dark mode.
- * The token key is resolved at render time via useColors().
- */
 type AccentToken = "primary" | "success" | "warning";
 
 interface OnboardingSlide {
@@ -104,33 +105,34 @@ export default function OnboardingScreen() {
       <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
         <View style={styles.slideContent}>
           {/* Icon Container */}
-          <View
-            style={[
-              styles.iconContainer,
-              { backgroundColor: accentAlpha },
-            ]}
-          >
-            <View
-              style={[
-                styles.iconInner,
-                { backgroundColor: accentAlpha },
-              ]}
-            >
-              <IconSymbol
-                name={item.icon as any}
-                size={48}
-                color={accent}
-              />
+          <View style={[styles.iconContainer, { backgroundColor: accentAlpha }]}>
+            <View style={[styles.iconInner, { backgroundColor: accentAlpha }]}>
+              <IconSymbol name={item.icon as any} size={48} color={accent} />
             </View>
           </View>
 
           {/* Text */}
-          <Text style={[styles.slideTitle, { color: colors.foreground }]}>
+          <Title1
+            style={{
+              fontSize: 32,
+              fontFamily: FontFamily.bold,
+              textAlign: "center",
+              letterSpacing: -0.5,
+              marginBottom: 16,
+            }}
+          >
             {item.title}
-          </Text>
-          <Text style={[styles.slideSubtitle, { color: colors.muted }]}>
+          </Title1>
+          <Callout
+            color="muted"
+            style={{
+              fontFamily: FontFamily.medium,
+              lineHeight: 24,
+              textAlign: "center",
+            }}
+          >
             {item.subtitle}
-          </Text>
+          </Callout>
         </View>
       </View>
     );
@@ -147,9 +149,9 @@ export default function OnboardingScreen() {
             onPress={handleSkip}
             style={({ pressed }) => [pressed && { opacity: 0.6 }]}
           >
-            <Text style={[styles.skipText, { color: colors.muted }]}>
+            <Callout color="muted" style={{ fontFamily: FontFamily.semibold }}>
               Skip
-            </Text>
+            </Callout>
           </Pressable>
         </View>
 
@@ -196,17 +198,18 @@ export default function OnboardingScreen() {
               pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
             ]}
           >
-            <Text style={[styles.ctaText, { color: colors.onPrimary }]}>
-              {activeIndex === SLIDES.length - 1
-                ? "Get Started"
-                : "Continue"}
-            </Text>
+            <Callout color="onPrimary" style={{ fontFamily: FontFamily.bold }}>
+              {activeIndex === SLIDES.length - 1 ? "Get Started" : "Continue"}
+            </Callout>
           </Pressable>
 
           {/* Terms */}
-          <Text style={[styles.terms, { color: colors.muted }]}>
+          <Caption1
+            color="muted"
+            style={{ textAlign: "center", lineHeight: 16 }}
+          >
             By continuing, you agree to our Terms of Service and Privacy Policy
-          </Text>
+          </Caption1>
         </View>
       </View>
     </ScreenContainer>
@@ -221,10 +224,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingHorizontal: 20,
     paddingTop: 8,
-  },
-  skipText: {
-    fontSize: 16,
-    fontWeight: "600",
   },
   slide: {
     flex: 1,
@@ -250,19 +249,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  slideTitle: {
-    fontSize: 32,
-    fontWeight: "800",
-    textAlign: "center",
-    letterSpacing: -0.5,
-    marginBottom: 16,
-  },
-  slideSubtitle: {
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: "center",
-    fontWeight: "500",
-  },
   bottomSection: {
     paddingHorizontal: 24,
     paddingBottom: 20,
@@ -284,14 +270,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
-  },
-  ctaText: {
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  terms: {
-    fontSize: 12,
-    textAlign: "center",
-    lineHeight: 16,
   },
 });

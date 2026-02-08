@@ -1,9 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Pressable } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "./sparkline";
 import { PnLText } from "./pnl-text";
+import { Subhead, Caption1, Caption2, MonoSubhead } from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 import type { Asset } from "@/lib/mock-data";
 
 interface TrendingCardProps {
@@ -28,17 +30,20 @@ export function TrendingCard({ asset, onPress }: TrendingCardProps) {
     >
       <View style={styles.header}>
         <View style={[styles.iconCircle, { backgroundColor: colors.surfaceSecondary }]}>
-          <Text style={[styles.iconText, { color: colors.primary }]}>
+          <Caption2 color="primary" style={{ fontFamily: FontFamily.bold }}>
             {asset.ticker.slice(0, 2)}
-          </Text>
+          </Caption2>
         </View>
         <View style={styles.headerText}>
-          <Text style={[styles.ticker, { color: colors.foreground }]} numberOfLines={1}>
+          <Subhead
+            style={{ fontFamily: FontFamily.bold, fontSize: 14 }}
+            numberOfLines={1}
+          >
             {asset.ticker}
-          </Text>
-          <Text style={[styles.name, { color: colors.muted }]} numberOfLines={1}>
+          </Subhead>
+          <Caption2 color="muted" style={{ fontFamily: FontFamily.medium }} numberOfLines={1}>
             {asset.name}
-          </Text>
+          </Caption2>
         </View>
       </View>
 
@@ -52,9 +57,9 @@ export function TrendingCard({ asset, onPress }: TrendingCardProps) {
       </View>
 
       <View style={styles.footer}>
-        <Text style={[styles.price, { color: colors.foreground }]}>
+        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, fontSize: 14 }}>
           €{asset.price.toFixed(2)}
-        </Text>
+        </MonoSubhead>
         <PnLText value={asset.changePercent} size="sm" showArrow={false} />
       </View>
     </Pressable>
@@ -82,20 +87,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 8,
   },
-  iconText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
   headerText: {
     flex: 1,
-  },
-  ticker: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  name: {
-    fontSize: 11,
-    fontWeight: "500",
   },
   sparklineContainer: {
     alignItems: "center",
@@ -105,10 +98,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-  },
-  price: {
-    fontSize: 14,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
   },
 });

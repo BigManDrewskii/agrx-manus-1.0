@@ -2,8 +2,6 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   ScrollView,
   View,
-  Text,
-  FlatList,
   StyleSheet,
   RefreshControl,
 } from "react-native";
@@ -16,6 +14,17 @@ import { Sparkline } from "@/components/ui/sparkline";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
+import {
+  Title1,
+  Title3,
+  Headline,
+  Subhead,
+  Footnote,
+  Caption1,
+  MonoLargeTitle,
+  MonoSubhead,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
 import {
   PORTFOLIO_HOLDINGS,
   PORTFOLIO_SPARKLINE,
@@ -72,7 +81,6 @@ export default function PortfolioScreen() {
   const portfolioPnlPercent = portfolioCost > 0 ? (portfolioPnl / portfolioCost) * 100 : 0;
 
   const isPositive = portfolioPnl >= 0;
-  const glowColor = isPositive ? colors.success : colors.error;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -102,49 +110,30 @@ export default function PortfolioScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.foreground }]}>
-            Portfolio
-          </Text>
+          <Title1>Portfolio</Title1>
           <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
         </View>
 
         {/* Portfolio Value Hero */}
         <View style={styles.heroContainer}>
-          <Text style={[styles.heroLabel, { color: colors.muted }]}>
-            Total Value
-          </Text>
-          <Text
-            style={[
-              styles.heroValue,
-              {
-                color: colors.foreground,
-                textShadowColor: glowColor + "40",
-                textShadowOffset: { width: 0, height: 0 },
-                textShadowRadius: 24,
-              },
-            ]}
+          <Footnote color="muted">Total Value</Footnote>
+          <MonoLargeTitle
+            style={{
+              fontSize: 40,
+              textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 24,
+            }}
           >
             €{portfolioTotal.toLocaleString("el-GR", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
-          </Text>
+          </MonoLargeTitle>
           <View style={styles.heroPnl}>
-            <PnLText
-              value={portfolioPnl}
-              format="currency"
-              size="lg"
-              showArrow={true}
-            />
-            <Text style={[styles.heroPnlSep, { color: colors.muted }]}>
-              {" · "}
-            </Text>
-            <PnLText
-              value={portfolioPnlPercent}
-              format="percent"
-              size="lg"
-              showArrow={false}
-            />
+            <PnLText value={portfolioPnl} format="currency" size="lg" showArrow={true} />
+            <Footnote color="muted"> · </Footnote>
+            <PnLText value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} />
           </View>
           <View style={styles.sparklineContainer}>
             <Sparkline
@@ -158,7 +147,7 @@ export default function PortfolioScreen() {
         </View>
 
         {/* Tab Selector */}
-        <View style={styles.tabContainer}>
+        <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
           {TABS.map((tab) => {
             const isActive = tab === activeTab;
             return (
@@ -167,24 +156,16 @@ export default function PortfolioScreen() {
                 onPress={() => setActiveTab(tab)}
                 style={({ pressed }) => [
                   styles.tab,
-                  isActive && {
-                    borderBottomColor: colors.primary,
-                    borderBottomWidth: 2,
-                  },
+                  isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
                   pressed && { opacity: 0.6 },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.tabText,
-                    {
-                      color: isActive ? colors.primary : colors.muted,
-                      fontWeight: isActive ? "700" : "500",
-                    },
-                  ]}
+                <Subhead
+                  color={isActive ? "primary" : "muted"}
+                  style={{ fontFamily: isActive ? FontFamily.bold : FontFamily.medium }}
                 >
                   {tab}
-                </Text>
+                </Subhead>
               </Pressable>
             );
           })}
@@ -193,9 +174,16 @@ export default function PortfolioScreen() {
         {/* Holdings List */}
         <View style={styles.holdingsContainer}>
           <View style={styles.holdingsHeader}>
-            <Text style={[styles.holdingsTitle, { color: colors.muted }]}>
+            <Caption1
+              color="muted"
+              style={{
+                fontFamily: FontFamily.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
               {enrichedHoldings.length} Holdings
-            </Text>
+            </Caption1>
           </View>
           {isLoading ? (
             <StockListSkeleton count={4} />
@@ -216,23 +204,18 @@ export default function PortfolioScreen() {
                 ]}
               >
                 <View style={styles.holdingLeft}>
-                  <View
-                    style={[
-                      styles.holdingIcon,
-                      { backgroundColor: colors.surfaceSecondary },
-                    ]}
-                  >
-                    <Text style={[styles.holdingIconText, { color: colors.primary }]}>
+                  <View style={[styles.holdingIcon, { backgroundColor: colors.surfaceSecondary }]}>
+                    <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
                       {holding.asset.ticker.slice(0, 2)}
-                    </Text>
+                    </Caption1>
                   </View>
                   <View>
-                    <Text style={[styles.holdingName, { color: colors.foreground }]}>
+                    <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
                       {holding.asset.ticker}
-                    </Text>
-                    <Text style={[styles.holdingShares, { color: colors.muted }]}>
+                    </Subhead>
+                    <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
                       {holding.shares} shares · avg €{holding.avgCost.toFixed(2)}
-                    </Text>
+                    </Caption1>
                   </View>
                 </View>
                 <View style={styles.holdingCenter}>
@@ -244,9 +227,9 @@ export default function PortfolioScreen() {
                   />
                 </View>
                 <View style={styles.holdingRight}>
-                  <Text style={[styles.holdingValue, { color: colors.foreground }]}>
+                  <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
                     €{holding.liveValue.toFixed(2)}
-                  </Text>
+                  </MonoSubhead>
                   <PnLText value={holding.livePnlPercent} size="sm" showArrow={false} />
                 </View>
               </Pressable>
@@ -256,39 +239,17 @@ export default function PortfolioScreen() {
 
         {/* Dividend Section */}
         <View style={styles.dividendSection}>
-          <Text style={[styles.dividendTitle, { color: colors.foreground }]}>
-            Upcoming Dividends
-          </Text>
-          <View
-            style={[
-              styles.dividendCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          >
+          <Title3 style={{ marginBottom: 12 }}>Upcoming Dividends</Title3>
+          <View style={[styles.dividendCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.dividendRow}>
-              <Text style={[styles.dividendAsset, { color: colors.foreground }]}>
-                OPAP
-              </Text>
-              <Text style={[styles.dividendDate, { color: colors.muted }]}>
-                Mar 15, 2026
-              </Text>
-              <Text style={[styles.dividendAmount, { color: colors.success }]}>
-                €0.60/share
-              </Text>
+              <Subhead style={{ fontFamily: FontFamily.semibold, width: 60 }}>OPAP</Subhead>
+              <Footnote color="muted" style={{ flex: 1, textAlign: "center" }}>Mar 15, 2026</Footnote>
+              <MonoSubhead color="success">€0.60/share</MonoSubhead>
             </View>
             <View style={styles.dividendRow}>
-              <Text style={[styles.dividendAsset, { color: colors.foreground }]}>
-                PPC
-              </Text>
-              <Text style={[styles.dividendDate, { color: colors.muted }]}>
-                Apr 02, 2026
-              </Text>
-              <Text style={[styles.dividendAmount, { color: colors.success }]}>
-                €0.85/share
-              </Text>
+              <Subhead style={{ fontFamily: FontFamily.semibold, width: 60 }}>PPC</Subhead>
+              <Footnote color="muted" style={{ flex: 1, textAlign: "center" }}>Apr 02, 2026</Footnote>
+              <MonoSubhead color="success">€0.85/share</MonoSubhead>
             </View>
           </View>
         </View>
@@ -311,33 +272,14 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
   heroContainer: {
     alignItems: "center",
     paddingVertical: 20,
-  },
-  heroLabel: {
-    fontSize: 13,
-    fontWeight: "500",
-    marginBottom: 4,
-  },
-  heroValue: {
-    fontSize: 40,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-    letterSpacing: -1,
   },
   heroPnl: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
-  },
-  heroPnlSep: {
-    fontSize: 14,
   },
   sparklineContainer: {
     marginTop: 16,
@@ -346,7 +288,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     borderBottomWidth: 0.5,
-    borderBottomColor: "transparent",
     marginBottom: 8,
   },
   tab: {
@@ -356,21 +297,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
   },
-  tabText: {
-    fontSize: 14,
-  },
   holdingsContainer: {
     paddingTop: 8,
   },
   holdingsHeader: {
     paddingHorizontal: 16,
     marginBottom: 8,
-  },
-  holdingsTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   holdingRow: {
     flexDirection: "row",
@@ -392,39 +324,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 12,
   },
-  holdingIconText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  holdingName: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  holdingShares: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
   holdingCenter: {
     marginHorizontal: 12,
   },
   holdingRight: {
     alignItems: "flex-end",
   },
-  holdingValue: {
-    fontSize: 15,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-    marginBottom: 2,
-  },
   dividendSection: {
     paddingHorizontal: 16,
     marginTop: 24,
-  },
-  dividendTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 12,
   },
   dividendCard: {
     borderRadius: 16,
@@ -436,21 +344,5 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
-  },
-  dividendAsset: {
-    fontSize: 15,
-    fontWeight: "600",
-    width: 60,
-  },
-  dividendDate: {
-    fontSize: 13,
-    fontWeight: "500",
-    flex: 1,
-    textAlign: "center",
-  },
-  dividendAmount: {
-    fontSize: 14,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
   },
 });

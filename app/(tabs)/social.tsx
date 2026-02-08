@@ -12,6 +12,18 @@ import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
+  Title1,
+  Title3,
+  Headline,
+  Body,
+  Subhead,
+  Footnote,
+  Caption1,
+  Caption2,
+  MonoSubhead,
+} from "@/components/ui/typography";
+import { FontFamily } from "@/constants/typography";
+import {
   SOCIAL_FEED,
   LEADERBOARD,
   ACHIEVEMENTS,
@@ -32,20 +44,14 @@ function PostCard({ post }: { post: SocialPost }) {
       ]}
     >
       <View style={styles.postHeader}>
-        <View
-          style={[styles.avatar, { backgroundColor: colors.primaryAlpha }]}
-        >
-          <Text style={[styles.avatarText, { color: colors.primary }]}>
+        <View style={[styles.avatar, { backgroundColor: colors.primaryAlpha }]}>
+          <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
             {post.avatar}
-          </Text>
+          </Caption1>
         </View>
         <View style={styles.postMeta}>
-          <Text style={[styles.postUsername, { color: colors.foreground }]}>
-            {post.username}
-          </Text>
-          <Text style={[styles.postTime, { color: colors.muted }]}>
-            {post.timestamp}
-          </Text>
+          <Subhead style={{ fontFamily: FontFamily.semibold }}>{post.username}</Subhead>
+          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>{post.timestamp}</Caption1>
         </View>
         {post.pnlPercent !== undefined && (
           <View
@@ -53,9 +59,7 @@ function PostCard({ post }: { post: SocialPost }) {
               styles.pnlBadge,
               {
                 backgroundColor:
-                  post.pnlPercent >= 0
-                    ? colors.successAlpha
-                    : colors.errorAlpha,
+                  post.pnlPercent >= 0 ? colors.successAlpha : colors.errorAlpha,
               },
             ]}
           >
@@ -63,49 +67,33 @@ function PostCard({ post }: { post: SocialPost }) {
           </View>
         )}
       </View>
-      <Text style={[styles.postContent, { color: colors.foreground }]}>
-        {post.content}
-      </Text>
+      <Body style={{ lineHeight: 21, marginBottom: 10 }}>{post.content}</Body>
       {post.assetTag && (
-        <View
-          style={[
-            styles.assetTag,
-            { backgroundColor: colors.primaryAlpha },
-          ]}
-        >
-          <Text style={[styles.assetTagText, { color: colors.primary }]}>
+        <View style={[styles.assetTag, { backgroundColor: colors.primaryAlpha }]}>
+          <Footnote color="primary" style={{ fontFamily: FontFamily.semibold }}>
             ${post.assetTag}
-          </Text>
+          </Footnote>
         </View>
       )}
       <View style={[styles.postFooter, { borderTopColor: colors.border }]}>
         <Pressable
-          style={({ pressed }) => [
-            styles.postAction,
-            pressed && { opacity: 0.6 },
-          ]}
+          style={({ pressed }) => [styles.postAction, pressed && { opacity: 0.6 }]}
         >
           <IconSymbol name="star.fill" size={16} color={colors.muted} />
-          <Text style={[styles.postActionText, { color: colors.muted }]}>
+          <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
             {post.likes}
-          </Text>
+          </Caption1>
         </Pressable>
         <Pressable
-          style={({ pressed }) => [
-            styles.postAction,
-            pressed && { opacity: 0.6 },
-          ]}
+          style={({ pressed }) => [styles.postAction, pressed && { opacity: 0.6 }]}
         >
           <IconSymbol name="paperplane.fill" size={16} color={colors.muted} />
-          <Text style={[styles.postActionText, { color: colors.muted }]}>
+          <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
             {post.comments}
-          </Text>
+          </Caption1>
         </Pressable>
         <Pressable
-          style={({ pressed }) => [
-            styles.postAction,
-            pressed && { opacity: 0.6 },
-          ]}
+          style={({ pressed }) => [styles.postAction, pressed && { opacity: 0.6 }]}
         >
           <IconSymbol name="square.and.arrow.up" size={16} color={colors.muted} />
         </Pressable>
@@ -120,47 +108,36 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   const rankColors = ["", colors.gold, colors.silver, colors.bronze];
 
   return (
-    <View
-      style={[
-        styles.leaderRow,
-        { borderBottomColor: colors.border },
-      ]}
-    >
+    <View style={[styles.leaderRow, { borderBottomColor: colors.border }]}>
       <View style={styles.leaderRank}>
-        <Text
-          style={[
-            styles.leaderRankText,
-            {
-              color: isTop3 ? rankColors[entry.rank] : colors.muted,
-              fontWeight: isTop3 ? "800" : "600",
-            },
-          ]}
+        <MonoSubhead
+          style={{
+            color: isTop3 ? rankColors[entry.rank] : colors.muted,
+            fontFamily: isTop3 ? FontFamily.monoBold : FontFamily.monoMedium,
+            fontSize: 16,
+          }}
         >
           {entry.rank}
-        </Text>
+        </MonoSubhead>
       </View>
-      <View
-        style={[styles.leaderAvatar, { backgroundColor: colors.primaryAlpha }]}
-      >
-        <Text style={[styles.leaderAvatarText, { color: colors.primary }]}>
+      <View style={[styles.leaderAvatar, { backgroundColor: colors.primaryAlpha }]}>
+        <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
           {entry.avatar}
-        </Text>
+        </Caption1>
       </View>
       <View style={styles.leaderInfo}>
-        <Text style={[styles.leaderName, { color: colors.foreground }]}>
+        <Subhead style={{ fontFamily: FontFamily.semibold, marginBottom: 2 }}>
           {entry.username}
-        </Text>
+        </Subhead>
         <View style={styles.leaderStats}>
-          <Text style={[styles.leaderStat, { color: colors.muted }]}>
+          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
             {entry.trades} trades
-          </Text>
-          <Text style={[styles.leaderStat, { color: colors.muted }]}>
-            {" · "}
-          </Text>
+          </Caption1>
+          <Caption1 color="muted"> · </Caption1>
           <IconSymbol name="flame.fill" size={12} color={colors.warning} />
-          <Text style={[styles.leaderStat, { color: colors.warning }]}>
+          <Caption1 style={{ color: colors.warning, fontFamily: FontFamily.medium }}>
             {entry.streak}
-          </Text>
+          </Caption1>
         </View>
       </View>
       <PnLText value={entry.returnPercent} size="md" showArrow={false} />
@@ -178,62 +155,49 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
         styles.achievementCard,
         {
           backgroundColor: colors.surface,
-          borderColor: achievement.unlocked
-            ? colors.warningAlpha
-            : colors.border,
+          borderColor: achievement.unlocked ? colors.warningAlpha : colors.border,
           opacity: achievement.unlocked ? 1 : 0.7,
         },
       ]}
     >
       <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-      <Text
-        style={[styles.achievementTitle, { color: colors.foreground }]}
+      <Subhead
+        style={{ fontFamily: FontFamily.bold, textAlign: "center", marginBottom: 4 }}
         numberOfLines={1}
       >
         {achievement.title}
-      </Text>
-      <Text
-        style={[styles.achievementDesc, { color: colors.muted }]}
+      </Subhead>
+      <Caption2
+        color="muted"
+        style={{ textAlign: "center", lineHeight: 15, marginBottom: 8 }}
         numberOfLines={2}
       >
         {achievement.description}
-      </Text>
+      </Caption2>
       {!achievement.unlocked && (
         <View style={styles.achievementProgress}>
-          <View
-            style={[
-              styles.achievementBar,
-              { backgroundColor: colors.surfaceSecondary },
-            ]}
-          >
+          <View style={[styles.achievementBar, { backgroundColor: colors.surfaceSecondary }]}>
             <View
               style={[
                 styles.achievementFill,
-                {
-                  backgroundColor: colors.warning,
-                  width: `${progressPercent}%`,
-                },
+                { backgroundColor: colors.warning, width: `${progressPercent}%` },
               ]}
             />
           </View>
-          <Text
-            style={[styles.achievementProgressText, { color: colors.muted }]}
+          <Caption2
+            color="muted"
+            style={{ fontFamily: FontFamily.monoMedium }}
           >
             {achievement.progress}/{achievement.total}
-          </Text>
+          </Caption2>
         </View>
       )}
       {achievement.unlocked && (
-        <View
-          style={[
-            styles.unlockedBadge,
-            { backgroundColor: colors.warningAlpha },
-          ]}
-        >
+        <View style={[styles.unlockedBadge, { backgroundColor: colors.warningAlpha }]}>
           <IconSymbol name="checkmark" size={12} color={colors.warning} />
-          <Text style={[styles.unlockedText, { color: colors.warning }]}>
+          <Caption2 style={{ color: colors.warning, fontFamily: FontFamily.semibold }}>
             Unlocked
-          </Text>
+          </Caption2>
         </View>
       )}
     </View>
@@ -248,9 +212,7 @@ export default function SocialScreen() {
     <ScreenContainer>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          Community
-        </Text>
+        <Title1>Community</Title1>
       </View>
 
       {/* Tab Selector */}
@@ -263,24 +225,16 @@ export default function SocialScreen() {
               onPress={() => setActiveTab(tab)}
               style={({ pressed }) => [
                 styles.tab,
-                isActive && {
-                  borderBottomColor: colors.primary,
-                  borderBottomWidth: 2,
-                },
+                isActive && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
                 pressed && { opacity: 0.6 },
               ]}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  {
-                    color: isActive ? colors.primary : colors.muted,
-                    fontWeight: isActive ? "700" : "500",
-                  },
-                ]}
+              <Subhead
+                color={isActive ? "primary" : "muted"}
+                style={{ fontFamily: isActive ? FontFamily.bold : FontFamily.medium }}
               >
                 {tab}
-              </Text>
+              </Subhead>
             </Pressable>
           );
         })}
@@ -308,12 +262,8 @@ export default function SocialScreen() {
               { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
           >
-            <Text style={[styles.leaderHeaderTitle, { color: colors.foreground }]}>
-              Weekly Top Performers
-            </Text>
-            <Text style={[styles.leaderHeaderSub, { color: colors.muted }]}>
-              Based on portfolio return percentage
-            </Text>
+            <Title3 style={{ marginBottom: 4 }}>Weekly Top Performers</Title3>
+            <Footnote color="muted">Based on portfolio return percentage</Footnote>
           </View>
           {LEADERBOARD.map((entry) => (
             <LeaderboardRow key={entry.rank} entry={entry} />
@@ -345,11 +295,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 4,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    letterSpacing: -0.5,
-  },
   tabContainer: {
     flexDirection: "row",
     paddingHorizontal: 16,
@@ -362,9 +307,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 2,
     borderBottomColor: "transparent",
-  },
-  tabText: {
-    fontSize: 14,
   },
   // Feed
   feedContent: {
@@ -390,30 +332,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
-  avatarText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
   postMeta: {
     flex: 1,
-  },
-  postUsername: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  postTime: {
-    fontSize: 12,
-    fontWeight: "500",
   },
   pnlBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-  },
-  postContent: {
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 10,
   },
   assetTag: {
     alignSelf: "flex-start",
@@ -421,10 +346,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     marginBottom: 12,
-  },
-  assetTagText: {
-    fontSize: 13,
-    fontWeight: "600",
   },
   postFooter: {
     flexDirection: "row",
@@ -437,10 +358,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 4,
   },
-  postActionText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
   // Leaderboard
   leaderContent: {
     paddingBottom: 20,
@@ -451,15 +368,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     alignItems: "center",
-  },
-  leaderHeaderTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  leaderHeaderSub: {
-    fontSize: 13,
-    fontWeight: "500",
   },
   leaderRow: {
     flexDirection: "row",
@@ -472,10 +380,6 @@ const styles = StyleSheet.create({
     width: 28,
     alignItems: "center",
   },
-  leaderRankText: {
-    fontSize: 16,
-    fontVariant: ["tabular-nums"],
-  },
   leaderAvatar: {
     width: 36,
     height: 36,
@@ -484,26 +388,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
-  leaderAvatarText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
   leaderInfo: {
     flex: 1,
-  },
-  leaderName: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 2,
   },
   leaderStats: {
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
-  },
-  leaderStat: {
-    fontSize: 12,
-    fontWeight: "500",
   },
   // Achievements
   achievementsContent: {
@@ -526,18 +417,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     marginBottom: 8,
   },
-  achievementTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  achievementDesc: {
-    fontSize: 11,
-    textAlign: "center",
-    lineHeight: 15,
-    marginBottom: 8,
-  },
   achievementProgress: {
     width: "100%",
     flexDirection: "row",
@@ -554,11 +433,6 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 2,
   },
-  achievementProgressText: {
-    fontSize: 10,
-    fontWeight: "600",
-    fontVariant: ["tabular-nums"],
-  },
   unlockedBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -566,9 +440,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-  },
-  unlockedText: {
-    fontSize: 11,
-    fontWeight: "600",
   },
 });
