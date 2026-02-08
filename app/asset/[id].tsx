@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   ScrollView,
   View,
   Text,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -11,9 +12,11 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Sparkline } from "@/components/ui/sparkline";
-import { GREEK_STOCKS, generateChartData } from "@/lib/mock-data";
-import Svg, { Polyline, Defs, LinearGradient, Stop, Rect, Path } from "react-native-svg";
+import { LiveBadge } from "@/components/ui/live-badge";
+import { ChartSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { useStockQuote, useStockChart } from "@/hooks/use-stocks";
+import { GREEK_STOCKS } from "@/lib/mock-data";
+import Svg, { Polyline, Defs, LinearGradient, Stop, Path } from "react-native-svg";
 
 const TIME_PERIODS = ["1D", "1W", "1M", "3M", "1Y", "ALL"];
 
@@ -48,7 +51,6 @@ function PriceChart({
 
   const polylinePoints = points.map((p) => `${p.x},${p.y}`).join(" ");
 
-  // Area fill path
   const areaPath = `M${points[0].x},${points[0].y} ${points
     .map((p) => `L${p.x},${p.y}`)
     .join(" ")} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`;
@@ -74,57 +76,56 @@ function PriceChart({
   );
 }
 
+function formatVolume(vol: number): string {
+  if (vol >= 1_000_000) return `${(vol / 1_000_000).toFixed(1)}M`;
+  if (vol >= 1_000) return `${(vol / 1_000).toFixed(0)}K`;
+  return vol.toString();
+}
+
 export default function AssetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colors = useColors();
   const [activePeriod, setActivePeriod] = useState("1D");
 
-  const asset = useMemo(
-    () => GREEK_STOCKS.find((s) => s.id === id) ?? GREEK_STOCKS[0],
-    [id]
-  );
+  const { stock, isLoading: quoteLoading, isLive } = useStockQuote(id ?? "");
+  const { chartData, isLoading: chartLoading, isLive: chartIsLive } = useStockChart(id ?? "", activePeriod);
 
-  const chartData = useMemo(() => {
-    const points =
-      activePeriod === "1D"
-        ? 48
-        : activePeriod === "1W"
-        ? 7 * 24
-        : activePeriod === "1M"
-        ? 30
-        : activePeriod === "3M"
-        ? 90
-        : activePeriod === "1Y"
-        ? 365
-        : 730;
-    return generateChartData(
-      asset.price * 0.9,
-      asset.price * 0.02,
-      points
-    ).map((d) => d.value);
-  }, [asset, activePeriod]);
+  // Fallback to mock data if stock not found
+  const mockAsset = GREEK_STOCKS.find((s) => s.id === id);
 
-  const isPositive = asset.change >= 0;
+  const ticker = stock?.ticker ?? mockAsset?.ticker ?? "---";
+  const name = stock?.name ?? mockAsset?.name ?? "Unknown";
+  const price = stock?.price ?? mockAsset?.price ?? 0;
+  const change = stock?.change ?? mockAsset?.change ?? 0;
+  const changePercent = stock?.changePercent ?? mockAsset?.changePercent ?? 0;
+  const dayHigh = stock?.dayHigh ?? price * 1.02;
+  const dayLow = stock?.dayLow ?? price * 0.98;
+  const volume = stock?.volume ?? 0;
+  const fiftyTwoWeekHigh = stock?.fiftyTwoWeekHigh ?? price * 1.2;
+  const fiftyTwoWeekLow = stock?.fiftyTwoWeekLow ?? price * 0.8;
+  const marketCap = stock?.marketCap ?? "N/A";
+
+  const isPositive = change >= 0;
   const buyPercent = 68;
   const sellPercent = 32;
 
   const NEWS = [
     {
       id: "1",
-      title: `${asset.name} reports strong Q4 earnings, beats estimates`,
+      title: `${name} reports strong Q4 earnings, beats estimates`,
       source: "Capital.gr",
       time: "2h ago",
     },
     {
       id: "2",
-      title: `Analysts upgrade ${asset.ticker} price target to €${(asset.price * 1.15).toFixed(2)}`,
+      title: `Analysts upgrade ${ticker} price target to €${(price * 1.15).toFixed(2)}`,
       source: "Naftemporiki",
       time: "5h ago",
     },
     {
       id: "3",
-      title: `ATHEX: ${asset.name} among top traded stocks today`,
+      title: `ATHEX: ${name} among top traded stocks today`,
       source: "Reuters",
       time: "8h ago",
     },
@@ -149,11 +150,14 @@ export default function AssetDetailScreen() {
             <IconSymbol name="chevron.right" size={20} color={colors.foreground} style={{ transform: [{ scaleX: -1 }] }} />
           </Pressable>
           <View style={styles.headerCenter}>
-            <Text style={[styles.headerTicker, { color: colors.foreground }]}>
-              {asset.ticker}
-            </Text>
+            <View style={styles.headerTitleRow}>
+              <Text style={[styles.headerTicker, { color: colors.foreground }]}>
+                {ticker}
+              </Text>
+              <LiveBadge isLive={isLive} />
+            </View>
             <Text style={[styles.headerName, { color: colors.muted }]}>
-              {asset.name}
+              {name}
             </Text>
           </View>
           <Pressable
@@ -169,25 +173,47 @@ export default function AssetDetailScreen() {
 
         {/* Price */}
         <View style={styles.priceContainer}>
-          <Text style={[styles.price, { color: colors.foreground }]}>
-            €{asset.price.toFixed(2)}
-          </Text>
-          <PnLText
-            value={asset.changePercent}
-            format="percent"
-            size="lg"
-            showArrow={true}
-          />
+          {quoteLoading ? (
+            <>
+              <Skeleton width={120} height={36} borderRadius={8} />
+              <Skeleton width={80} height={20} borderRadius={6} style={{ marginTop: 8 }} />
+            </>
+          ) : (
+            <>
+              <Text style={[styles.price, { color: colors.foreground }]}>
+                €{price.toFixed(2)}
+              </Text>
+              <View style={styles.changeRow}>
+                <PnLText
+                  value={change}
+                  format="currency"
+                  size="md"
+                  showArrow={true}
+                />
+                <Text style={[styles.changeSep, { color: colors.muted }]}> · </Text>
+                <PnLText
+                  value={changePercent}
+                  format="percent"
+                  size="md"
+                  showArrow={false}
+                />
+              </View>
+            </>
+          )}
         </View>
 
         {/* Chart */}
         <View style={styles.chartContainer}>
-          <PriceChart
-            data={chartData}
-            width={360}
-            height={200}
-            positive={isPositive}
-          />
+          {chartLoading ? (
+            <ChartSkeleton />
+          ) : (
+            <PriceChart
+              data={chartData}
+              width={360}
+              height={200}
+              positive={isPositive}
+            />
+          )}
         </View>
 
         {/* Time Period Selector */}
@@ -220,7 +246,7 @@ export default function AssetDetailScreen() {
           })}
         </View>
 
-        {/* Key Stats */}
+        {/* Key Stats — Live Data */}
         <View
           style={[
             styles.statsCard,
@@ -229,10 +255,10 @@ export default function AssetDetailScreen() {
         >
           <View style={styles.statsGrid}>
             {[
-              { label: "Market Cap", value: asset.marketCap ?? "N/A" },
-              { label: "Day Range", value: `€${(asset.price * 0.97).toFixed(2)} - €${(asset.price * 1.02).toFixed(2)}` },
-              { label: "Volume", value: "1.2M" },
-              { label: "P/E Ratio", value: "14.8" },
+              { label: "Market Cap", value: marketCap },
+              { label: "Day Range", value: `€${dayLow.toFixed(2)} - €${dayHigh.toFixed(2)}` },
+              { label: "Volume", value: volume > 0 ? formatVolume(volume) : "N/A" },
+              { label: "52W Range", value: `€${fiftyTwoWeekLow.toFixed(2)} - €${fiftyTwoWeekHigh.toFixed(2)}` },
             ].map((stat) => (
               <View key={stat.label} style={styles.statItem}>
                 <Text style={[styles.statLabel, { color: colors.muted }]}>
@@ -326,7 +352,7 @@ export default function AssetDetailScreen() {
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Sticky Buy/Sell CTAs */}
+      {/* Bottom CTA */}
       <View
         style={[
           styles.ctaContainer,
@@ -380,6 +406,11 @@ const styles = StyleSheet.create({
   headerCenter: {
     alignItems: "center",
   },
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   headerTicker: {
     fontSize: 18,
     fontWeight: "700",
@@ -405,6 +436,13 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
     letterSpacing: -1,
     marginBottom: 4,
+  },
+  changeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  changeSep: {
+    fontSize: 14,
   },
   chartContainer: {
     alignItems: "center",

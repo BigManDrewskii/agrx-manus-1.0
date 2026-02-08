@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   ScrollView,
   Text,
   View,
   FlatList,
   StyleSheet,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -17,12 +19,14 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { DemoBanner } from "@/components/ui/demo-banner";
 import { XPBar } from "@/components/ui/xp-bar";
+import { LiveBadge } from "@/components/ui/live-badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import {
   PORTFOLIO_TOTAL_VALUE,
   PORTFOLIO_PNL_PERCENT,
   PORTFOLIO_TOTAL_PNL,
   PORTFOLIO_SPARKLINE,
-  TRENDING_STOCKS,
   DAILY_CHALLENGE,
   USER_STREAK,
   SOCIAL_FEED,
@@ -31,8 +35,29 @@ import {
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+  const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
+  const refreshCache = useRefreshCache();
+
   const isPositive = PORTFOLIO_TOTAL_PNL >= 0;
   const glowColor = isPositive ? colors.success : colors.error;
+
+  // Get top 5 trending stocks by absolute change percent
+  const trendingStocks = [...stocks]
+    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
+    .slice(0, 5);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshCache.mutateAsync();
+      await refetch();
+    } catch {
+      // Silently handle refresh errors
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshCache, refetch]);
 
   return (
     <ScreenContainer>
@@ -40,6 +65,14 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
@@ -52,6 +85,7 @@ export default function HomeScreen() {
             </Text>
           </View>
           <View style={styles.headerRight}>
+            <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
             <View style={styles.streakBadge}>
               <IconSymbol name="flame.fill" size={16} color={colors.warning} />
               <Text style={[styles.streakText, { color: colors.warning }]}>
@@ -211,31 +245,54 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Trending on ATHEX */}
+        {/* Trending on ATHEX — Live Data */}
         <View style={styles.section}>
           <SectionHeader
             title="Trending on ATHEX"
             actionLabel="See All"
             onAction={() => router.push("/(tabs)/markets")}
           />
-          <FlatList
-            data={TRENDING_STOCKS}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.trendingList}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TrendingCard
-                asset={item}
-                onPress={() =>
-                  router.push({
-                    pathname: "/asset/[id]" as any,
-                    params: { id: item.id },
-                  })
-                }
-              />
-            )}
-          />
+          {isLoading ? (
+            <View style={styles.trendingLoading}>
+              {[1, 2, 3].map((i) => (
+                <View key={i} style={[styles.trendingSkeletonCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Skeleton width={40} height={40} borderRadius={20} />
+                  <Skeleton width={60} height={14} style={{ marginTop: 8 }} />
+                  <Skeleton width={80} height={12} style={{ marginTop: 4 }} />
+                  <Skeleton width={50} height={30} style={{ marginTop: 12 }} />
+                  <Skeleton width={55} height={14} style={{ marginTop: 8 }} />
+                </View>
+              ))}
+            </View>
+          ) : (
+            <FlatList
+              data={trendingStocks}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.trendingList}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TrendingCard
+                  asset={{
+                    id: item.id,
+                    ticker: item.ticker,
+                    name: item.name,
+                    price: item.price,
+                    change: item.change,
+                    changePercent: item.changePercent,
+                    sparkline: item.sparkline,
+                    category: item.category,
+                  }}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/asset/[id]" as any,
+                      params: { id: item.id },
+                    })
+                  }
+                />
+              )}
+            />
+          )}
         </View>
 
         {/* Social Feed Preview */}
@@ -336,7 +393,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
   },
   streakBadge: {
     flexDirection: "row",
@@ -465,6 +522,18 @@ const styles = StyleSheet.create({
   },
   trendingList: {
     paddingHorizontal: 16,
+  },
+  trendingLoading: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  trendingSkeletonCard: {
+    width: 150,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    alignItems: "center",
   },
   socialCard: {
     marginHorizontal: 16,

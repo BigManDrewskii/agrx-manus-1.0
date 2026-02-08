@@ -33,3 +33,14 @@
 - [x] Generate custom app logo
 - [x] Update app.config.ts with AGRX branding
 - [x] Create checkpoint and deliver MVP
+- [x] Create server-side stock data router with YahooFinance API integration
+- [x] Build stock data service with caching and rate-limit handling
+- [x] Map ATHEX stock symbols to Yahoo Finance .AT suffixes
+- [x] Create tRPC endpoints: getQuote, getChart, getMultipleQuotes
+- [x] Build client-side React Query hooks for live stock data
+- [x] Update Home screen to use live data with loading/error states
+- [x] Update Markets screen to use live data with loading/error states
+- [x] Update Asset Detail screen to use live chart data
+- [x] Update Portfolio screen to use live prices for holdings
+- [x] Add pull-to-refresh for data refresh on key screens
+- [x] Write tests for the stock data service (7 integration tests passing)

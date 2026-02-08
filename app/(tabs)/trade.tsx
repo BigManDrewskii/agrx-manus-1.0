@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
   TextInput,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -12,24 +13,43 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { AssetRow } from "@/components/ui/asset-row";
-import { GREEK_STOCKS, QUICK_AMOUNTS, type Asset } from "@/lib/mock-data";
+import { LiveBadge } from "@/components/ui/live-badge";
+import { StockListSkeleton } from "@/components/ui/skeleton";
+import { useStockQuotes } from "@/hooks/use-stocks";
+import { QUICK_AMOUNTS } from "@/lib/mock-data";
+
+interface SelectedStock {
+  id: string;
+  ticker: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  sparkline: number[];
+  category: string;
+}
 
 export default function TradeScreen() {
   const colors = useColors();
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<SelectedStock | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [isBuy, setIsBuy] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { stocks, isLoading, isLive, lastUpdated } = useStockQuotes();
 
-  const filteredStocks = search.trim()
-    ? GREEK_STOCKS.filter(
+  const filteredStocks = useMemo(() => {
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      return stocks.filter(
         (s) =>
-          s.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.ticker.toLowerCase().includes(search.toLowerCase())
-      )
-    : GREEK_STOCKS.slice(0, 6);
+          s.name.toLowerCase().includes(q) ||
+          s.ticker.toLowerCase().includes(q)
+      );
+    }
+    return stocks.slice(0, 8);
+  }, [stocks, search]);
 
   const handleConfirm = useCallback(() => {
     if (!selectedAsset || !selectedAmount) return;
@@ -66,7 +86,7 @@ export default function TradeScreen() {
           <Pressable
             onPress={() => {}}
             style={({ pressed }) => [
-              styles.shareButton,
+              styles.shareTradeButton,
               { backgroundColor: colors.primary },
               pressed && { opacity: 0.8 },
             ]}
@@ -92,9 +112,12 @@ export default function TradeScreen() {
           >
             <IconSymbol name="xmark" size={22} color={colors.muted} />
           </Pressable>
-          <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
-            {selectedAsset.ticker}
-          </Text>
+          <View style={styles.sheetTitleRow}>
+            <Text style={[styles.sheetTitle, { color: colors.foreground }]}>
+              {selectedAsset.ticker}
+            </Text>
+            <LiveBadge isLive={isLive} />
+          </View>
           <View style={{ width: 22 }} />
         </View>
 
@@ -141,7 +164,7 @@ export default function TradeScreen() {
           </Pressable>
         </View>
 
-        {/* Asset Info */}
+        {/* Asset Info with Live Price */}
         <View style={styles.assetInfo}>
           <View
             style={[
@@ -158,6 +181,20 @@ export default function TradeScreen() {
           </Text>
           <Text style={[styles.assetPrice, { color: colors.foreground }]}>
             €{selectedAsset.price.toFixed(2)}
+          </Text>
+          <Text
+            style={[
+              styles.assetChange,
+              {
+                color:
+                  selectedAsset.changePercent >= 0
+                    ? colors.success
+                    : colors.error,
+              },
+            ]}
+          >
+            {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
+            {Math.abs(selectedAsset.changePercent).toFixed(2)}% today
           </Text>
         </View>
 
@@ -224,7 +261,7 @@ export default function TradeScreen() {
             </View>
             <View style={styles.orderRow}>
               <Text style={[styles.orderLabel, { color: colors.muted }]}>
-                Market price
+                Market price (live)
               </Text>
               <Text style={[styles.orderValue, { color: colors.foreground }]}>
                 €{selectedAsset.price.toFixed(2)}
@@ -282,6 +319,7 @@ export default function TradeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.foreground }]}>Trade</Text>
+        <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
       </View>
 
       {/* Search */}
@@ -315,24 +353,47 @@ export default function TradeScreen() {
       </View>
 
       {/* Stock List */}
-      <FlatList
-        data={filteredStocks}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <AssetRow
-            asset={item}
-            onPress={() => setSelectedAsset(item)}
-          />
-        )}
-      />
+      {isLoading ? (
+        <StockListSkeleton count={6} />
+      ) : (
+        <FlatList
+          data={filteredStocks}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          renderItem={({ item }) => (
+            <AssetRow
+              asset={{
+                id: item.id,
+                ticker: item.ticker,
+                name: item.name,
+                price: item.price,
+                change: item.change,
+                changePercent: item.changePercent,
+                sparkline: item.sparkline,
+                category: item.category,
+              }}
+              onPress={() => setSelectedAsset(item)}
+            />
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={[styles.emptyText, { color: colors.muted }]}>
+                No stocks found
+              </Text>
+            </View>
+          }
+        />
+      )}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
@@ -373,6 +434,14 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 100,
   },
+  emptyContainer: {
+    alignItems: "center",
+    paddingTop: 40,
+  },
+  emptyText: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
   // Sheet styles
   sheetHeader: {
     flexDirection: "row",
@@ -381,6 +450,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 16,
+  },
+  sheetTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   sheetTitle: {
     fontSize: 18,
@@ -428,6 +502,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     fontVariant: ["tabular-nums"],
+    marginBottom: 2,
+  },
+  assetChange: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   amountsContainer: {
     paddingHorizontal: 16,
@@ -524,7 +603,7 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
     marginBottom: 32,
   },
-  shareButton: {
+  shareTradeButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

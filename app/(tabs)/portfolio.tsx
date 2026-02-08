@@ -1,92 +1,111 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   ScrollView,
   View,
   Text,
   FlatList,
   StyleSheet,
+  RefreshControl,
 } from "react-native";
 import { Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { PnLText } from "@/components/ui/pnl-text";
 import { Sparkline } from "@/components/ui/sparkline";
+import { LiveBadge } from "@/components/ui/live-badge";
+import { StockListSkeleton } from "@/components/ui/skeleton";
+import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import {
   PORTFOLIO_HOLDINGS,
-  PORTFOLIO_TOTAL_VALUE,
-  PORTFOLIO_TOTAL_PNL,
-  PORTFOLIO_PNL_PERCENT,
   PORTFOLIO_SPARKLINE,
   type Holding,
 } from "@/lib/mock-data";
 
 const TABS = ["All", "Stocks", "Options", "Copied"];
 
-function HoldingRow({ holding }: { holding: Holding }) {
-  const colors = useColors();
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.holdingRow,
-        { borderBottomColor: colors.border },
-        pressed && { opacity: 0.7 },
-      ]}
-    >
-      <View style={styles.holdingLeft}>
-        <View
-          style={[
-            styles.holdingIcon,
-            { backgroundColor: colors.surfaceSecondary },
-          ]}
-        >
-          <Text style={[styles.holdingIconText, { color: colors.primary }]}>
-            {holding.asset.ticker.slice(0, 2)}
-          </Text>
-        </View>
-        <View>
-          <Text style={[styles.holdingName, { color: colors.foreground }]}>
-            {holding.asset.ticker}
-          </Text>
-          <Text style={[styles.holdingShares, { color: colors.muted }]}>
-            {holding.shares} shares
-          </Text>
-        </View>
-      </View>
-      <View style={styles.holdingCenter}>
-        <Sparkline
-          data={holding.asset.sparkline}
-          width={48}
-          height={20}
-          positive={holding.pnl >= 0}
-        />
-      </View>
-      <View style={styles.holdingRight}>
-        <Text style={[styles.holdingValue, { color: colors.foreground }]}>
-          €{holding.currentValue.toFixed(2)}
-        </Text>
-        <PnLText value={holding.pnlPercent} size="sm" showArrow={false} />
-      </View>
-    </Pressable>
-  );
+interface EnrichedHolding extends Holding {
+  livePrice?: number;
+  liveChange?: number;
+  liveChangePercent?: number;
+  liveValue: number;
+  livePnl: number;
+  livePnlPercent: number;
+  liveSparkline: number[];
 }
 
 export default function PortfolioScreen() {
   const colors = useColors();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("All");
-  const isPositive = PORTFOLIO_TOTAL_PNL >= 0;
+  const [refreshing, setRefreshing] = useState(false);
+  const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
+  const refreshCache = useRefreshCache();
+
+  // Enrich holdings with live prices
+  const enrichedHoldings: EnrichedHolding[] = useMemo(() => {
+    return PORTFOLIO_HOLDINGS.map((holding) => {
+      const liveStock = stocks.find((s) => s.id === holding.asset.id);
+      const currentPrice = liveStock?.price ?? holding.asset.price;
+      const liveValue = holding.shares * currentPrice;
+      const costBasis = holding.shares * holding.avgCost;
+      const livePnl = liveValue - costBasis;
+      const livePnlPercent = costBasis > 0 ? (livePnl / costBasis) * 100 : 0;
+
+      return {
+        ...holding,
+        livePrice: liveStock?.price,
+        liveChange: liveStock?.change,
+        liveChangePercent: liveStock?.changePercent,
+        liveValue,
+        livePnl,
+        livePnlPercent,
+        liveSparkline: liveStock?.sparkline ?? holding.asset.sparkline,
+      };
+    });
+  }, [stocks]);
+
+  // Calculate portfolio totals from live data
+  const portfolioTotal = enrichedHoldings.reduce((sum, h) => sum + h.liveValue, 0);
+  const portfolioCost = enrichedHoldings.reduce((sum, h) => sum + h.shares * h.avgCost, 0);
+  const portfolioPnl = portfolioTotal - portfolioCost;
+  const portfolioPnlPercent = portfolioCost > 0 ? (portfolioPnl / portfolioCost) * 100 : 0;
+
+  const isPositive = portfolioPnl >= 0;
   const glowColor = isPositive ? colors.success : colors.error;
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshCache.mutateAsync();
+      await refetch();
+    } catch {
+      // Silently handle
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshCache, refetch]);
 
   return (
     <ScreenContainer>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.foreground }]}>
             Portfolio
           </Text>
+          <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
         </View>
 
         {/* Portfolio Value Hero */}
@@ -105,14 +124,14 @@ export default function PortfolioScreen() {
               },
             ]}
           >
-            €{PORTFOLIO_TOTAL_VALUE.toLocaleString("el-GR", {
+            €{portfolioTotal.toLocaleString("el-GR", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </Text>
           <View style={styles.heroPnl}>
             <PnLText
-              value={PORTFOLIO_TOTAL_PNL}
+              value={portfolioPnl}
               format="currency"
               size="lg"
               showArrow={true}
@@ -121,7 +140,7 @@ export default function PortfolioScreen() {
               {" · "}
             </Text>
             <PnLText
-              value={PORTFOLIO_PNL_PERCENT}
+              value={portfolioPnlPercent}
               format="percent"
               size="lg"
               showArrow={false}
@@ -175,12 +194,64 @@ export default function PortfolioScreen() {
         <View style={styles.holdingsContainer}>
           <View style={styles.holdingsHeader}>
             <Text style={[styles.holdingsTitle, { color: colors.muted }]}>
-              {PORTFOLIO_HOLDINGS.length} Holdings
+              {enrichedHoldings.length} Holdings
             </Text>
           </View>
-          {PORTFOLIO_HOLDINGS.map((holding) => (
-            <HoldingRow key={holding.asset.id} holding={holding} />
-          ))}
+          {isLoading ? (
+            <StockListSkeleton count={4} />
+          ) : (
+            enrichedHoldings.map((holding) => (
+              <Pressable
+                key={holding.asset.id}
+                onPress={() =>
+                  router.push({
+                    pathname: "/asset/[id]" as any,
+                    params: { id: holding.asset.id },
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.holdingRow,
+                  { borderBottomColor: colors.border },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <View style={styles.holdingLeft}>
+                  <View
+                    style={[
+                      styles.holdingIcon,
+                      { backgroundColor: colors.surfaceSecondary },
+                    ]}
+                  >
+                    <Text style={[styles.holdingIconText, { color: colors.primary }]}>
+                      {holding.asset.ticker.slice(0, 2)}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={[styles.holdingName, { color: colors.foreground }]}>
+                      {holding.asset.ticker}
+                    </Text>
+                    <Text style={[styles.holdingShares, { color: colors.muted }]}>
+                      {holding.shares} shares · avg €{holding.avgCost.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.holdingCenter}>
+                  <Sparkline
+                    data={holding.liveSparkline}
+                    width={48}
+                    height={20}
+                    positive={holding.livePnl >= 0}
+                  />
+                </View>
+                <View style={styles.holdingRight}>
+                  <Text style={[styles.holdingValue, { color: colors.foreground }]}>
+                    €{holding.liveValue.toFixed(2)}
+                  </Text>
+                  <PnLText value={holding.livePnlPercent} size="sm" showArrow={false} />
+                </View>
+              </Pressable>
+            ))
+          )}
         </View>
 
         {/* Dividend Section */}
@@ -210,7 +281,7 @@ export default function PortfolioScreen() {
             </View>
             <View style={styles.dividendRow}>
               <Text style={[styles.dividendAsset, { color: colors.foreground }]}>
-                MOH
+                PPC
               </Text>
               <Text style={[styles.dividendDate, { color: colors.muted }]}>
                 Apr 02, 2026
@@ -233,6 +304,9 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 4,

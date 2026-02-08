@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
   TextInput,
   FlatList,
   StyleSheet,
+  RefreshControl,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -12,62 +13,94 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { AssetRow } from "@/components/ui/asset-row";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import {
-  GREEK_STOCKS,
-  TOP_GAINERS,
-  TOP_LOSERS,
-  type Asset,
-} from "@/lib/mock-data";
+import { LiveBadge } from "@/components/ui/live-badge";
+import { StockListSkeleton } from "@/components/ui/skeleton";
+import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 
-const CATEGORIES = ["All", "Blue Chips", "Gainers", "Losers", "Dividend"];
+const CATEGORIES = ["All", "Blue Chips", "Gainers", "Losers", "Dividend", "Growth"];
 
 export default function MarketsScreen() {
   const colors = useColors();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [refreshing, setRefreshing] = useState(false);
+  const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
+  const refreshCache = useRefreshCache();
 
   const filteredStocks = useMemo(() => {
-    let stocks: Asset[];
+    let filtered = [...stocks];
     switch (activeCategory) {
       case "Gainers":
-        stocks = TOP_GAINERS;
+        filtered = filtered.filter((s) => s.changePercent > 0).sort((a, b) => b.changePercent - a.changePercent);
         break;
       case "Losers":
-        stocks = TOP_LOSERS;
+        filtered = filtered.filter((s) => s.changePercent < 0).sort((a, b) => a.changePercent - b.changePercent);
         break;
       case "Blue Chips":
-        stocks = GREEK_STOCKS.filter((s) => s.category === "blue-chip");
+        filtered = filtered.filter((s) => s.category === "blue-chip");
         break;
       case "Dividend":
-        stocks = GREEK_STOCKS.filter((s) => s.category === "dividend");
+        filtered = filtered.filter((s) => s.category === "dividend");
+        break;
+      case "Growth":
+        filtered = filtered.filter((s) => s.category === "growth");
         break;
       default:
-        stocks = GREEK_STOCKS;
+        break;
     }
     if (search.trim()) {
       const q = search.toLowerCase();
-      stocks = stocks.filter(
+      filtered = filtered.filter(
         (s) =>
           s.name.toLowerCase().includes(q) ||
           s.ticker.toLowerCase().includes(q)
       );
     }
-    return stocks;
-  }, [search, activeCategory]);
+    return filtered;
+  }, [stocks, search, activeCategory]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshCache.mutateAsync();
+      await refetch();
+    } catch {
+      // Silently handle
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshCache, refetch]);
+
+  // Determine ATHEX market status based on current time (EEST)
+  const now = new Date();
+  const athensHour = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Athens" })).getHours();
+  const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+  const isMarketOpen = isWeekday && athensHour >= 10 && athensHour < 17;
 
   return (
     <ScreenContainer>
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.foreground }]}>Markets</Text>
-        <View style={styles.marketStatus}>
-          <View
-            style={[styles.statusDot, { backgroundColor: colors.success }]}
-          />
-          <Text style={[styles.statusText, { color: colors.success }]}>
-            ATHEX Open
-          </Text>
+        <View style={styles.headerRight}>
+          <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
+          <View style={styles.marketStatus}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: isMarketOpen ? colors.success : colors.muted },
+              ]}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                { color: isMarketOpen ? colors.success : colors.muted },
+              ]}
+            >
+              {isMarketOpen ? "ATHEX Open" : "ATHEX Closed"}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -137,31 +170,63 @@ export default function MarketsScreen() {
         />
       </View>
 
+      {/* Stock Count */}
+      <View style={styles.countRow}>
+        <Text style={[styles.countText, { color: colors.muted }]}>
+          {filteredStocks.length} {filteredStocks.length === 1 ? "stock" : "stocks"}
+        </Text>
+      </View>
+
       {/* Stock List */}
-      <FlatList
-        data={filteredStocks}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <AssetRow
-            asset={item}
-            onPress={() =>
-              router.push({
-                pathname: "/asset/[id]" as any,
-                params: { id: item.id },
-              })
-            }
-          />
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: colors.muted }]}>
-              No stocks found
-            </Text>
-          </View>
-        }
-      />
+      {isLoading ? (
+        <StockListSkeleton count={8} />
+      ) : (
+        <FlatList
+          data={filteredStocks}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+          renderItem={({ item }) => (
+            <AssetRow
+              asset={{
+                id: item.id,
+                ticker: item.ticker,
+                name: item.name,
+                price: item.price,
+                change: item.change,
+                changePercent: item.changePercent,
+                sparkline: item.sparkline,
+                category: item.category,
+              }}
+              onPress={() =>
+                router.push({
+                  pathname: "/asset/[id]" as any,
+                  params: { id: item.id },
+                })
+              }
+            />
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <IconSymbol name="magnifyingglass" size={32} color={colors.muted} />
+              <Text style={[styles.emptyText, { color: colors.muted }]}>
+                No stocks found
+              </Text>
+              <Text style={[styles.emptySubtext, { color: colors.muted }]}>
+                Try a different search or category
+              </Text>
+            </View>
+          }
+        />
+      )}
     </ScreenContainer>
   );
 }
@@ -179,6 +244,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     letterSpacing: -0.5,
+  },
+  headerRight: {
+    alignItems: "flex-end",
+    gap: 4,
   },
   marketStatus: {
     flexDirection: "row",
@@ -228,15 +297,28 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 13,
   },
+  countRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+  countText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
   listContent: {
     paddingBottom: 100,
   },
   emptyContainer: {
     alignItems: "center",
     paddingTop: 40,
+    gap: 8,
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  emptySubtext: {
+    fontSize: 13,
     fontWeight: "500",
   },
 });
