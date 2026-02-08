@@ -302,6 +302,26 @@ export default function PortfolioScreen() {
           >
             {enrichedHoldings.length} Holdings
           </Caption1>
+          {state.trades.length > 0 && (
+            <AnimatedPressable
+              variant="chip"
+              onPress={() => router.push("/trade-history" as any)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 12,
+                backgroundColor: colors.surfaceSecondary,
+              }}
+            >
+              <IconSymbol name="clock" size={12} color={colors.muted} />
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
+                History
+              </Caption1>
+            </AnimatedPressable>
+          )}
         </View>
 
         {/* Holdings List */}
@@ -541,6 +561,9 @@ const styles = StyleSheet.create({
   },
   // ── Holdings ──
   holdingsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     marginBottom: 8,
   },

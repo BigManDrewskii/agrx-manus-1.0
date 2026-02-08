@@ -225,3 +225,14 @@
 - [x] Create AnimatedPressable component — spring-based press feedback with 5 variants (button/card/chip/icon/toggle)
 - [x] Replace all Pressable/TouchableOpacity across 17 files with AnimatedPressable
 - [x] Run tests and verify 0 regressions after animation changes (395 passed)
+- [x] Audit DemoContext trade data model — DemoTrade already has id, stockId, ticker, name, type, amount, shares, price, timestamp
+- [x] Design Trade History screen layout (date grouping, per-trade P&L, buy/sell indicators)
+- [x] DemoContext already persists trades in AsyncStorage — no changes needed
+- [x] Build Trade History screen: FlatList with date grouping (Today/Yesterday/This Week/Earlier)
+- [x] Build trade row UI: side indicator (green buy/red sell), ticker, shares, price, per-trade P&L vs live prices
+- [x] Add summary card: total volume, net P&L, trade count breakdown (buys/sells)
+- [x] Add empty state with clock icon and Start Trading CTA
+- [x] Wire navigation: Portfolio holdings header "History" chip
+- [x] Register trade-history route in root layout (slide_from_right)
+- [x] Write 38 trade history tests (structure, grouping, row display, P&L, summary, empty state, routing, design system)
+- [x] Run full test suite: 433 tests passed, 0 TS errors
