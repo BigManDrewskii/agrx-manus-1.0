@@ -4,8 +4,8 @@ import * as Haptics from "expo-haptics";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useColors } from "@/hooks/use-colors";
 import { Sparkline } from "./sparkline";
-import { PnLText } from "./pnl-text";
-import { Subhead, Caption1, MonoSubhead } from "@/components/ui/typography";
+import { AnimatedNumber, AnimatedPnLNumber } from "./animated-number";
+import { Subhead, Caption1 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
 import { IconSymbol } from "./icon-symbol";
 import type { Asset } from "@/lib/mock-data";
@@ -86,10 +86,19 @@ export function AssetRow({
       {/* Right: Price + Change + Star */}
       <View style={styles.rightGroup}>
         <View style={styles.right}>
-          <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
-            €{asset.price.toFixed(2)}
-          </MonoSubhead>
-          <PnLText value={asset.changePercent} size="sm" showArrow={false} />
+          <AnimatedNumber
+            value={asset.price}
+            prefix="€"
+            decimals={2}
+            style={{
+              fontSize: 15,
+              lineHeight: 20,
+              fontFamily: FontFamily.monoMedium,
+              color: colors.foreground,
+              marginBottom: 2,
+            }}
+          />
+          <AnimatedPnLNumber value={asset.changePercent} format="percent" size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
         </View>
         {showStar && (
           <AnimatedPressable

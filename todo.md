@@ -272,3 +272,7 @@
 - [x] Animate P&L values on Asset Detail screen with AnimatedPnLNumber (change amount + change percent)
 - [x] Removed unused MonoLargeTitle and PnLText imports
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Animate stock prices on Markets screen with AnimatedNumber (via AssetRow component — affects Markets, Home watchlist, and all stock lists)
+- [x] Animate P&L percentages on Markets screen with AnimatedPnLNumber (via AssetRow component)
+- [x] Removed unused PnLText and MonoSubhead imports from asset-row.tsx
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
