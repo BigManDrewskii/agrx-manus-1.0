@@ -211,3 +211,8 @@
 - [x] Build SwipeToConfirm component (draggable thumb, progress fill, haptic feedback, completion animation)
 - [x] Integrate SwipeToConfirm into Trade screen replacing tap-to-confirm button
 - [x] Write tests for SwipeToConfirm component and integration
+- [x] Audit trade screen buy/sell order sheet UI — identify spacing, chip layout, and visual issues
+- [x] Research Robinhood/Coinbase trade screen patterns for modern reference
+- [x] Redesign quick amount chips for cleaner, modern look
+- [x] Refine overall trade order sheet layout, spacing, and visual hierarchy
+- [x] Run tests and verify 0 regressions after UI refinement
