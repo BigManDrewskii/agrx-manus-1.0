@@ -20,6 +20,7 @@ import { useStockQuotes } from "@/hooks/use-stocks";
 import { useDemo } from "@/lib/demo-context";
 import { useViewMode } from "@/lib/viewmode-context";
 import { ShareCardModal } from "@/components/ui/share-card-modal";
+import { SwipeToConfirm } from "@/components/ui/swipe-to-confirm";
 import type { ShareCardData } from "@/components/ui/share-card";
 import {
   Title1,
@@ -517,31 +518,16 @@ export default function TradeScreen() {
           {/* Spacer */}
           <View style={{ flex: 1, minHeight: 12 }} />
 
-          {/* Confirm Button — always reachable */}
-          <View style={styles.confirmContainer}>
-            <Pressable
-              onPress={handleConfirm}
-              disabled={!isValidAmount}
-              style={({ pressed }) => [
-                styles.confirmButton,
-                {
-                  backgroundColor: isValidAmount
-                    ? isBuy ? colors.success : colors.error
-                    : colors.surfaceSecondary,
-                },
-                pressed && isValidAmount ? { transform: [{ scale: 0.97 }], opacity: 0.9 } : undefined,
-              ]}
-            >
-              <Callout
-                color={isValidAmount ? "onPrimary" : "muted"}
-                style={{ fontFamily: FontFamily.bold }}
-              >
-                {isValidAmount
-                  ? `${isBuy ? "Buy" : "Sell"} €${parsedAmount.toFixed(2)} of ${selectedAsset.ticker}`
-                  : amountText ? "Fix amount to continue" : "Enter an amount"}
-              </Callout>
-            </Pressable>
-          </View>
+          {/* Swipe to Confirm — premium slide gesture */}
+          <SwipeToConfirm
+            label={isValidAmount
+              ? `Slide to ${isBuy ? "Buy" : "Sell"} €${parsedAmount.toFixed(2)} ${selectedAsset.ticker}`
+              : ""}
+            enabled={isValidAmount}
+            onConfirm={handleConfirm}
+            variant={isBuy ? "buy" : "sell"}
+            disabledLabel={amountText ? "Fix amount to continue" : "Enter an amount"}
+          />
         </ScrollView>
       </ScreenContainer>
     );
@@ -844,17 +830,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  // Confirm button
-  confirmContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  confirmButton: {
-    height: 50,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
   // ─── Success Screen ───────────────────────────────────────────
   successContainer: {

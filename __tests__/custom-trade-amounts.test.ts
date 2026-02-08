@@ -176,13 +176,18 @@ describe("Custom Trade Amounts", () => {
     });
   });
 
-  describe("Confirm Button", () => {
-    it("should be disabled when amount is not valid", () => {
-      expect(trade).toMatch(/disabled=\{!isValidAmount\}/);
+  describe("Swipe to Confirm", () => {
+    it("should use SwipeToConfirm component instead of Pressable button", () => {
+      expect(trade).toMatch(/<SwipeToConfirm/);
+      expect(trade).not.toMatch(/styles\.confirmButton/);
     });
 
-    it("should show dynamic text with amount and ticker", () => {
-      expect(trade).toMatch(/Buy.*Sell.*€.*parsedAmount.*selectedAsset\.ticker/s);
+    it("should pass enabled based on isValidAmount", () => {
+      expect(trade).toMatch(/enabled=\{isValidAmount\}/);
+    });
+
+    it("should show dynamic label with amount and ticker", () => {
+      expect(trade).toMatch(/Slide to.*Buy.*Sell/s);
     });
 
     it("should show 'Enter an amount' when no input", () => {

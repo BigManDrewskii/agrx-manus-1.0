@@ -208,3 +208,6 @@
 - [x] Add View Mode toggle section to Settings screen (with description per mode)
 - [x] Wire ViewModeProvider into root layout
 - [x] Run full test suite: 340 tests passed, 0 TS errors
+- [x] Build SwipeToConfirm component (draggable thumb, progress fill, haptic feedback, completion animation)
+- [x] Integrate SwipeToConfirm into Trade screen replacing tap-to-confirm button
+- [x] Write tests for SwipeToConfirm component and integration
