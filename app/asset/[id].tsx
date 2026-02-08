@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { PnLText } from "@/components/ui/pnl-text";
+import { AnimatedNumber, AnimatedPnLNumber } from "@/components/ui/animated-number";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { ChartSkeleton, Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +30,6 @@ import {
   Footnote,
   Caption1,
   Caption2,
-  MonoLargeTitle,
   MonoBody,
   MonoSubhead,
 } from "@/components/ui/typography";
@@ -306,13 +305,22 @@ export default function AssetDetailScreen() {
             </>
           ) : (
             <>
-              <MonoLargeTitle style={{ fontSize: 36, letterSpacing: -1, marginBottom: 4 }}>
-                €{price.toFixed(2)}
-              </MonoLargeTitle>
+              <AnimatedNumber
+                value={price}
+                prefix="€"
+                decimals={2}
+                style={{
+                  fontSize: 36,
+                  letterSpacing: -1,
+                  marginBottom: 4,
+                  fontFamily: FontFamily.monoMedium,
+                  color: colors.foreground,
+                }}
+              />
               <View style={styles.changeRow}>
-                <PnLText value={change} format="currency" size="md" showArrow={true} />
+                <AnimatedPnLNumber value={change} format="currency" size="md" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
                 <Footnote color="muted"> · </Footnote>
-                <PnLText value={changePercent} format="percent" size="md" showArrow={false} />
+                <AnimatedPnLNumber value={changePercent} format="percent" size="md" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
               </View>
             </>
           )}

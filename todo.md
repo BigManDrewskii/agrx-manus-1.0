@@ -268,3 +268,7 @@
 - [x] Apply AnimatedNumber to per-stock live value (€ amount) in both modes
 - [x] Remove unused PnLText import from portfolio.tsx
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Animate live price on Asset Detail screen with AnimatedNumber (spring-interpolated € price, 36px hero)
+- [x] Animate P&L values on Asset Detail screen with AnimatedPnLNumber (change amount + change percent)
+- [x] Removed unused MonoLargeTitle and PnLText imports
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
