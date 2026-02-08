@@ -52,3 +52,13 @@
 - [x] Update all components to use token-based colors consistently (no hardcoded colors)
 - [x] Test light and dark mode switching end-to-end
 - [x] Remove all hardcoded color values from screens and components (0 violations in grep audit)
+- [x] Research Coinbase/Robinhood/Binance dark mode palettes for reference (CDS v8 gray spectrum)
+- [x] Audit current dark mode rendering across all screens
+- [x] Fine-tune dark background/surface/surfaceSecondary for OLED contrast (#0A0B0D → #1A1C23 → #262830)
+- [x] Fine-tune dark foreground/muted for readability (WCAG AA: #EEF0F3 fg, #89909E muted)
+- [x] Fine-tune dark border token for subtle separation (#282A30)
+- [x] Fine-tune dark primary/accent/success/warning/error (CDS dark spectrum: #578BFA, #27AD74, #ED5966, #EBBA00)
+- [x] Fine-tune dark alpha variants for proper translucency (14-16% opacity)
+- [x] Update global.css dark mode CSS variables to match new tokens
+- [x] Verify all screens render correctly in dark mode
+- [x] Run all tests including design system validation (58 passed + 19 WCAG contrast tests)

@@ -6,49 +6,51 @@
  * Initial CSS variable declarations for web.
  * These prevent a flash of unstyled content (FOUC) before the JS ThemeProvider hydrates.
  * Values MUST stay in sync with theme.config.js — the ThemeProvider will override them at runtime.
+ *
+ * Dark palette is modeled after the Coinbase Design System (CDS v8) gray spectrum.
  */
 :root {
-  --color-primary: #0055DD;
-  --color-primaryAlpha: rgba(0,85,221,0.12);
-  --color-background: #F8F9FB;
+  --color-primary: #0052FF;
+  --color-primaryAlpha: rgba(0,82,255,0.10);
+  --color-background: #F7F8F9;
   --color-surface: #FFFFFF;
-  --color-surfaceSecondary: #F0F1F5;
-  --color-foreground: #111827;
-  --color-muted: #6B7280;
+  --color-surfaceSecondary: #EEF0F3;
+  --color-foreground: #0A0B0D;
+  --color-muted: #5B616E;
   --color-onPrimary: #FFFFFF;
-  --color-border: #E5E7EB;
-  --color-success: #10B981;
-  --color-successAlpha: rgba(16,185,129,0.12);
-  --color-warning: #F59E0B;
-  --color-warningAlpha: rgba(245,158,11,0.12);
-  --color-error: #EF4444;
-  --color-errorAlpha: rgba(239,68,68,0.12);
-  --color-accent: #8B5CF6;
-  --color-accentAlpha: rgba(139,92,246,0.12);
-  --color-gold: #F59E0B;
-  --color-silver: #9CA3AF;
-  --color-bronze: #B45309;
+  --color-border: #DEE1E7;
+  --color-success: #09854F;
+  --color-successAlpha: rgba(9,133,79,0.10);
+  --color-warning: #CF7100;
+  --color-warningAlpha: rgba(207,113,0,0.10);
+  --color-error: #CF2030;
+  --color-errorAlpha: rgba(207,32,48,0.10);
+  --color-accent: #4257E9;
+  --color-accentAlpha: rgba(66,87,233,0.10);
+  --color-gold: #CF9700;
+  --color-silver: #89909E;
+  --color-bronze: #B54F06;
 }
 
 :root[data-theme="dark"] {
-  --color-primary: #3B82F6;
-  --color-primaryAlpha: rgba(59,130,246,0.18);
-  --color-background: #0F1116;
-  --color-surface: #1A1D26;
-  --color-surfaceSecondary: #242834;
-  --color-foreground: #F0F2F5;
-  --color-muted: #8B919E;
+  --color-primary: #578BFA;
+  --color-primaryAlpha: rgba(87,139,250,0.16);
+  --color-background: #0A0B0D;
+  --color-surface: #1A1C23;
+  --color-surfaceSecondary: #262830;
+  --color-foreground: #EEF0F3;
+  --color-muted: #89909E;
   --color-onPrimary: #FFFFFF;
-  --color-border: #2E3342;
-  --color-success: #34D399;
-  --color-successAlpha: rgba(52,211,153,0.15);
-  --color-warning: #FBBF24;
-  --color-warningAlpha: rgba(251,191,36,0.15);
-  --color-error: #F87171;
-  --color-errorAlpha: rgba(248,113,113,0.15);
-  --color-accent: #A78BFA;
-  --color-accentAlpha: rgba(167,139,250,0.15);
-  --color-gold: #FBBF24;
-  --color-silver: #D1D5DB;
-  --color-bronze: #D97706;
+  --color-border: #282A30;
+  --color-success: #27AD74;
+  --color-successAlpha: rgba(39,173,116,0.14);
+  --color-warning: #EBBA00;
+  --color-warningAlpha: rgba(235,186,0,0.14);
+  --color-error: #ED5966;
+  --color-errorAlpha: rgba(237,89,102,0.14);
+  --color-accent: #8A7BFA;
+  --color-accentAlpha: rgba(138,123,250,0.14);
+  --color-gold: #EBBA00;
+  --color-silver: #B1B7C3;
+  --color-bronze: #ED702F;
 }
