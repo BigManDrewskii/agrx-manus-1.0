@@ -138,3 +138,16 @@
 - [x] Add bell.badge.fill icon mapping
 - [x] Write 71 push notification tests (service, router, context, UI integration)
 - [x] Run full test suite: 174 tests passed, 0 TS errors
+- [x] Audit notification context data model and Home screen header for integration points
+- [x] Extend NotificationContext with notification history array, persistence (AsyncStorage), and unread count
+- [x] Add markAsRead, markAllAsRead, removeFromHistory, clearHistory functions to context
+- [x] Build Notification History screen (grouped by Today/Yesterday/This Week/Earlier, alert details, timestamps, read/unread state)
+- [x] Add delete button on individual history items (with native confirmation dialog)
+- [x] Add "Read All" and "Clear" header actions
+- [x] Add bell icon with unread badge count (red dot, capped at 9+) to Home screen header
+- [x] Wire bell icon to navigate to Notification History screen
+- [x] Add Notification History link to Settings screen
+- [x] Register notification-history route in root layout
+- [x] Add icon mappings (trash, clock, newspaper, arrow.up, arrow.down, percent, etc.)
+- [x] Write 76 notification history tests (data model, persistence, grouping, rendering, actions, badge)
+- [x] Run full test suite: 250 tests passed, 0 TS errors

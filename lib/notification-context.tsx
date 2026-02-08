@@ -7,6 +7,7 @@
  * - Local notification display and handling
  * - Notification tap routing to relevant screens
  * - Device ID generation and persistence
+ * - Notification history with AsyncStorage persistence and unread badge
  */
 import React, {
   createContext,
@@ -30,6 +31,8 @@ import type { PriceAlert, NotificationPreferences, AlertType } from "@/server/pr
 const DEVICE_ID_KEY = "@agrx/device-id";
 const PUSH_TOKEN_KEY = "@agrx/push-token";
 const PERMISSION_ASKED_KEY = "@agrx/notification-permission-asked";
+const NOTIFICATION_HISTORY_KEY = "@agrx/notification-history";
+const MAX_HISTORY_ITEMS = 100;
 
 // ─── Configure notification handler ────────────────────────────────────────
 
@@ -44,6 +47,38 @@ Notifications.setNotificationHandler({
 });
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+
+export type NotificationHistoryItemType =
+  | "price_above"
+  | "price_below"
+  | "percent_change"
+  | "market_news"
+  | "daily_challenge"
+  | "social"
+  | "system";
+
+export interface NotificationHistoryItem {
+  /** Unique ID */
+  id: string;
+  /** Notification title */
+  title: string;
+  /** Notification body text */
+  body: string;
+  /** Type of notification for icon/color theming */
+  type: NotificationHistoryItemType;
+  /** Associated stock ID (if applicable) */
+  stockId?: string;
+  /** Associated stock ticker (if applicable) */
+  stockTicker?: string;
+  /** The threshold value that triggered the alert */
+  threshold?: number;
+  /** The actual price at the time of the alert */
+  actualPrice?: number;
+  /** Whether the user has read this notification */
+  read: boolean;
+  /** Timestamp when the notification was received */
+  timestamp: number;
+}
 
 interface NotificationContextValue {
   /** Whether push notifications are supported on this device */
@@ -81,6 +116,20 @@ interface NotificationContextValue {
   preferences: NotificationPreferences | null;
   /** Refresh alerts from server */
   refreshAlerts: () => void;
+
+  // ── History ──
+  /** All notification history items (newest first) */
+  history: NotificationHistoryItem[];
+  /** Count of unread notifications */
+  unreadCount: number;
+  /** Mark a single notification as read */
+  markAsRead: (notificationId: string) => void;
+  /** Mark all notifications as read */
+  markAllAsRead: () => void;
+  /** Remove a single notification from history */
+  removeFromHistory: (notificationId: string) => void;
+  /** Clear all notification history */
+  clearHistory: () => void;
 }
 
 const defaultPreferences: NotificationPreferences = {
@@ -109,6 +158,12 @@ const NotificationContext = createContext<NotificationContextValue>({
   updatePreferences: async () => {},
   preferences: null,
   refreshAlerts: () => {},
+  history: [],
+  unreadCount: 0,
+  markAsRead: () => {},
+  markAllAsRead: () => {},
+  removeFromHistory: () => {},
+  clearHistory: () => {},
 });
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -120,6 +175,10 @@ function generateDeviceId(): string {
     id += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return id;
+}
+
+function generateHistoryId(): string {
+  return `notif-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 async function getOrCreateDeviceId(): Promise<string> {
@@ -135,6 +194,49 @@ async function getOrCreateDeviceId(): Promise<string> {
   }
 }
 
+async function loadHistory(): Promise<NotificationHistoryItem[]> {
+  try {
+    const stored = await AsyncStorage.getItem(NOTIFICATION_HISTORY_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function saveHistory(items: NotificationHistoryItem[]): Promise<void> {
+  try {
+    // Keep only the most recent MAX_HISTORY_ITEMS
+    const trimmed = items.slice(0, MAX_HISTORY_ITEMS);
+    await AsyncStorage.setItem(NOTIFICATION_HISTORY_KEY, JSON.stringify(trimmed));
+  } catch {
+    // Silently fail
+  }
+}
+
+/**
+ * Map notification data to a history item type.
+ */
+function mapNotificationToHistoryType(data: Record<string, any> | undefined): NotificationHistoryItemType {
+  if (!data) return "system";
+  switch (data.type) {
+    case "price_alert":
+      if (data.alertType === "above") return "price_above";
+      if (data.alertType === "below") return "price_below";
+      if (data.alertType === "percent_change") return "percent_change";
+      return "price_above";
+    case "market_news":
+      return "market_news";
+    case "daily_challenge":
+      return "daily_challenge";
+    case "social":
+      return "social";
+    default:
+      return "system";
+  }
+}
+
 // ─── Provider ───────────────────────────────────────────────────────────────
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
@@ -147,6 +249,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
 
   const notificationListener = useRef<EventSubscription | undefined>(undefined);
   const responseListener = useRef<EventSubscription | undefined>(undefined);
@@ -169,6 +272,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     { enabled: !!deviceId && !!pushToken }
   );
 
+  // ── Derived: unread count ──
+  const unreadCount = useMemo(() => history.filter((h) => !h.read).length, [history]);
+
   // ── Initialize ──
   useEffect(() => {
     (async () => {
@@ -177,13 +283,16 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         const id = await getOrCreateDeviceId();
         setDeviceId(id);
 
+        // Load notification history from storage
+        const storedHistory = await loadHistory();
+        setHistory(storedHistory);
+
         // Check if we've asked before
         const asked = await AsyncStorage.getItem(PERMISSION_ASKED_KEY);
         setPermissionAsked(asked === "true");
 
         // Check platform support
         if (Platform.OS === "web") {
-          // Web push is limited — mark as supported but handle gracefully
           setIsSupported("Notification" in globalThis);
           if ("Notification" in globalThis) {
             setHasPermission(Notification.permission === "granted");
@@ -200,7 +309,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         // If already granted, get the push token
         if (status === "granted") {
           const tokenData = await Notifications.getExpoPushTokenAsync({
-            projectId: undefined, // Uses the project from app.config
+            projectId: undefined,
           });
           const token = tokenData.data;
           setPushToken(token);
@@ -251,21 +360,61 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [prefsQuery.data]);
 
+  // ── Helper: add item to history ──
+  const addToHistory = useCallback((item: NotificationHistoryItem) => {
+    setHistory((prev) => {
+      const updated = [item, ...prev].slice(0, MAX_HISTORY_ITEMS);
+      // Persist async (fire-and-forget)
+      saveHistory(updated);
+      return updated;
+    });
+  }, []);
+
   // ── Set up notification listeners ──
   useEffect(() => {
     // Listen for incoming notifications (foreground)
     notificationListener.current = Notifications.addNotificationReceivedListener(
       (notification) => {
-        console.log("[Notifications] Received:", notification.request.content.title);
+        const content = notification.request.content;
+        const data = content.data as Record<string, any> | undefined;
+
+        // Add to history
+        addToHistory({
+          id: generateHistoryId(),
+          title: content.title ?? "AGRX Alert",
+          body: content.body ?? "",
+          type: mapNotificationToHistoryType(data),
+          stockId: data?.stockId,
+          stockTicker: data?.stockTicker,
+          threshold: data?.threshold ? Number(data.threshold) : undefined,
+          actualPrice: data?.actualPrice ? Number(data.actualPrice) : undefined,
+          read: false,
+          timestamp: Date.now(),
+        });
       }
     );
 
     // Listen for notification taps
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        const data = response.notification.request.content.data;
+        const content = response.notification.request.content;
+        const data = content.data as Record<string, any> | undefined;
+
+        // Also add to history if not already there (e.g. background notification)
+        addToHistory({
+          id: generateHistoryId(),
+          title: content.title ?? "AGRX Alert",
+          body: content.body ?? "",
+          type: mapNotificationToHistoryType(data),
+          stockId: data?.stockId,
+          stockTicker: data?.stockTicker,
+          threshold: data?.threshold ? Number(data.threshold) : undefined,
+          actualPrice: data?.actualPrice ? Number(data.actualPrice) : undefined,
+          read: true, // Tapped = read
+          timestamp: Date.now(),
+        });
+
         if (data?.type === "price_alert" && data?.stockId) {
-          // Navigate to the stock detail screen
           router.push(`/asset/${data.stockId}` as any);
         }
       }
@@ -279,7 +428,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         responseListener.current.remove();
       }
     };
-  }, [router]);
+  }, [router, addToHistory]);
 
   // ── Set up Android notification channel ──
   useEffect(() => {
@@ -347,6 +496,20 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         if (result.success && result.data) {
           setAlerts((prev) => [...prev, result.data as PriceAlert]);
+
+          // Add a history entry for the alert creation
+          addToHistory({
+            id: generateHistoryId(),
+            title: "Price Alert Created",
+            body: `${params.type === "above" ? "Above" : params.type === "below" ? "Below" : "±"} €${params.threshold.toFixed(2)} alert set for ${params.stockName}`,
+            type: params.type === "above" ? "price_above" : params.type === "below" ? "price_below" : "percent_change",
+            stockId: params.stockId,
+            stockTicker: params.stockName,
+            threshold: params.threshold,
+            read: true, // User just created it, so it's "read"
+            timestamp: Date.now(),
+          });
+
           return result.data as PriceAlert;
         }
         return null;
@@ -355,7 +518,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         return null;
       }
     },
-    [deviceId, addAlertMutation]
+    [deviceId, addAlertMutation, addToHistory]
   );
 
   // ── Remove Price Alert ──
@@ -443,6 +606,41 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     prefsQuery.refetch();
   }, [alertsQuery, prefsQuery]);
 
+  // ── History: Mark as Read ──
+  const markAsRead = useCallback((notificationId: string) => {
+    setHistory((prev) => {
+      const updated = prev.map((item) =>
+        item.id === notificationId ? { ...item, read: true } : item
+      );
+      saveHistory(updated);
+      return updated;
+    });
+  }, []);
+
+  // ── History: Mark All as Read ──
+  const markAllAsRead = useCallback(() => {
+    setHistory((prev) => {
+      const updated = prev.map((item) => ({ ...item, read: true }));
+      saveHistory(updated);
+      return updated;
+    });
+  }, []);
+
+  // ── History: Remove from History ──
+  const removeFromHistory = useCallback((notificationId: string) => {
+    setHistory((prev) => {
+      const updated = prev.filter((item) => item.id !== notificationId);
+      saveHistory(updated);
+      return updated;
+    });
+  }, []);
+
+  // ── History: Clear All ──
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+    AsyncStorage.removeItem(NOTIFICATION_HISTORY_KEY).catch(() => {});
+  }, []);
+
   const value = useMemo<NotificationContextValue>(
     () => ({
       isSupported,
@@ -460,6 +658,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       updatePreferences: updatePreferencesHandler,
       preferences,
       refreshAlerts,
+      history,
+      unreadCount,
+      markAsRead,
+      markAllAsRead,
+      removeFromHistory,
+      clearHistory,
     }),
     [
       isSupported,
@@ -477,6 +681,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       updatePreferencesHandler,
       preferences,
       refreshAlerts,
+      history,
+      unreadCount,
+      markAsRead,
+      markAllAsRead,
+      removeFromHistory,
+      clearHistory,
     ]
   );
 

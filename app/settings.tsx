@@ -194,6 +194,25 @@ export default function SettingsScreen() {
             </View>
             <IconSymbol name="chevron.right" size={16} color={colors.muted} />
           </Pressable>
+          <Pressable
+            onPress={() => router.push("/notification-history" as any)}
+            style={({ pressed }) => [
+              styles.row,
+              {
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderBottomColor: colors.border,
+              },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <View style={styles.rowLeft}>
+              <View>
+                <Subhead style={{ fontFamily: FontFamily.medium, color: colors.primary }}>Notification History</Subhead>
+                <Caption1 color="muted" style={{ marginTop: 2 }}>View past alerts and notifications</Caption1>
+              </View>
+            </View>
+            <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+          </Pressable>
           <NotifRow
             label="Daily Challenge"
             description="Reminder to complete your daily trading challenge"

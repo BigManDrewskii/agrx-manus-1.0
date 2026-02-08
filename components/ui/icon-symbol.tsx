@@ -37,6 +37,15 @@ const MAPPING = {
   "checkmark": "check",
   "info.circle": "info",
   "exclamationmark.triangle": "warning",
+  "trash": "delete",
+  "clock": "schedule",
+  "newspaper": "article",
+  "chart.bar.fill": "bar-chart",
+  "person.fill": "person",
+  "bolt.fill": "bolt",
+  "arrow.up": "arrow-upward",
+  "arrow.down": "arrow-downward",
+  "percent": "percent",
 } as IconMapping;
 
 /**

@@ -21,6 +21,7 @@ import { XPBar } from "@/components/ui/xp-bar";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
+import { useNotifications } from "@/lib/notification-context";
 import { useMarketNews } from "@/hooks/use-news";
 import {
   Footnote,
@@ -55,6 +56,7 @@ export default function HomeScreen() {
   const marketNews = marketNewsQuery.data?.success ? marketNewsQuery.data.data : [];
   const newsLoading = marketNewsQuery.isLoading;
 
+  const { unreadCount } = useNotifications();
   const isPositive = PORTFOLIO_TOTAL_PNL >= 0;
 
   // Get top 5 trending stocks by absolute change percent
@@ -107,13 +109,33 @@ export default function HomeScreen() {
               </Callout>
             </View>
             <Pressable
+              onPress={() => router.push("/notification-history" as any)}
               style={({ pressed }) => [
                 styles.notifButton,
                 { backgroundColor: colors.surface },
                 pressed && { opacity: 0.6 },
               ]}
             >
-              <IconSymbol name="bell.fill" size={20} color={colors.muted} />
+              <IconSymbol name="bell.fill" size={20} color={unreadCount > 0 ? colors.primary : colors.muted} />
+              {unreadCount > 0 && (
+                <View
+                  style={[
+                    styles.badgeContainer,
+                    { backgroundColor: colors.error },
+                  ]}
+                >
+                  <Caption2
+                    style={{
+                      color: colors.onPrimary,
+                      fontFamily: FontFamily.bold,
+                      fontSize: 10,
+                      lineHeight: 14,
+                    }}
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Caption2>
+                </View>
+              )}
             </Pressable>
             <Pressable
               onPress={() => router.push("/settings" as any)}
@@ -430,6 +452,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+  },
+  badgeContainer: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
   },
   portfolioHero: {
     paddingHorizontal: 16,
