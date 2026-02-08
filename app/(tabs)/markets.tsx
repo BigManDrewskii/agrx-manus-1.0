@@ -113,13 +113,15 @@ export default function MarketsScreen() {
     }
   }, [refreshCache, refetch]);
 
-  // ATHEX market status
-  const now = new Date();
-  const athensHour = new Date(
-    now.toLocaleString("en-US", { timeZone: "Europe/Athens" })
-  ).getHours();
-  const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
-  const isMarketOpen = isWeekday && athensHour >= 10 && athensHour < 17;
+  // ATHEX market status — derived in useMemo to satisfy React Compiler purity rules
+  const isMarketOpen = useMemo(() => {
+    const now = new Date();
+    const athensHour = new Date(
+      now.toLocaleString("en-US", { timeZone: "Europe/Athens" })
+    ).getHours();
+    const isWeekday = now.getDay() >= 1 && now.getDay() <= 5;
+    return isWeekday && athensHour >= 10 && athensHour < 17;
+  }, [lastUpdated]); // Re-derive when data refreshes
 
   return (
     <ScreenContainer>

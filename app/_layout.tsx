@@ -58,12 +58,33 @@ function InnerLayout() {
 }
 
 export default function RootLayout() {
+  // === ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS (React 19 Rules) ===
+
   const [fontsLoaded, fontError] = useAppFonts();
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 
   const [insets, setInsets] = useState<EdgeInsets>(initialInsets);
   const [frame, setFrame] = useState<Rect>(initialFrame);
+
+  // Create clients once and reuse them — must be before early return
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnWindowFocus: false,
+            retry: 1,
+          },
+        },
+      }),
+  );
+  const [trpcClient] = useState(() => createTRPCClient());
+
+  const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
+    setInsets(metrics.insets);
+    setFrame(metrics.frame);
+  }, []);
 
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
@@ -77,39 +98,14 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  // Hold render until fonts are ready (or failed — fallback to system fonts)
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
-
-  const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
-    setInsets(metrics.insets);
-    setFrame(metrics.frame);
-  }, []);
-
+  // Subscribe to safe area inset changes on web
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const unsubscribe = subscribeSafeAreaInsets(handleSafeAreaUpdate);
     return () => unsubscribe();
   }, [handleSafeAreaUpdate]);
 
-  // Create clients once and reuse them
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // Disable automatic refetching on window focus for mobile
-            refetchOnWindowFocus: false,
-            // Retry failed requests once
-            retry: 1,
-          },
-        },
-      }),
-  );
-  const [trpcClient] = useState(() => createTRPCClient());
-
-  // Ensure minimum 8px padding for top and bottom on mobile
+  // Ensure minimum padding for top and bottom on mobile
   const providerInitialMetrics = useMemo(() => {
     const metrics = initialWindowMetrics ?? { insets: initialInsets, frame: initialFrame };
     return {
@@ -121,6 +117,11 @@ export default function RootLayout() {
       },
     };
   }, [initialInsets, initialFrame]);
+
+  // === EARLY RETURN — all hooks are above this line ===
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -144,11 +145,11 @@ export default function RootLayout() {
     return (
       <ThemeProvider>
         <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-          <SafeAreaFrameContext.Provider value={frame}>
-            <SafeAreaInsetsContext.Provider value={insets}>
+          <SafeAreaFrameContext value={frame}>
+            <SafeAreaInsetsContext value={insets}>
               {content}
-            </SafeAreaInsetsContext.Provider>
-          </SafeAreaFrameContext.Provider>
+            </SafeAreaInsetsContext>
+          </SafeAreaFrameContext>
         </SafeAreaProvider>
       </ThemeProvider>
     );

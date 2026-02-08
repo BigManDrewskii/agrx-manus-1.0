@@ -691,9 +691,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   );
 
   return (
-    <NotificationContext.Provider value={value}>
+    <NotificationContext value={value}>
       {children}
-    </NotificationContext.Provider>
+    </NotificationContext>
   );
 }
 

@@ -16,7 +16,7 @@
  *   - AGRX branding footer with app logo reference
  */
 
-import React, { forwardRef } from "react";
+import React from "react";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import Svg, {
   Polyline,
@@ -178,8 +178,7 @@ function SentimentBadge({ sentiment }: { sentiment: ShareSentiment }) {
 
 // ─── Main Share Card ────────────────────────────────────────────────────────
 
-export const ShareCard = forwardRef<View, { data: ShareCardData }>(
-  function ShareCard({ data }, ref) {
+export function ShareCard({ data, ref }: { data: ShareCardData; ref?: React.Ref<View> }) {
     const {
       ticker,
       companyName,
@@ -312,8 +311,7 @@ export const ShareCard = forwardRef<View, { data: ShareCardData }>(
         </View>
       </View>
     );
-  }
-);
+}
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 

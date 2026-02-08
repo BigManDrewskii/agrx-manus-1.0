@@ -164,11 +164,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext value={value}>
       <View style={[{ flex: 1 }, themeVariables]} key={`theme-${colorScheme}`}>
         {children}
       </View>
-    </ThemeContext.Provider>
+    </ThemeContext>
   );
 }
 

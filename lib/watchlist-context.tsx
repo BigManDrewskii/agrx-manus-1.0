@@ -84,9 +84,9 @@ export function WatchlistProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <WatchlistContext.Provider value={value}>
+    <WatchlistContext value={value}>
       {children}
-    </WatchlistContext.Provider>
+    </WatchlistContext>
   );
 }
 

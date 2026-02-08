@@ -84,9 +84,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <DemoContext.Provider value={{ state, executeTrade, addXP, resetDemo }}>
+    <DemoContext value={{ state, executeTrade, addXP, resetDemo }}>
       {children}
-    </DemoContext.Provider>
+    </DemoContext>
   );
 }
 

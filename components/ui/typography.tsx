@@ -14,10 +14,11 @@
  *   - `color`: a theme token name (foreground, muted, primary, success, error, etc.)
  *   - `style`: additional RN style overrides
  *   - `className`: NativeWind classes (for layout, spacing — NOT for font/color)
+ *   - `ref`: React 19 ref as regular prop (no forwardRef needed)
  *   - `numberOfLines`, `ellipsizeMode`, `selectable`, etc.
  */
 import React from "react";
-import { Text, type TextProps, StyleSheet } from "react-native";
+import { Text, type TextProps } from "react-native";
 import { TypeScale, type TypeScaleKey } from "@/constants/typography";
 import { useColors } from "@/hooks/use-colors";
 import type { ThemeColorPalette } from "@/constants/theme";
@@ -31,39 +32,39 @@ interface TypographyProps extends TextProps {
   color?: ThemeColorKey;
   /** Children must be renderable content. */
   children: React.ReactNode;
+  /** React 19: ref as regular prop */
+  ref?: React.Ref<Text>;
 }
 
 function createTypographyComponent(variant: TypeScaleKey, defaultColor: ThemeColorKey = "foreground") {
   const scale = TypeScale[variant];
 
-  const Component = React.forwardRef<Text, TypographyProps>(
-    ({ color, style, children, ...rest }, ref) => {
-      const colors = useColors();
-      const resolvedColor = colors[color ?? defaultColor];
+  function TypographyComponent({ color, style, children, ref, ...rest }: TypographyProps) {
+    const colors = useColors();
+    const resolvedColor = colors[color ?? defaultColor];
 
-      return (
-        <Text
-          ref={ref}
-          style={[
-            {
-              fontSize: scale.fontSize,
-              lineHeight: scale.lineHeight,
-              letterSpacing: scale.letterSpacing,
-              fontFamily: scale.fontFamily,
-              color: resolvedColor,
-            },
-            style,
-          ]}
-          {...rest}
-        >
-          {children}
-        </Text>
-      );
-    }
-  );
+    return (
+      <Text
+        ref={ref}
+        style={[
+          {
+            fontSize: scale.fontSize,
+            lineHeight: scale.lineHeight,
+            letterSpacing: scale.letterSpacing,
+            fontFamily: scale.fontFamily,
+            color: resolvedColor,
+          },
+          style,
+        ]}
+        {...rest}
+      >
+        {children}
+      </Text>
+    );
+  }
 
-  Component.displayName = variant.charAt(0).toUpperCase() + variant.slice(1);
-  return Component;
+  TypographyComponent.displayName = variant.charAt(0).toUpperCase() + variant.slice(1);
+  return TypographyComponent;
 }
 
 // ─── Text Components ────────────────────────────────────────────────────────

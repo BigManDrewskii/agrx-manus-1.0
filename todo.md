@@ -151,3 +151,14 @@
 - [x] Add icon mappings (trash, clock, newspaper, arrow.up, arrow.down, percent, etc.)
 - [x] Write 76 notification history tests (data model, persistence, grouping, rendering, actions, badge)
 - [x] Run full test suite: 250 tests passed, 0 TS errors
+- [x] Research React 19 official docs: new APIs, breaking changes, hooks rules, compiler, concurrent features
+- [x] Read skill-creator skill and create React 19 skill (SKILL.md + references + audit script)
+- [x] Create comprehensive React 19 skill with new-apis.md, compiler-rules.md, and audit-react19.sh
+- [x] Audit AGRX codebase against React 19 skill — identified all violations
+- [x] FIX: Hooks ordering crash in _layout.tsx (hooks after early return `if (!fontsLoaded) return null`)
+- [x] FIX: Context.Provider → direct Context rendering (theme-provider, demo-context, watchlist-context, notification-context)
+- [x] FIX: forwardRef → ref as regular prop (typography.tsx, share-card.tsx)
+- [x] FIX: React Compiler purity — moved Date() call from render body into useMemo (markets.tsx)
+- [x] Verified: no defaultProps, propTypes, string refs, legacy context, findDOMNode
+- [x] Verified: React Compiler enabled (app.config.ts experiments.reactCompiler: true)
+- [x] Run full test suite after React 19 fixes: 250 tests passed, 0 TS errors
