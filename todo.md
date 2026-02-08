@@ -236,3 +236,11 @@
 - [x] Register trade-history route in root layout (slide_from_right)
 - [x] Write 38 trade history tests (structure, grouping, row display, P&L, summary, empty state, routing, design system)
 - [x] Run full test suite: 433 tests passed, 0 TS errors
+- [x] Apply AGRX motion language to Trade History screen
+- [x] Add staggered FadeInDown.duration(250).delay(index*30) entering animations to trade list items
+- [x] Add FadeInDown.duration(250).delay(60) entering animation to summary card
+- [x] Add FadeIn.duration(200) entering animation to section headers
+- [x] Add FadeIn.duration(200) entering animation to header
+- [x] Add FadeIn.duration(300) entering animation to empty state
+- [x] Import STAGGER_DELAY and STAGGER_MAX from lib/animations.ts for consistent stagger timing
+- [x] Verify TypeScript compiles (0 errors) and all tests pass (433 passed)

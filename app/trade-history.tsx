@@ -5,10 +5,18 @@
  * Grouped by date (Today, Yesterday, This Week, Earlier).
  * Each trade shows side indicator, ticker, shares, execution price,
  * and per-trade P&L computed against live prices.
+ *
+ * Animation: AGRX motion language applied —
+ *   Header: FadeIn.duration(200)
+ *   Summary card: FadeInDown.duration(250).delay(60)
+ *   Section headers: FadeIn.duration(200)
+ *   Trade rows: FadeInDown.duration(250).delay(stagger)
+ *   Empty state: FadeIn.duration(300)
  */
 import React, { useMemo, useCallback } from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { useRouter } from "expo-router";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -28,6 +36,7 @@ import {
   MonoCaption1,
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 
 // ─── Date Grouping ─────────────────────────────────────────────────────────
 
@@ -123,14 +132,16 @@ export default function TradeHistoryScreen() {
   // Flatten for FlatList with section headers
   type ListItem =
     | { kind: "header"; title: DateGroup; key: string }
-    | { kind: "trade"; trade: DemoTrade; key: string };
+    | { kind: "trade"; trade: DemoTrade; key: string; index: number };
 
   const flatData = useMemo<ListItem[]>(() => {
     const result: ListItem[] = [];
+    let tradeIndex = 0;
     for (const section of sections) {
       result.push({ kind: "header", title: section.title, key: `header-${section.title}` });
       for (const trade of section.data) {
-        result.push({ kind: "trade", trade, key: trade.id });
+        result.push({ kind: "trade", trade, key: trade.id, index: tradeIndex });
+        tradeIndex++;
       }
     }
     return result;
@@ -198,18 +209,21 @@ export default function TradeHistoryScreen() {
     ({ item: listItem }: { item: ListItem }) => {
       if (listItem.kind === "header") {
         return (
-          <View style={styles.sectionHeader}>
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            style={styles.sectionHeader}
+          >
             <Footnote
               color="muted"
               style={{ fontFamily: FontFamily.semibold, letterSpacing: 0.5 }}
             >
               {listItem.title.toUpperCase()}
             </Footnote>
-          </View>
+          </Animated.View>
         );
       }
 
-      const { trade } = listItem;
+      const { trade, index } = listItem;
       const isBuy = trade.type === "buy";
       const sideColor = isBuy ? colors.success : colors.error;
       const sideLabel = isBuy ? "BUY" : "SELL";
@@ -223,74 +237,79 @@ export default function TradeHistoryScreen() {
           ? formatFullDate(trade.timestamp)
           : formatDateWithYear(trade.timestamp);
 
+      // Staggered entrance: cap at STAGGER_MAX to avoid long waits
+      const staggerMs = Math.min(index, STAGGER_MAX) * STAGGER_DELAY;
+
       return (
-        <AnimatedPressable
-          variant="card"
-          onPress={() => handleTradePress(trade)}
-          style={[
-            styles.tradeRow,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-            },
-          ]}
-        >
-          {/* Side Indicator */}
-          <View
+        <Animated.View entering={FadeInDown.duration(250).delay(staggerMs)}>
+          <AnimatedPressable
+            variant="card"
+            onPress={() => handleTradePress(trade)}
             style={[
-              styles.sideIndicator,
-              { backgroundColor: sideColor + "18" },
+              styles.tradeRow,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+              },
             ]}
           >
-            <IconSymbol name={sideIcon as any} size={16} color={sideColor} />
-          </View>
-
-          {/* Trade Info */}
-          <View style={styles.tradeInfo}>
-            <View style={styles.tradeTopRow}>
-              <View style={styles.tradeNameRow}>
-                <Subhead style={{ fontFamily: FontFamily.semibold }} numberOfLines={1}>
-                  {trade.ticker}
-                </Subhead>
-                <Caption1
-                  style={{
-                    fontFamily: FontFamily.semibold,
-                    color: sideColor,
-                    marginLeft: 6,
-                  }}
-                >
-                  {sideLabel}
-                </Caption1>
-              </View>
-              <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
-                €{trade.amount.toFixed(2)}
-              </MonoSubhead>
+            {/* Side Indicator */}
+            <View
+              style={[
+                styles.sideIndicator,
+                { backgroundColor: sideColor + "18" },
+              ]}
+            >
+              <IconSymbol name={sideIcon as any} size={16} color={sideColor} />
             </View>
 
-            <View style={styles.tradeBottomRow}>
-              <View style={styles.tradeMetaRow}>
-                <Caption2 color="muted">
-                  {trade.shares.toFixed(trade.shares < 1 ? 4 : 2)} shares @ €{trade.price.toFixed(2)}
-                </Caption2>
-                <Caption2 color="muted" style={{ marginLeft: 8 }}>
-                  {timeStr}
-                </Caption2>
-              </View>
-              {tradePnL && (
-                <View style={styles.pnlContainer}>
-                  <MonoCaption1
+            {/* Trade Info */}
+            <View style={styles.tradeInfo}>
+              <View style={styles.tradeTopRow}>
+                <View style={styles.tradeNameRow}>
+                  <Subhead style={{ fontFamily: FontFamily.semibold }} numberOfLines={1}>
+                    {trade.ticker}
+                  </Subhead>
+                  <Caption1
                     style={{
-                      color: tradePnL.pnl >= 0 ? colors.success : colors.error,
-                      fontFamily: FontFamily.monoMedium,
+                      fontFamily: FontFamily.semibold,
+                      color: sideColor,
+                      marginLeft: 6,
                     }}
                   >
-                    {tradePnL.pnl >= 0 ? "+" : ""}€{Math.abs(tradePnL.pnl).toFixed(2)}
-                  </MonoCaption1>
+                    {sideLabel}
+                  </Caption1>
                 </View>
-              )}
+                <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
+                  €{trade.amount.toFixed(2)}
+                </MonoSubhead>
+              </View>
+
+              <View style={styles.tradeBottomRow}>
+                <View style={styles.tradeMetaRow}>
+                  <Caption2 color="muted">
+                    {trade.shares.toFixed(trade.shares < 1 ? 4 : 2)} shares @ €{trade.price.toFixed(2)}
+                  </Caption2>
+                  <Caption2 color="muted" style={{ marginLeft: 8 }}>
+                    {timeStr}
+                  </Caption2>
+                </View>
+                {tradePnL && (
+                  <View style={styles.pnlContainer}>
+                    <MonoCaption1
+                      style={{
+                        color: tradePnL.pnl >= 0 ? colors.success : colors.error,
+                        fontFamily: FontFamily.monoMedium,
+                      }}
+                    >
+                      {tradePnL.pnl >= 0 ? "+" : ""}€{Math.abs(tradePnL.pnl).toFixed(2)}
+                    </MonoCaption1>
+                  </View>
+                )}
+              </View>
             </View>
-          </View>
-        </AnimatedPressable>
+          </AnimatedPressable>
+        </Animated.View>
       );
     },
     [colors, getTradeP_L, handleTradePress]
@@ -306,7 +325,7 @@ export default function TradeHistoryScreen() {
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
         <View style={styles.headerLeft}>
           <AnimatedPressable
             variant="icon"
@@ -336,11 +355,12 @@ export default function TradeHistoryScreen() {
             )}
           </View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* ── Summary Card ── */}
       {state.trades.length > 0 && (
-        <View
+        <Animated.View
+          entering={FadeInDown.duration(250).delay(60)}
           style={[
             styles.summaryCard,
             {
@@ -374,12 +394,12 @@ export default function TradeHistoryScreen() {
               </MonoSubhead>
             </View>
           </View>
-        </View>
+        </Animated.View>
       )}
 
       {/* ── Empty State ── */}
       {state.trades.length === 0 ? (
-        <View style={styles.emptyState}>
+        <Animated.View entering={FadeIn.duration(300)} style={styles.emptyState}>
           <View
             style={[
               styles.emptyIcon,
@@ -419,7 +439,7 @@ export default function TradeHistoryScreen() {
               Start Trading
             </Caption1>
           </AnimatedPressable>
-        </View>
+        </Animated.View>
       ) : (
         <FlatList
           data={flatData}
