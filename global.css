@@ -54,3 +54,25 @@
   --color-silver: #B1B7C3;
   --color-bronze: #ED702F;
 }
+
+/*
+ * Smooth color transitions for theme switching on web.
+ * Only applies to color-related properties — no layout shift.
+ * The 200ms duration matches iOS system theme transition speed.
+ */
+* {
+  transition-property: color, background-color, border-color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+/*
+ * Disable transitions on elements that should snap instantly
+ * (e.g., SVG chart lines, animated elements).
+ */
+svg polyline,
+svg line,
+svg path,
+[data-no-transition] {
+  transition: none !important;
+}

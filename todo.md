@@ -115,3 +115,12 @@
 - [x] Add share trigger to Asset Detail screen
 - [x] Add time frame selector (Today/This Week/This Month/All Time) on share card
 - [x] Test share card rendering and share flow end-to-end (84 tests passed, 21 share-card tests)
+- [x] BUG FIX: Theme switching causes visual glitches without full reload
+- [x] Audit theme pipeline: theme.config.js → theme.ts → ThemeProvider → CSS vars → NativeWind → useColors
+- [x] Fix ThemeProvider: key-based re-render, synchronous CSS var injection, proper NativeWind colorScheme.set()
+- [x] Fix root layout: reactive StatusBar (light/dark based on resolved scheme)
+- [x] Fix tab layout: key-based re-render on theme change for tab bar colors
+- [x] Add smooth CSS transitions (200ms) for web theme switching, disabled on SVG
+- [x] Verify all 25+ screens and components switch themes dynamically without reload
+- [x] Write 19 theme-switching tests covering pipeline integrity, provider, layout, and component reactivity
+- [x] Run full test suite: 103 tests passed, 0 TS errors

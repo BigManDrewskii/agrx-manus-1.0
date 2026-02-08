@@ -4,10 +4,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   Appearance,
+  Platform,
   View,
   useColorScheme as useSystemColorScheme,
 } from "react-native";
@@ -30,6 +32,8 @@ type ThemeContextValue = {
   setPreference: (pref: ThemePreference) => void;
   /** Convenience: is dark mode currently active? */
   isDark: boolean;
+  /** Increments on every theme change — use as React key to force re-renders. */
+  themeVersion: number;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -54,18 +58,27 @@ function buildNativeWindVars(scheme: ColorScheme) {
 
 /**
  * Apply CSS variables to the document root (web only).
- * This runs on initial mount and on every scheme change.
+ * This runs SYNCHRONOUSLY before React re-renders to prevent FOUC.
  */
 function applyWebCSSVariables(scheme: ColorScheme) {
   if (typeof document === "undefined") return;
 
   const root = document.documentElement;
+
+  // Set data-theme attribute for Tailwind dark: variant
   root.dataset.theme = scheme;
   root.classList.toggle("dark", scheme === "dark");
 
+  // Apply all CSS variables from the palette
   const palette = SchemeColors[scheme];
   for (const [token, value] of Object.entries(palette)) {
     root.style.setProperty(`--color-${token}`, value);
+  }
+
+  // Also set meta theme-color for mobile browsers
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute("content", palette.background);
   }
 }
 
@@ -86,6 +99,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme: ColorScheme = useSystemColorScheme() ?? "light";
   const [preference, setPreferenceState] = useState<ThemePreference>("system");
   const [isHydrated, setIsHydrated] = useState(false);
+  // Monotonically increasing version to force re-renders on theme change
+  const [themeVersion, setThemeVersion] = useState(0);
+  const prevSchemeRef = useRef<ColorScheme | null>(null);
 
   // Resolve the active scheme from preference + system
   const colorScheme = resolveScheme(preference, systemScheme);
@@ -102,18 +118,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsHydrated(true));
   }, []);
 
-  // ── Apply scheme to NativeWind + Appearance + web CSS vars ──
-  const applyScheme = useCallback((scheme: ColorScheme) => {
-    nativewindColorScheme.set(scheme);
-    Appearance.setColorScheme?.(scheme);
-    applyWebCSSVariables(scheme);
-  }, []);
-
+  // ── Apply scheme changes synchronously ──
+  // This effect runs whenever the resolved colorScheme changes.
+  // It applies CSS variables, sets NativeWind's color scheme, and bumps the version.
   useEffect(() => {
-    if (isHydrated) {
-      applyScheme(colorScheme);
+    if (!isHydrated) return;
+
+    // Apply web CSS variables FIRST (synchronous DOM mutation)
+    applyWebCSSVariables(colorScheme);
+
+    // Set NativeWind's color scheme for class-based dark mode
+    nativewindColorScheme.set(colorScheme);
+
+    // Set RN Appearance for native components (StatusBar, etc.)
+    Appearance.setColorScheme?.(colorScheme);
+
+    // Only bump version if the scheme actually changed (not on initial mount)
+    if (prevSchemeRef.current !== null && prevSchemeRef.current !== colorScheme) {
+      setThemeVersion((v) => v + 1);
     }
-  }, [applyScheme, colorScheme, isHydrated]);
+    prevSchemeRef.current = colorScheme;
+  }, [colorScheme, isHydrated]);
 
   // ── Public setter: persist + update state ──
   const setPreference = useCallback((pref: ThemePreference) => {
@@ -121,7 +146,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem(STORAGE_KEY, pref).catch(() => {});
   }, []);
 
-  // ── Memoized values ──
+  // ── Memoized NativeWind vars ──
   const themeVariables = useMemo(
     () => buildNativeWindVars(colorScheme),
     [colorScheme],
@@ -133,13 +158,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       preference,
       setPreference,
       isDark: colorScheme === "dark",
+      themeVersion,
     }),
-    [colorScheme, preference, setPreference],
+    [colorScheme, preference, setPreference, themeVersion],
   );
 
   return (
     <ThemeContext.Provider value={value}>
-      <View style={[{ flex: 1 }, themeVariables]}>{children}</View>
+      <View style={[{ flex: 1 }, themeVariables]} key={`theme-${colorScheme}`}>
+        {children}
+      </View>
     </ThemeContext.Provider>
   );
 }
