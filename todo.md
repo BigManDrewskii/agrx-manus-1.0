@@ -67,3 +67,8 @@
 - [x] Implement graceful fallback: check array.length > 0 instead of truthiness
 - [x] Ensure UI is never empty — DEMO DATA badge shown when using mock data
 - [x] Test fallback behavior end-to-end (verified via screenshot + 58 tests passing)
+- [x] Research complete ATHEX General Index constituent list (145 tickers from stockanalysis.com)
+- [x] Verify Yahoo Finance symbols for all ATHEX stocks (135 of 144 valid with .AT suffix)
+- [x] Update stockService.ts with all 135 verified symbols (18 blue-chip, 15 dividend, 102 growth)
+- [x] Update mock-data.ts GREEK_STOCKS to cover all 135 stocks with representative prices
+- [x] Test full API integration with complete ATHEX list (58 tests passing, 0 TS errors)

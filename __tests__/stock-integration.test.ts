@@ -110,7 +110,7 @@ describe("Stock Service Integration", () => {
     const res = await fetch(`${API_BASE}/stocks.getQuotes`);
     const data = await res.json();
     const result = data.result.data.json;
-    const validCategories = ["blue-chip", "growth", "dividend", "etf"];
+    const validCategories = ["blue-chip", "growth", "dividend"];
     for (const quote of result.data) {
       expect(validCategories).toContain(quote.category);
     }

@@ -18,7 +18,7 @@ export interface LiveStockQuote {
   change: number;
   changePercent: number;
   sparkline: number[];
-  category: "blue-chip" | "growth" | "dividend" | "etf";
+  category: "blue-chip" | "growth" | "dividend";
   marketCap: string;
   dayHigh: number;
   dayLow: number;
