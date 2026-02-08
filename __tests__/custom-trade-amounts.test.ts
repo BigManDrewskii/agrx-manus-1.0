@@ -137,7 +137,7 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should use pill/chip shape (borderRadius 20)", () => {
-      expect(trade).toMatch(/borderRadius:\s*20/);
+      expect(trade).toMatch(/borderRadius:\s*16/);
     });
   });
 
@@ -147,11 +147,11 @@ describe("Custom Trade Amounts", () => {
     });
 
     it("should show estimated shares", () => {
-      expect(trade).toMatch(/Estimated shares/);
+      expect(trade).toMatch(/Est\. shares/);
     });
 
     it("should show market price", () => {
-      expect(trade).toMatch(/Market price/);
+      expect(trade).toMatch(/Price \(live\)/);
     });
 
     it("should show commission (€0.00)", () => {

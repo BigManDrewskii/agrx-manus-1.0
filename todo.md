@@ -186,3 +186,13 @@
 - [x] Show balance-after in red when negative
 - [x] Write 48 custom trade amounts tests (input, validation, MAX, chips, preview, confirm, keyboard)
 - [x] Run full test suite: 340 tests passed, 0 TS errors
+- [x] BUG FIX: Stock price text cut off on mobile preview in Trade order sheet
+- [x] Audit Trade screen layout: identified 7 spacing/sizing issues (icon 56→40, price 24→20pt, hero 40→32pt, etc.)
+- [x] Compact asset info: 40px icon (was 56), horizontal layout (was centered/stacked), price 20pt with lineHeight 26
+- [x] Compact amount hero: 32pt font (was 40pt), 10px padding (was 16px), 1.5px border (was 2px)
+- [x] Reduced all vertical gaps: toggle 14px (was 20), asset 16px (was 20), amount 12px (was 16), chips 14px (was 20)
+- [x] Removed redundant section labels ("ENTER AMOUNT" and "QUICK AMOUNTS")
+- [x] Compact quick chips: 14px/7px padding (was 18/10), borderRadius 16 (was 20), font 13px
+- [x] Confirm button visible without scrolling: 50px height (was 56), 24px bottom padding (was 40)
+- [x] Verified on mobile preview: price fully visible, all content fits in viewport
+- [x] All 340 tests passing, 0 TS errors

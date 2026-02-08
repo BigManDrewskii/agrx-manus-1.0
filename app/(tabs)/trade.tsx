@@ -66,7 +66,7 @@ export default function TradeScreen() {
   const parsedAmount = useMemo(() => {
     const num = parseFloat(amountText);
     if (isNaN(num) || num <= 0) return 0;
-    return Math.round(num * 100) / 100; // 2 decimal places
+    return Math.round(num * 100) / 100;
   }, [amountText]);
 
   // Compute current holding for sell validation
@@ -84,7 +84,7 @@ export default function TradeScreen() {
 
   // Validation
   const validationError = useMemo(() => {
-    if (parsedAmount === 0) return null; // No input yet
+    if (parsedAmount === 0) return null;
     if (parsedAmount < 1) return "Minimum trade amount is €1.00";
     if (isBuy && parsedAmount > demoState.balance) {
       return `Insufficient balance (€${demoState.balance.toFixed(2)} available)`;
@@ -110,18 +110,13 @@ export default function TradeScreen() {
   }, [stocks, search]);
 
   const handleAmountChange = useCallback((text: string) => {
-    // Allow only digits and one decimal point, max 2 decimal places
     const cleaned = text.replace(/[^0-9.]/g, "");
-    // Prevent multiple decimal points
     const parts = cleaned.split(".");
     if (parts.length > 2) return;
-    // Limit decimal places to 2
     if (parts.length === 2 && parts[1].length > 2) return;
-    // Prevent leading zeros (except "0." for decimals)
     if (parts[0].length > 1 && parts[0].startsWith("0") && parts[0] !== "0") {
       return;
     }
-    // Limit to reasonable max (999999.99)
     if (parts[0].length > 6) return;
     setAmountText(cleaned);
     setTradeError(null);
@@ -251,11 +246,12 @@ export default function TradeScreen() {
     return (
       <ScreenContainer>
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.sheetScroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {/* Header */}
+          {/* Header — compact row with close, ticker, live badge */}
           <View style={styles.sheetHeader}>
             <Pressable
               onPress={() => {
@@ -263,18 +259,21 @@ export default function TradeScreen() {
                 setAmountText("");
                 setTradeError(null);
               }}
-              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+              style={({ pressed }) => [
+                styles.closeButton,
+                pressed && { opacity: 0.6 },
+              ]}
             >
-              <IconSymbol name="xmark" size={22} color={colors.muted} />
+              <IconSymbol name="xmark" size={18} color={colors.muted} />
             </Pressable>
             <View style={styles.sheetTitleRow}>
-              <Title3>{selectedAsset.ticker}</Title3>
+              <Subhead style={{ fontFamily: FontFamily.semibold }}>{selectedAsset.ticker}</Subhead>
               <LiveBadge isLive={isLive} />
             </View>
-            <View style={{ width: 22 }} />
+            <View style={{ width: 32 }} />
           </View>
 
-          {/* Buy/Sell Toggle */}
+          {/* Buy/Sell Toggle — compact */}
           <View style={[styles.toggleContainer, { backgroundColor: colors.surface }]}>
             <Pressable
               onPress={() => { setIsBuy(true); setTradeError(null); }}
@@ -284,12 +283,12 @@ export default function TradeScreen() {
                 pressed && { opacity: 0.8 },
               ]}
             >
-              <Subhead
+              <Footnote
                 color={isBuy ? "onPrimary" : "muted"}
                 style={{ fontFamily: FontFamily.semibold }}
               >
                 Buy
-              </Subhead>
+              </Footnote>
             </Pressable>
             <Pressable
               onPress={() => { setIsBuy(false); setTradeError(null); }}
@@ -299,59 +298,59 @@ export default function TradeScreen() {
                 pressed && { opacity: 0.8 },
               ]}
             >
-              <Subhead
+              <Footnote
                 color={!isBuy ? "onPrimary" : "muted"}
                 style={{ fontFamily: FontFamily.semibold }}
               >
                 Sell
-              </Subhead>
+              </Footnote>
             </Pressable>
           </View>
 
-          {/* Asset Info with Live Price */}
-          <View style={styles.assetInfo}>
-            <View style={[styles.assetIcon, { backgroundColor: colors.surfaceSecondary }]}>
-              <Headline color="primary">{selectedAsset.ticker.slice(0, 2)}</Headline>
+          {/* Asset Info — compact inline layout */}
+          <View style={styles.assetInfoCompact}>
+            <View style={[styles.assetIconSmall, { backgroundColor: colors.surfaceSecondary }]}>
+              <Footnote color="primary" style={{ fontFamily: FontFamily.bold }}>
+                {selectedAsset.ticker.slice(0, 2)}
+              </Footnote>
             </View>
-            <Title3 style={{ marginBottom: 4 }}>{selectedAsset.name}</Title3>
-            <MonoHeadline style={{ fontSize: 24, marginBottom: 2 }}>
-              €{selectedAsset.price.toFixed(2)}
-            </MonoHeadline>
-            <MonoSubhead color={selectedAsset.changePercent >= 0 ? "success" : "error"}>
-              {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
-              {Math.abs(selectedAsset.changePercent).toFixed(2)}% today
-            </MonoSubhead>
+            <View style={styles.assetInfoText}>
+              <Subhead style={{ fontFamily: FontFamily.semibold }} numberOfLines={1}>
+                {selectedAsset.name}
+              </Subhead>
+              <View style={styles.assetPriceRow}>
+                <MonoHeadline style={styles.assetPrice}>
+                  €{selectedAsset.price.toFixed(2)}
+                </MonoHeadline>
+                <MonoSubhead
+                  color={selectedAsset.changePercent >= 0 ? "success" : "error"}
+                  style={{ fontSize: 13 }}
+                >
+                  {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
+                  {Math.abs(selectedAsset.changePercent).toFixed(2)}%
+                </MonoSubhead>
+              </View>
+            </View>
           </View>
 
-          {/* Custom Amount Input */}
-          <View style={styles.amountInputSection}>
-            <Caption1
-              color="muted"
-              style={{
-                fontFamily: FontFamily.semibold,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-                marginBottom: 12,
-              }}
-            >
-              Enter amount
-            </Caption1>
-
-            {/* Hero Amount Display */}
+          {/* Amount Input — streamlined hero */}
+          <View style={styles.amountSection}>
             <Pressable
               onPress={() => amountInputRef.current?.focus()}
               style={[
                 styles.amountHero,
                 {
                   backgroundColor: colors.surface,
-                  borderColor: amountText ? (validationError ? colors.error : colors.primary) : colors.border,
+                  borderColor: amountText
+                    ? (validationError ? colors.error : colors.primary)
+                    : colors.border,
                 },
               ]}
             >
               <View style={styles.amountHeroInner}>
                 <MonoLargeTitle
                   color={amountText ? (validationError ? "error" : "foreground") : "muted"}
-                  style={{ fontSize: 40, lineHeight: 48 }}
+                  style={styles.eurSign}
                 >
                   €
                 </MonoLargeTitle>
@@ -385,21 +384,27 @@ export default function TradeScreen() {
                   pressed && { opacity: 0.7 },
                 ]}
               >
-                <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 11 }}>
                   MAX
                 </Caption1>
               </Pressable>
             </Pressable>
 
-            {/* Available balance / holdings info */}
+            {/* Available balance / holdings — tight row */}
             <View style={styles.availableRow}>
               {isBuy ? (
-                <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
-                  Available: <MonoSubhead color="foreground">€{demoState.balance.toFixed(2)}</MonoSubhead>
+                <Footnote color="muted">
+                  Available:{" "}
+                  <MonoSubhead color="foreground" style={{ fontSize: 13 }}>
+                    €{demoState.balance.toFixed(2)}
+                  </MonoSubhead>
                 </Footnote>
               ) : (
-                <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
-                  You own: <MonoSubhead color="foreground">{currentShares.toFixed(currentShares % 1 === 0 ? 0 : 4)} shares</MonoSubhead>
+                <Footnote color="muted">
+                  You own:{" "}
+                  <MonoSubhead color="foreground" style={{ fontSize: 13 }}>
+                    {currentShares.toFixed(currentShares % 1 === 0 ? 0 : 4)} shares
+                  </MonoSubhead>
                   {currentShares > 0 && (
                     <Footnote color="muted"> (€{currentHoldingValue.toFixed(2)})</Footnote>
                   )}
@@ -410,7 +415,7 @@ export default function TradeScreen() {
             {/* Validation Error */}
             {validationError && (
               <View style={[styles.validationError, { backgroundColor: colors.errorAlpha }]}>
-                <IconSymbol name="xmark" size={12} color={colors.error} />
+                <IconSymbol name="xmark" size={11} color={colors.error} />
                 <Caption1 color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
                   {validationError}
                 </Caption1>
@@ -418,95 +423,88 @@ export default function TradeScreen() {
             )}
           </View>
 
-          {/* Quick Amount Chips */}
-          <View style={styles.quickChipsSection}>
-            <Caption1
-              color="muted"
-              style={{
-                fontFamily: FontFamily.semibold,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-                marginBottom: 10,
-              }}
-            >
-              Quick amounts
-            </Caption1>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.quickChipsRow}
-            >
-              {QUICK_AMOUNTS.map((amount) => {
-                const isSelected = parsedAmount === amount;
-                const isDisabled = amount > maxAmount;
-                return (
-                  <Pressable
-                    key={amount}
-                    onPress={() => !isDisabled && handleQuickAmount(amount)}
-                    style={({ pressed }) => [
-                      styles.quickChip,
-                      {
-                        backgroundColor: isSelected ? colors.primary : colors.surface,
-                        borderColor: isSelected ? colors.primary : colors.border,
-                        opacity: isDisabled ? 0.4 : 1,
-                      },
-                      pressed && !isDisabled && { opacity: 0.7 },
-                    ]}
+          {/* Quick Amount Chips — compact inline row */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickChipsRow}
+            style={styles.quickChipsScroll}
+          >
+            {QUICK_AMOUNTS.map((amount) => {
+              const isSelected = parsedAmount === amount;
+              const isDisabled = amount > maxAmount;
+              return (
+                <Pressable
+                  key={amount}
+                  onPress={() => !isDisabled && handleQuickAmount(amount)}
+                  style={({ pressed }) => [
+                    styles.quickChip,
+                    {
+                      backgroundColor: isSelected ? colors.primary : colors.surface,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                      opacity: isDisabled ? 0.35 : 1,
+                    },
+                    pressed && !isDisabled && { opacity: 0.7 },
+                  ]}
+                >
+                  <MonoBody
+                    color={isSelected ? "onPrimary" : "foreground"}
+                    style={{
+                      fontSize: 13,
+                      fontFamily: isSelected ? FontFamily.monoBold : FontFamily.monoMedium,
+                    }}
                   >
-                    <MonoBody
-                      color={isSelected ? "onPrimary" : "foreground"}
-                      style={{
-                        fontSize: 14,
-                        fontFamily: isSelected ? FontFamily.monoBold : FontFamily.monoMedium,
-                      }}
-                    >
-                      €{amount}
-                    </MonoBody>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
+                    €{amount}
+                  </MonoBody>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
 
-          {/* Order Preview */}
+          {/* Order Preview — compact card */}
           {isValidAmount && (
             <View style={[styles.orderPreview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.orderRow}>
-                <Subhead color="muted">Estimated shares</Subhead>
-                <MonoSubhead>{(parsedAmount / selectedAsset.price).toFixed(4)}</MonoSubhead>
+                <Footnote color="muted">Est. shares</Footnote>
+                <MonoSubhead style={{ fontSize: 13 }}>
+                  {(parsedAmount / selectedAsset.price).toFixed(4)}
+                </MonoSubhead>
               </View>
               <View style={styles.orderRow}>
-                <Subhead color="muted">Market price (live)</Subhead>
-                <MonoSubhead>€{selectedAsset.price.toFixed(2)}</MonoSubhead>
+                <Footnote color="muted">Price (live)</Footnote>
+                <MonoSubhead style={{ fontSize: 13 }}>€{selectedAsset.price.toFixed(2)}</MonoSubhead>
               </View>
               <View style={styles.orderRow}>
-                <Subhead color="muted">Commission</Subhead>
-                <MonoSubhead color="success">€0.00</MonoSubhead>
+                <Footnote color="muted">Commission</Footnote>
+                <MonoSubhead color="success" style={{ fontSize: 13 }}>€0.00</MonoSubhead>
               </View>
               <View style={[styles.orderDivider, { backgroundColor: colors.border }]} />
               <View style={styles.orderRow}>
-                <Subhead color="muted">Balance after</Subhead>
-                <MonoSubhead color={balanceAfter >= 0 ? "foreground" : "error"}>
+                <Footnote color="muted">Balance after</Footnote>
+                <MonoSubhead
+                  color={balanceAfter >= 0 ? "foreground" : "error"}
+                  style={{ fontSize: 13 }}
+                >
                   €{balanceAfter.toFixed(2)}
                 </MonoSubhead>
               </View>
             </View>
           )}
 
-          {/* Trade Error from server */}
+          {/* Trade Error */}
           {tradeError && (
             <View style={[styles.errorBanner, { backgroundColor: colors.errorAlpha }]}>
-              <IconSymbol name="xmark" size={14} color={colors.error} />
-              <Footnote color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
+              <IconSymbol name="xmark" size={12} color={colors.error} />
+              <Caption1 color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
                 {tradeError}
-              </Footnote>
+              </Caption1>
             </View>
           )}
 
-          {/* Spacer to push confirm button down */}
-          <View style={{ flex: 1, minHeight: 20 }} />
+          {/* Spacer */}
+          <View style={{ flex: 1, minHeight: 12 }} />
 
-          {/* Confirm Button */}
+          {/* Confirm Button — always reachable */}
           <View style={styles.confirmContainer}>
             <Pressable
               onPress={handleConfirm}
@@ -615,6 +613,7 @@ export default function TradeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ─── Stock Picker ─────────────────────────────────────────────
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -651,67 +650,103 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 40,
   },
-  // Sheet styles
+
+  // ─── Order Sheet ──────────────────────────────────────────────
+  sheetScroll: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
   sheetHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 16,
+    paddingTop: 4,
+    paddingBottom: 10,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   sheetTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
+
+  // Toggle — compact
   toggleContainer: {
     flexDirection: "row",
     marginHorizontal: 16,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: 14,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     alignItems: "center",
   },
-  assetInfo: {
+
+  // Asset info — horizontal compact layout
+  assetInfoCompact: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingBottom: 20,
-  },
-  assetIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-  },
-  // Custom Amount Input
-  amountInputSection: {
     paddingHorizontal: 16,
     marginBottom: 16,
+    gap: 12,
+  },
+  assetIconSmall: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  assetInfoText: {
+    flex: 1,
+  },
+  assetPriceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 8,
+    marginTop: 2,
+  },
+  assetPrice: {
+    fontSize: 20,
+    lineHeight: 26,
+  },
+
+  // Amount input — streamlined
+  amountSection: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
   amountHero: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: 16,
-    borderWidth: 2,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   amountHeroInner: {
     flexDirection: "row",
     alignItems: "baseline",
     flex: 1,
   },
+  eurSign: {
+    fontSize: 32,
+    lineHeight: 40,
+  },
   amountInput: {
-    fontSize: 40,
-    lineHeight: 48,
+    fontSize: 32,
+    lineHeight: 40,
     flex: 1,
     paddingVertical: 0,
     paddingHorizontal: 4,
@@ -720,78 +755,85 @@ const styles = StyleSheet.create({
     }),
   },
   maxButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginLeft: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 8,
   },
   availableRow: {
-    marginTop: 10,
-    paddingHorizontal: 4,
+    marginTop: 8,
+    paddingHorizontal: 2,
   },
   validationError: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    gap: 5,
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  // Quick Amount Chips
-  quickChipsSection: {
-    paddingHorizontal: 16,
-    marginBottom: 20,
+
+  // Quick chips — compact
+  quickChipsScroll: {
+    marginBottom: 14,
   },
   quickChipsRow: {
     flexDirection: "row",
-    gap: 8,
-    paddingRight: 16,
+    gap: 6,
+    paddingHorizontal: 16,
   },
   quickChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  // Order Preview
-  orderPreview: {
-    marginHorizontal: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 20,
+  },
+
+  // Order preview — compact
+  orderPreview: {
+    marginHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 14,
   },
   orderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    alignItems: "center",
+    paddingVertical: 5,
   },
   orderDivider: {
-    height: 1,
-    marginVertical: 4,
+    height: StyleSheet.hairlineWidth,
+    marginVertical: 3,
   },
+
+  // Error banner
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
     marginHorizontal: 16,
-    marginBottom: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
   },
+
+  // Confirm button
   confirmContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 40,
+    paddingBottom: 24,
   },
   confirmButton: {
-    height: 56,
-    borderRadius: 16,
+    height: 50,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
-  // Success screen
+
+  // ─── Success Screen ───────────────────────────────────────────
   successContainer: {
     flex: 1,
     alignItems: "center",
