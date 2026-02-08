@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -29,7 +29,7 @@ export default function TabLayout() {
           paddingTop: 8,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
-          backgroundColor: colors.background,
+          backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 0.5,
         },
@@ -57,14 +57,24 @@ export default function TabLayout() {
         name="trade"
         options={{
           title: "",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: () => (
             <View
-              style={[
-                styles.tradeButton,
-                { backgroundColor: colors.tint },
-              ]}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: -12,
+                backgroundColor: colors.primary,
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
             >
-              <IconSymbol size={28} name="plus.circle.fill" color="#FFFFFF" />
+              <IconSymbol size={28} name="plus.circle.fill" color={colors.onPrimary} />
             </View>
           ),
         }}
@@ -90,19 +100,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tradeButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -12,
-    shadowColor: "#0066FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-});

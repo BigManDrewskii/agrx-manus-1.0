@@ -157,7 +157,7 @@ export default function MarketsScreen() {
                   style={[
                     styles.chipText,
                     {
-                      color: isActive ? "#FFFFFF" : colors.muted,
+                      color: isActive ? colors.onPrimary : colors.muted,
                       fontWeight: isActive ? "700" : "500",
                     },
                   ]}

@@ -226,7 +226,7 @@ export default function AssetDetailScreen() {
                 onPress={() => setActivePeriod(period)}
                 style={({ pressed }) => [
                   styles.periodButton,
-                  isActive && { backgroundColor: colors.primary + "20" },
+                  isActive && { backgroundColor: colors.primaryAlpha },
                   pressed && { opacity: 0.6 },
                 ]}
               >
@@ -367,7 +367,7 @@ export default function AssetDetailScreen() {
             pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
           ]}
         >
-          <Text style={styles.ctaText}>Buy</Text>
+          <Text style={[styles.ctaText, { color: colors.onPrimary }]}>Buy</Text>
         </Pressable>
         <Pressable
           onPress={() => router.push("/(tabs)/trade" as any)}
@@ -377,7 +377,7 @@ export default function AssetDetailScreen() {
             pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
           ]}
         >
-          <Text style={styles.ctaText}>Sell</Text>
+          <Text style={[styles.ctaText, { color: colors.onPrimary }]}>Sell</Text>
         </Pressable>
       </View>
     </ScreenContainer>
@@ -573,7 +573,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   ctaText: {
-    color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "700",
   },

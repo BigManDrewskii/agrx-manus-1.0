@@ -115,7 +115,7 @@ export default function HomeScreen() {
                 styles.portfolioValue,
                 {
                   color: colors.foreground,
-                  textShadowColor: glowColor + "40",
+                  textShadowColor: isPositive ? colors.successAlpha : colors.errorAlpha,
                   textShadowOffset: { width: 0, height: 0 },
                   textShadowRadius: 20,
                 },
@@ -164,7 +164,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => [
                   styles.timePeriodButton,
                   i === 0 && {
-                    backgroundColor: colors.primary + "20",
+                    backgroundColor: colors.primaryAlpha,
                   },
                   pressed && { opacity: 0.6 },
                 ]}
@@ -194,8 +194,8 @@ export default function HomeScreen() {
             style={({ pressed }) => [
               styles.challengeCard,
               {
-                backgroundColor: colors.warning + "12",
-                borderColor: colors.warning + "30",
+                backgroundColor: colors.warningAlpha,
+                borderColor: colors.warningAlpha,
               },
               pressed && { opacity: 0.7 },
             ]}
@@ -210,7 +210,7 @@ export default function HomeScreen() {
               <View
                 style={[
                   styles.rewardBadge,
-                  { backgroundColor: colors.warning + "25" },
+                  { backgroundColor: colors.warningAlpha },
                 ]}
               >
                 <Text style={[styles.rewardText, { color: colors.warning }]}>
@@ -225,7 +225,7 @@ export default function HomeScreen() {
               <View
                 style={[
                   styles.progressBar,
-                  { backgroundColor: colors.warning + "20" },
+                  { backgroundColor: colors.warningAlpha },
                 ]}
               >
                 <View
@@ -318,7 +318,7 @@ export default function HomeScreen() {
                 <View
                   style={[
                     styles.avatar,
-                    { backgroundColor: colors.primary + "20" },
+                    { backgroundColor: colors.primaryAlpha },
                   ]}
                 >
                   <Text style={[styles.avatarText, { color: colors.primary }]}>

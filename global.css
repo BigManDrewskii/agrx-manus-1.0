@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Initial CSS variable declarations for web.
+ * These prevent a flash of unstyled content (FOUC) before the JS ThemeProvider hydrates.
+ * Values MUST stay in sync with theme.config.js — the ThemeProvider will override them at runtime.
+ */
+:root {
+  --color-primary: #0055DD;
+  --color-primaryAlpha: rgba(0,85,221,0.12);
+  --color-background: #F8F9FB;
+  --color-surface: #FFFFFF;
+  --color-surfaceSecondary: #F0F1F5;
+  --color-foreground: #111827;
+  --color-muted: #6B7280;
+  --color-onPrimary: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-success: #10B981;
+  --color-successAlpha: rgba(16,185,129,0.12);
+  --color-warning: #F59E0B;
+  --color-warningAlpha: rgba(245,158,11,0.12);
+  --color-error: #EF4444;
+  --color-errorAlpha: rgba(239,68,68,0.12);
+  --color-accent: #8B5CF6;
+  --color-accentAlpha: rgba(139,92,246,0.12);
+  --color-gold: #F59E0B;
+  --color-silver: #9CA3AF;
+  --color-bronze: #B45309;
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #3B82F6;
+  --color-primaryAlpha: rgba(59,130,246,0.18);
+  --color-background: #0F1116;
+  --color-surface: #1A1D26;
+  --color-surfaceSecondary: #242834;
+  --color-foreground: #F0F2F5;
+  --color-muted: #8B919E;
+  --color-onPrimary: #FFFFFF;
+  --color-border: #2E3342;
+  --color-success: #34D399;
+  --color-successAlpha: rgba(52,211,153,0.15);
+  --color-warning: #FBBF24;
+  --color-warningAlpha: rgba(251,191,36,0.15);
+  --color-error: #F87171;
+  --color-errorAlpha: rgba(248,113,113,0.15);
+  --color-accent: #A78BFA;
+  --color-accentAlpha: rgba(167,139,250,0.15);
+  --color-gold: #FBBF24;
+  --color-silver: #D1D5DB;
+  --color-bronze: #D97706;
+}

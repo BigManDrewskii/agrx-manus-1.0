@@ -10,7 +10,7 @@ export function DemoBanner() {
   if (!state.isDemo) return null;
 
   return (
-    <View style={[styles.banner, { backgroundColor: colors.warning + "15" }]}>
+    <View style={[styles.banner, { backgroundColor: colors.warningAlpha }]}>
       <View style={[styles.dot, { backgroundColor: colors.warning }]} />
       <Text style={[styles.text, { color: colors.warning }]}>
         Demo Mode

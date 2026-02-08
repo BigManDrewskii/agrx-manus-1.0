@@ -1,14 +1,26 @@
+type ColorSwatch = { light: string; dark: string };
+
 export const themeColors: {
-  primary: { light: string; dark: string };
-  background: { light: string; dark: string };
-  surface: { light: string; dark: string };
-  surfaceSecondary: { light: string; dark: string };
-  foreground: { light: string; dark: string };
-  muted: { light: string; dark: string };
-  border: { light: string; dark: string };
-  success: { light: string; dark: string };
-  warning: { light: string; dark: string };
-  error: { light: string; dark: string };
+  primary: ColorSwatch;
+  primaryAlpha: ColorSwatch;
+  background: ColorSwatch;
+  surface: ColorSwatch;
+  surfaceSecondary: ColorSwatch;
+  foreground: ColorSwatch;
+  muted: ColorSwatch;
+  onPrimary: ColorSwatch;
+  border: ColorSwatch;
+  success: ColorSwatch;
+  successAlpha: ColorSwatch;
+  warning: ColorSwatch;
+  warningAlpha: ColorSwatch;
+  error: ColorSwatch;
+  errorAlpha: ColorSwatch;
+  accent: ColorSwatch;
+  accentAlpha: ColorSwatch;
+  gold: ColorSwatch;
+  silver: ColorSwatch;
+  bronze: ColorSwatch;
 };
 
 declare const themeConfig: {

@@ -44,3 +44,11 @@
 - [x] Update Portfolio screen to use live prices for holdings
 - [x] Add pull-to-refresh for data refresh on key screens
 - [x] Write tests for the stock data service (7 integration tests passing)
+- [x] Audit full theme pipeline (theme.config.js → theme.ts → tailwind → CSS vars → useColors → components)
+- [x] Rebuild theme.config.js with comprehensive light/dark palettes (20 tokens: primary, background, surface, surfaceSecondary, foreground, muted, onPrimary, border, success, warning, error, accent, gold, silver, bronze + 5 alpha variants)
+- [x] Fix ThemeProvider: removed console.log, dynamic vars() from all tokens, proper CSS variable injection
+- [x] Ensure tailwind.config.js correctly consumes CSS variables
+- [x] Verify useColors hook returns correct palette per scheme
+- [x] Update all components to use token-based colors consistently (no hardcoded colors)
+- [x] Test light and dark mode switching end-to-end
+- [x] Remove all hardcoded color values from screens and components (0 violations in grep audit)

@@ -15,12 +15,19 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+/**
+ * Each slide maps its accent to a semantic token key so colors adapt to light/dark mode.
+ * The token key is resolved at render time via useColors().
+ */
+type AccentToken = "primary" | "success" | "warning";
+
 interface OnboardingSlide {
   id: string;
   icon: string;
   title: string;
   subtitle: string;
-  accentColor: string;
+  accentToken: AccentToken;
+  accentAlphaToken: "primaryAlpha" | "successAlpha" | "warningAlpha";
 }
 
 const SLIDES: OnboardingSlide[] = [
@@ -30,7 +37,8 @@ const SLIDES: OnboardingSlide[] = [
     title: "Invest in Greece",
     subtitle:
       "Access the Athens Stock Exchange from your pocket. Buy fractional shares of top Greek companies starting from just €1.",
-    accentColor: "#0066FF",
+    accentToken: "primary",
+    accentAlphaToken: "primaryAlpha",
   },
   {
     id: "2",
@@ -38,7 +46,8 @@ const SLIDES: OnboardingSlide[] = [
     title: "Trade Socially",
     subtitle:
       "Follow top traders, share your wins, and learn from the community. Investing is better together.",
-    accentColor: "#00D4AA",
+    accentToken: "success",
+    accentAlphaToken: "successAlpha",
   },
   {
     id: "3",
@@ -46,7 +55,8 @@ const SLIDES: OnboardingSlide[] = [
     title: "Earn While You Learn",
     subtitle:
       "Complete daily challenges, unlock achievements, and climb the leaderboard. Start with €100K in demo credits.",
-    accentColor: "#F5A623",
+    accentToken: "warning",
+    accentAlphaToken: "warningAlpha",
   },
 ];
 
@@ -83,40 +93,50 @@ export default function OnboardingScreen() {
     router.replace("/(tabs)");
   };
 
-  const renderSlide = ({ item }: { item: OnboardingSlide }) => (
-    <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
-      <View style={styles.slideContent}>
-        {/* Icon Container */}
-        <View
-          style={[
-            styles.iconContainer,
-            { backgroundColor: item.accentColor + "15" },
-          ]}
-        >
+  const resolveAccent = (slide: OnboardingSlide) => colors[slide.accentToken];
+  const resolveAccentAlpha = (slide: OnboardingSlide) => colors[slide.accentAlphaToken];
+
+  const renderSlide = ({ item }: { item: OnboardingSlide }) => {
+    const accent = resolveAccent(item);
+    const accentAlpha = resolveAccentAlpha(item);
+
+    return (
+      <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
+        <View style={styles.slideContent}>
+          {/* Icon Container */}
           <View
             style={[
-              styles.iconInner,
-              { backgroundColor: item.accentColor + "25" },
+              styles.iconContainer,
+              { backgroundColor: accentAlpha },
             ]}
           >
-            <IconSymbol
-              name={item.icon as any}
-              size={48}
-              color={item.accentColor}
-            />
+            <View
+              style={[
+                styles.iconInner,
+                { backgroundColor: accentAlpha },
+              ]}
+            >
+              <IconSymbol
+                name={item.icon as any}
+                size={48}
+                color={accent}
+              />
+            </View>
           </View>
-        </View>
 
-        {/* Text */}
-        <Text style={[styles.slideTitle, { color: colors.foreground }]}>
-          {item.title}
-        </Text>
-        <Text style={[styles.slideSubtitle, { color: colors.muted }]}>
-          {item.subtitle}
-        </Text>
+          {/* Text */}
+          <Text style={[styles.slideTitle, { color: colors.foreground }]}>
+            {item.title}
+          </Text>
+          <Text style={[styles.slideSubtitle, { color: colors.muted }]}>
+            {item.subtitle}
+          </Text>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+
+  const activeAccent = resolveAccent(SLIDES[activeIndex]);
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]}>
@@ -158,7 +178,7 @@ export default function OnboardingScreen() {
                   {
                     backgroundColor:
                       index === activeIndex
-                        ? SLIDES[activeIndex].accentColor
+                        ? resolveAccent(SLIDES[activeIndex])
                         : colors.surfaceSecondary,
                     width: index === activeIndex ? 24 : 8,
                   },
@@ -172,13 +192,11 @@ export default function OnboardingScreen() {
             onPress={handleNext}
             style={({ pressed }) => [
               styles.ctaButton,
-              {
-                backgroundColor: SLIDES[activeIndex].accentColor,
-              },
+              { backgroundColor: activeAccent },
               pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
             ]}
           >
-            <Text style={styles.ctaText}>
+            <Text style={[styles.ctaText, { color: colors.onPrimary }]}>
               {activeIndex === SLIDES.length - 1
                 ? "Get Started"
                 : "Continue"}
@@ -268,7 +286,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   ctaText: {
-    color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "700",
   },

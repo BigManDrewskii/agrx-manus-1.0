@@ -69,7 +69,7 @@ export default function TradeScreen() {
           <View
             style={[
               styles.successIcon,
-              { backgroundColor: colors.success + "20" },
+              { backgroundColor: colors.successAlpha },
             ]}
           >
             <IconSymbol name="checkmark" size={48} color={colors.success} />
@@ -91,8 +91,8 @@ export default function TradeScreen() {
               pressed && { opacity: 0.8 },
             ]}
           >
-            <IconSymbol name="square.and.arrow.up" size={18} color="#FFFFFF" />
-            <Text style={styles.shareButtonText}>Share with friends</Text>
+            <IconSymbol name="square.and.arrow.up" size={18} color={colors.onPrimary} />
+            <Text style={[styles.shareButtonText, { color: colors.onPrimary }]}>Share with friends</Text>
           </Pressable>
         </View>
       </ScreenContainer>
@@ -139,7 +139,7 @@ export default function TradeScreen() {
             <Text
               style={[
                 styles.toggleText,
-                { color: isBuy ? "#FFFFFF" : colors.muted },
+                { color: isBuy ? colors.onPrimary : colors.muted },
               ]}
             >
               Buy
@@ -156,7 +156,7 @@ export default function TradeScreen() {
             <Text
               style={[
                 styles.toggleText,
-                { color: !isBuy ? "#FFFFFF" : colors.muted },
+                { color: !isBuy ? colors.onPrimary : colors.muted },
               ]}
             >
               Sell
@@ -227,7 +227,7 @@ export default function TradeScreen() {
                     style={[
                       styles.amountText,
                       {
-                        color: isSelected ? "#FFFFFF" : colors.foreground,
+                        color: isSelected ? colors.onPrimary : colors.foreground,
                         fontWeight: isSelected ? "700" : "600",
                       },
                     ]}
@@ -300,7 +300,7 @@ export default function TradeScreen() {
               style={[
                 styles.confirmText,
                 {
-                  color: selectedAmount ? "#FFFFFF" : colors.muted,
+                  color: selectedAmount ? colors.onPrimary : colors.muted,
                 },
               ]}
             >
@@ -612,7 +612,6 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   shareButtonText: {
-    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },

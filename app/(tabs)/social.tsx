@@ -33,7 +33,7 @@ function PostCard({ post }: { post: SocialPost }) {
     >
       <View style={styles.postHeader}>
         <View
-          style={[styles.avatar, { backgroundColor: colors.primary + "20" }]}
+          style={[styles.avatar, { backgroundColor: colors.primaryAlpha }]}
         >
           <Text style={[styles.avatarText, { color: colors.primary }]}>
             {post.avatar}
@@ -54,8 +54,8 @@ function PostCard({ post }: { post: SocialPost }) {
               {
                 backgroundColor:
                   post.pnlPercent >= 0
-                    ? colors.success + "15"
-                    : colors.error + "15",
+                    ? colors.successAlpha
+                    : colors.errorAlpha,
               },
             ]}
           >
@@ -70,7 +70,7 @@ function PostCard({ post }: { post: SocialPost }) {
         <View
           style={[
             styles.assetTag,
-            { backgroundColor: colors.primary + "12" },
+            { backgroundColor: colors.primaryAlpha },
           ]}
         >
           <Text style={[styles.assetTagText, { color: colors.primary }]}>
@@ -117,7 +117,7 @@ function PostCard({ post }: { post: SocialPost }) {
 function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
   const colors = useColors();
   const isTop3 = entry.rank <= 3;
-  const rankColors = ["", colors.warning, "#C0C0C0", "#CD7F32"];
+  const rankColors = ["", colors.gold, colors.silver, colors.bronze];
 
   return (
     <View
@@ -140,7 +140,7 @@ function LeaderboardRow({ entry }: { entry: LeaderboardEntry }) {
         </Text>
       </View>
       <View
-        style={[styles.leaderAvatar, { backgroundColor: colors.primary + "20" }]}
+        style={[styles.leaderAvatar, { backgroundColor: colors.primaryAlpha }]}
       >
         <Text style={[styles.leaderAvatarText, { color: colors.primary }]}>
           {entry.avatar}
@@ -179,7 +179,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
         {
           backgroundColor: colors.surface,
           borderColor: achievement.unlocked
-            ? colors.warning + "40"
+            ? colors.warningAlpha
             : colors.border,
           opacity: achievement.unlocked ? 1 : 0.7,
         },
@@ -227,7 +227,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
         <View
           style={[
             styles.unlockedBadge,
-            { backgroundColor: colors.warning + "20" },
+            { backgroundColor: colors.warningAlpha },
           ]}
         >
           <IconSymbol name="checkmark" size={12} color={colors.warning} />
