@@ -6,6 +6,7 @@ import {
   StyleSheet,
   type ViewToken,
 } from "react-native";
+import ReAnimated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -144,7 +145,7 @@ export default function OnboardingScreen() {
     <ScreenContainer edges={["top", "bottom", "left", "right"]}>
       <View style={styles.container}>
         {/* Skip Button */}
-        <View style={styles.skipContainer}>
+        <ReAnimated.View entering={FadeIn.duration(200).delay(300)} style={styles.skipContainer}>
           <AnimatedPressable
             variant="icon"
             onPress={handleSkip}
@@ -153,7 +154,7 @@ export default function OnboardingScreen() {
               Skip
             </Callout>
           </AnimatedPressable>
-        </View>
+        </ReAnimated.View>
 
         {/* Slides */}
         <FlatList
@@ -169,7 +170,7 @@ export default function OnboardingScreen() {
         />
 
         {/* Bottom Section */}
-        <View style={styles.bottomSection}>
+        <ReAnimated.View entering={FadeInUp.duration(300).delay(400)} style={styles.bottomSection}>
           {/* Dots */}
           <View style={styles.dotsContainer}>
             {SLIDES.map((slide, index) => (
@@ -210,7 +211,7 @@ export default function OnboardingScreen() {
           >
             By continuing, you agree to our Terms of Service and Privacy Policy
           </Caption1>
-        </View>
+        </ReAnimated.View>
       </View>
     </ScreenContainer>
   );

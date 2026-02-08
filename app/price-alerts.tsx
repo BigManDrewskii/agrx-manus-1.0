@@ -14,6 +14,8 @@ import {
   FlatList,
   Alert,
 } from "react-native";
+import ReAnimated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -159,7 +161,7 @@ export default function PriceAlertsScreen() {
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <ReAnimated.View entering={FadeIn.duration(200)} style={styles.header}>
         <AnimatedPressable
           variant="icon"
           onPress={() => router.back()}
@@ -176,11 +178,12 @@ export default function PriceAlertsScreen() {
           />
         </AnimatedPressable>
         <LargeTitle style={{ letterSpacing: -0.5 }}>Price Alerts</LargeTitle>
-      </View>
+      </ReAnimated.View>
 
       {/* ── Permission Banner ── */}
       {!hasPermission && isSupported && (
-        <View
+        <ReAnimated.View
+          entering={FadeInDown.duration(250).delay(60)}
           style={[
             styles.permissionBanner,
             { backgroundColor: colors.warning + "15", borderColor: colors.warning + "30" },
@@ -207,12 +210,12 @@ export default function PriceAlertsScreen() {
               Enable
             </Caption1>
           </AnimatedPressable>
-        </View>
+        </ReAnimated.View>
       )}
 
       {/* ── Alert List ── */}
       {alerts.length === 0 ? (
-        <View style={styles.emptyState}>
+        <ReAnimated.View entering={FadeIn.duration(300).delay(120)} style={styles.emptyState}>
           <Body style={{ fontSize: 48, textAlign: "center" }}>🔔</Body>
           <Title3 style={{ textAlign: "center", marginTop: 12 }}>
             No Price Alerts
@@ -224,7 +227,7 @@ export default function PriceAlertsScreen() {
             Set price alerts on stocks from the Markets or Asset Detail screen.
             You'll be notified when prices hit your targets.
           </Body>
-        </View>
+        </ReAnimated.View>
       ) : (
         <FlatList
           data={[...activeAlerts, ...inactiveAlerts]}

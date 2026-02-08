@@ -252,3 +252,8 @@
 - [x] Apply AGRX motion language to Social screen (header FadeIn, tabs +60ms, PostCard/LeaderboardRow/AchievementCard all staggered FadeInDown with STAGGER_DELAY)
 - [x] Apply AGRX motion language to Asset Detail screen (header FadeIn, price +60ms, chart +120ms, periods +180ms, stats +240ms, sentiment +300ms, news +360ms)
 - [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after animation rollout
+- [x] Apply AGRX motion language to Settings screen (header FadeIn, 5 sections staggered FadeInDown at 60ms intervals, footer FadeIn+360ms)
+- [x] Apply AGRX motion language to Onboarding screen (skip button FadeIn+300ms, bottom section FadeInUp+400ms)
+- [x] Apply AGRX motion language to Price Alerts screen (header FadeIn, permission banner FadeInDown+60ms, empty state FadeIn+120ms)
+- [x] Apply AGRX motion language to Notification History screen (header FadeIn, actions FadeInDown+60ms, empty state FadeIn+120ms)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after final animation rollout

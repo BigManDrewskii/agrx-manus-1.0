@@ -13,6 +13,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import ReAnimated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
@@ -315,7 +316,7 @@ export default function NotificationHistoryScreen() {
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <ReAnimated.View entering={FadeIn.duration(200)} style={styles.header}>
         <View style={styles.headerLeft}>
           <AnimatedPressable
             variant="icon"
@@ -344,7 +345,7 @@ export default function NotificationHistoryScreen() {
 
         {/* Header actions */}
         {history.length > 0 && (
-          <View style={styles.headerActions}>
+          <ReAnimated.View entering={FadeInDown.duration(250).delay(60)} style={styles.headerActions}>
             {unreadCount > 0 && (
               <AnimatedPressable
                 variant="chip"
@@ -377,13 +378,13 @@ export default function NotificationHistoryScreen() {
                 Clear
               </Caption1>
             </AnimatedPressable>
-          </View>
+          </ReAnimated.View>
         )}
-      </View>
+      </ReAnimated.View>
 
       {/* ── Empty State ── */}
       {history.length === 0 ? (
-        <View style={styles.emptyState}>
+        <ReAnimated.View entering={FadeIn.duration(300).delay(120)} style={styles.emptyState}>
           <View
             style={[
               styles.emptyIcon,
@@ -423,7 +424,7 @@ export default function NotificationHistoryScreen() {
               Set Up Price Alerts
             </Caption1>
           </AnimatedPressable>
-        </View>
+        </ReAnimated.View>
       ) : (
         <FlatList
           data={flatData}

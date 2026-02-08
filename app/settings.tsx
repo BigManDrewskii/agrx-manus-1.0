@@ -7,6 +7,7 @@ import {
   Platform,
   Linking,
 } from "react-native";
+import ReAnimated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -105,7 +106,7 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <View style={styles.header}>
+        <ReAnimated.View entering={FadeIn.duration(200)} style={styles.header}>
           <AnimatedPressable
             variant="icon"
             onPress={() => router.back()}
@@ -117,11 +118,12 @@ export default function SettingsScreen() {
             <IconSymbol name="chevron.right" size={20} color={colors.foreground} style={{ transform: [{ scaleX: -1 }] }} />
           </AnimatedPressable>
           <LargeTitle style={{ letterSpacing: -0.5 }}>Settings</LargeTitle>
-        </View>
+        </ReAnimated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION: View Mode
             ═══════════════════════════════════════════════════════════════════ */}
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(60)}>
         <SectionLabel text="View Mode" />
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={[styles.row, { flexDirection: "column", alignItems: "flex-start", gap: 10 }]}>
@@ -136,10 +138,12 @@ export default function SettingsScreen() {
             <ViewModeToggle />
           </View>
         </View>
+        </ReAnimated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION: Appearance
             ═══════════════════════════════════════════════════════════════════ */}
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(120)}>
         <SectionLabel text="Appearance" />
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {themeOptions.map((opt, i) => {
@@ -182,10 +186,12 @@ export default function SettingsScreen() {
             );
           })}
         </View>
+        </ReAnimated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION: Notifications
             ═══════════════════════════════════════════════════════════════════ */}
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(180)}>
         <SectionLabel text="Notifications" />
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <NotifRow
@@ -259,10 +265,12 @@ export default function SettingsScreen() {
             isLast={true}
           />
         </View>
+        </ReAnimated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION: Account
             ═══════════════════════════════════════════════════════════════════ */}
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(240)}>
         <SectionLabel text="Account" />
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SettingsRow
@@ -283,10 +291,12 @@ export default function SettingsScreen() {
             isLast={true}
           />
         </View>
+        </ReAnimated.View>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION: About
             ═══════════════════════════════════════════════════════════════════ */}
+        <ReAnimated.View entering={FadeInDown.duration(250).delay(300)}>
         <SectionLabel text="About" />
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <SettingsRow
@@ -321,16 +331,17 @@ export default function SettingsScreen() {
             isLast={true}
           />
         </View>
+        </ReAnimated.View>
 
         {/* ── Footer ── */}
-        <View style={styles.footer}>
+        <ReAnimated.View entering={FadeIn.duration(200).delay(360)} style={styles.footer}>
           <Caption1 color="muted" style={{ textAlign: "center" }}>
             AGRX — Agora Greek Exchange
           </Caption1>
           <Caption1 color="muted" style={{ textAlign: "center", marginTop: 2 }}>
             Making investing social for Greece 🇬🇷
           </Caption1>
-        </View>
+        </ReAnimated.View>
       </ScrollView>
     </ScreenContainer>
   );
