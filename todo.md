@@ -62,3 +62,8 @@
 - [x] Update global.css dark mode CSS variables to match new tokens
 - [x] Verify all screens render correctly in dark mode
 - [x] Run all tests including design system validation (58 passed + 19 WCAG contrast tests)
+- [x] BUG FIX: "No stocks found" when live API is unavailable (rate limit exhausted)
+- [x] Diagnose root cause: empty array from API is truthy, fallback never triggered
+- [x] Implement graceful fallback: check array.length > 0 instead of truthiness
+- [x] Ensure UI is never empty — DEMO DATA badge shown when using mock data
+- [x] Test fallback behavior end-to-end (verified via screenshot + 58 tests passing)

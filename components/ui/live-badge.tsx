@@ -10,25 +10,26 @@ interface LiveBadgeProps {
 export function LiveBadge({ isLive, lastUpdated }: LiveBadgeProps) {
   const colors = useColors();
 
-  const timeAgo = lastUpdated
-    ? formatTimeAgo(lastUpdated)
-    : null;
+  const timeAgo = lastUpdated ? formatTimeAgo(lastUpdated) : null;
 
   return (
     <View style={styles.container}>
       <View
         style={[
           styles.dot,
-          { backgroundColor: isLive ? colors.success : colors.muted },
+          { backgroundColor: isLive ? colors.success : colors.warning },
         ]}
       />
-      <Text style={[styles.text, { color: isLive ? colors.success : colors.muted }]}>
-        {isLive ? "Live" : "Demo"}
+      <Text
+        style={[
+          styles.text,
+          { color: isLive ? colors.success : colors.warning },
+        ]}
+      >
+        {isLive ? "LIVE" : "DEMO DATA"}
       </Text>
       {timeAgo && (
-        <Text style={[styles.time, { color: colors.muted }]}>
-          {timeAgo}
-        </Text>
+        <Text style={[styles.time, { color: colors.muted }]}>{timeAgo}</Text>
       )}
     </View>
   );
@@ -58,7 +59,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.3,
-    textTransform: "uppercase",
   },
   time: {
     fontSize: 11,
