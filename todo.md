@@ -78,3 +78,11 @@
 - [x] Create reusable Typography text components (14 named exports)
 - [x] Update all screens + shared components to use Typography components
 - [x] Test font rendering and run all tests (58 passed, 0 TS errors)
+- [x] Build theme preference context with light/dark/system toggle
+- [x] Persist theme preference with AsyncStorage
+- [x] Update ThemeProvider to respect manual theme override (ThemePreference type + resolveScheme)
+- [x] Build Settings screen with theme toggle section (radio buttons: System/Light/Dark)
+- [x] Build Settings screen with notification preferences section (4 toggles with AsyncStorage)
+- [x] Build Settings screen with account/about section (demo mode, version, legal links)
+- [x] Add Settings route accessible from Home screen gear icon
+- [x] Test theme switching end-to-end and run all tests (58 passed, 0 TS errors)

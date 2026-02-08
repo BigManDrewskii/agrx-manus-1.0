@@ -1,15 +1,42 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { Appearance, View, useColorScheme as useSystemColorScheme } from "react-native";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  Appearance,
+  View,
+  useColorScheme as useSystemColorScheme,
+} from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { SchemeColors, type ColorScheme } from "@/constants/theme";
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+/** User-facing preference: "system" follows device, "light"/"dark" are manual overrides. */
+export type ThemePreference = "system" | "light" | "dark";
+
 type ThemeContextValue = {
+  /** The resolved color scheme currently applied (always "light" or "dark"). */
   colorScheme: ColorScheme;
-  setColorScheme: (scheme: ColorScheme) => void;
+  /** The user's stored preference ("system" | "light" | "dark"). */
+  preference: ThemePreference;
+  /** Change the preference. Persists to AsyncStorage automatically. */
+  setPreference: (pref: ThemePreference) => void;
+  /** Convenience: is dark mode currently active? */
+  isDark: boolean;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+const STORAGE_KEY = "@agrx/theme-preference";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
  * Build the NativeWind `vars()` object dynamically from ALL tokens in SchemeColors.
@@ -42,37 +69,72 @@ function applyWebCSSVariables(scheme: ColorScheme) {
   }
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useSystemColorScheme() ?? "light";
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
+/**
+ * Resolve a ThemePreference into a concrete ColorScheme.
+ */
+function resolveScheme(
+  preference: ThemePreference,
+  systemScheme: ColorScheme,
+): ColorScheme {
+  if (preference === "system") return systemScheme;
+  return preference;
+}
 
+// ─── Provider ────────────────────────────────────────────────────────────────
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const systemScheme: ColorScheme = useSystemColorScheme() ?? "light";
+  const [preference, setPreferenceState] = useState<ThemePreference>("system");
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Resolve the active scheme from preference + system
+  const colorScheme = resolveScheme(preference, systemScheme);
+
+  // ── Hydrate from AsyncStorage on mount ──
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((stored) => {
+        if (stored === "light" || stored === "dark" || stored === "system") {
+          setPreferenceState(stored);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsHydrated(true));
+  }, []);
+
+  // ── Apply scheme to NativeWind + Appearance + web CSS vars ──
   const applyScheme = useCallback((scheme: ColorScheme) => {
     nativewindColorScheme.set(scheme);
     Appearance.setColorScheme?.(scheme);
     applyWebCSSVariables(scheme);
   }, []);
 
-  const setColorScheme = useCallback(
-    (scheme: ColorScheme) => {
-      setColorSchemeState(scheme);
-      applyScheme(scheme);
-    },
-    [applyScheme],
-  );
-
-  // Apply on mount and on scheme change
   useEffect(() => {
-    applyScheme(colorScheme);
-  }, [applyScheme, colorScheme]);
+    if (isHydrated) {
+      applyScheme(colorScheme);
+    }
+  }, [applyScheme, colorScheme, isHydrated]);
 
+  // ── Public setter: persist + update state ──
+  const setPreference = useCallback((pref: ThemePreference) => {
+    setPreferenceState(pref);
+    AsyncStorage.setItem(STORAGE_KEY, pref).catch(() => {});
+  }, []);
+
+  // ── Memoized values ──
   const themeVariables = useMemo(
     () => buildNativeWindVars(colorScheme),
     [colorScheme],
   );
 
-  const value = useMemo(
-    () => ({ colorScheme, setColorScheme }),
-    [colorScheme, setColorScheme],
+  const value = useMemo<ThemeContextValue>(
+    () => ({
+      colorScheme,
+      preference,
+      setPreference,
+      isDark: colorScheme === "dark",
+    }),
+    [colorScheme, preference, setPreference],
   );
 
   return (
@@ -81,6 +143,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     </ThemeContext.Provider>
   );
 }
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useThemeContext(): ThemeContextValue {
   const ctx = useContext(ThemeContext);

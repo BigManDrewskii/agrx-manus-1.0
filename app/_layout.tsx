@@ -109,6 +109,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
             <Stack.Screen name="asset/[id]" options={{ animation: "slide_from_right" }} />
+            <Stack.Screen name="settings" options={{ animation: "slide_from_right" }} />
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <StatusBar style="auto" />

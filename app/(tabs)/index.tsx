@@ -110,6 +110,16 @@ export default function HomeScreen() {
             >
               <IconSymbol name="bell.fill" size={20} color={colors.muted} />
             </Pressable>
+            <Pressable
+              onPress={() => router.push("/settings" as any)}
+              style={({ pressed }) => [
+                styles.notifButton,
+                { backgroundColor: colors.surface },
+                pressed && { opacity: 0.6 },
+              ]}
+            >
+              <IconSymbol name="gearshape.fill" size={20} color={colors.muted} />
+            </Pressable>
           </View>
         </View>
 
