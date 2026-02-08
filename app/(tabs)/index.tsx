@@ -5,6 +5,7 @@ import {
   FlatList,
   StyleSheet,
   RefreshControl,
+  Linking,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -20,6 +21,7 @@ import { XPBar } from "@/components/ui/xp-bar";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
+import { useMarketNews } from "@/hooks/use-news";
 import {
   Footnote,
   Title2,
@@ -49,6 +51,9 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { stocks, isLoading, isLive, lastUpdated, refetch } = useStockQuotes();
   const refreshCache = useRefreshCache();
+  const marketNewsQuery = useMarketNews();
+  const marketNews = marketNewsQuery.data?.success ? marketNewsQuery.data.data : [];
+  const newsLoading = marketNewsQuery.isLoading;
 
   const isPositive = PORTFOLIO_TOTAL_PNL >= 0;
 
@@ -287,6 +292,55 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {/* Market News */}
+        <View style={styles.section}>
+          <SectionHeader title="Market News" actionLabel={marketNews.length > 3 ? "See All" : undefined} />
+          {newsLoading ? (
+            <View style={{ paddingHorizontal: 16, gap: 10 }}>
+              {[1, 2, 3].map((i) => (
+                <View key={i} style={[styles.newsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Skeleton width="100%" height={14} borderRadius={4} />
+                  <Skeleton width="70%" height={14} borderRadius={4} style={{ marginTop: 6 }} />
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
+                    <Skeleton width={80} height={10} borderRadius={4} />
+                    <Skeleton width={50} height={10} borderRadius={4} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : marketNews.length > 0 ? (
+            marketNews.slice(0, 4).map((article, index) => (
+              <Pressable
+                key={`${article.url}-${index}`}
+                onPress={() => {
+                  if (article.url) Linking.openURL(article.url).catch(() => {});
+                }}
+                style={({ pressed }) => [
+                  styles.newsCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Subhead style={{ fontFamily: FontFamily.semibold, lineHeight: 20 }} numberOfLines={2}>
+                  {article.title}
+                </Subhead>
+                <View style={styles.newsMetaRow}>
+                  <Caption1 color="primary" style={{ fontFamily: FontFamily.semibold }}>
+                    {article.source}
+                  </Caption1>
+                  <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                    {article.relativeTime}
+                  </Caption1>
+                </View>
+              </Pressable>
+            ))
+          ) : (
+            <View style={[styles.newsCard, { backgroundColor: colors.surface, borderColor: colors.border, alignItems: "center", paddingVertical: 20, marginHorizontal: 16 }]}>
+              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>No market news available</Footnote>
+            </View>
+          )}
+        </View>
+
         {/* Social Feed Preview */}
         <View style={styles.section}>
           <SectionHeader
@@ -488,5 +542,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+  },
+  newsCard: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+  },
+  newsMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
   },
 });

@@ -98,3 +98,12 @@
 - [x] Add star toggle to Asset Detail screen header (gold/muted star + haptics)
 - [ ] Add watchlist section to Home screen (if user has watchlisted stocks)
 - [x] Test watchlist feature end-to-end (58 tests passed, 0 TS errors)
+- [x] Research news APIs: Google News RSS (free, no key) + OpenRouter for sentiment
+- [x] Build server-side news service with Google News RSS, 15min cache, XML parser
+- [x] Create tRPC news router with getStockNews, getMarketNews, and refreshNews endpoints
+- [x] Build client-side useStockNews and useMarketNews hooks with 5min staleTime
+- [x] Update Asset Detail screen with live news feed, sentiment bar, and article links
+- [x] Compute dynamic sentiment via OpenRouter (Gemini 2.0 Flash) + keyword fallback
+- [x] Update sentiment bar on Asset Detail to reflect live news sentiment
+- [x] Add Market News section to Home screen (4 articles with source + time)
+- [x] Test news integration end-to-end (63 tests passed, 5 news-specific tests)

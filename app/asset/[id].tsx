@@ -4,6 +4,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Linking,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -14,6 +15,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { LiveBadge } from "@/components/ui/live-badge";
 import { ChartSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { useStockQuote, useStockChart } from "@/hooks/use-stocks";
+import { useStockNews } from "@/hooks/use-news";
 import { GREEK_STOCKS } from "@/lib/mock-data";
 import {
   Title3,
@@ -23,6 +25,7 @@ import {
   Subhead,
   Footnote,
   Caption1,
+  Caption2,
   MonoLargeTitle,
   MonoBody,
   MonoSubhead,
@@ -97,6 +100,47 @@ function formatVolume(vol: number): string {
   return vol.toString();
 }
 
+// ─── Sentiment Dot Indicator ────────────────────────────────────────────────
+
+function SentimentDot({ sentiment }: { sentiment: "bullish" | "bearish" | "neutral" }) {
+  const colors = useColors();
+  const dotColor =
+    sentiment === "bullish" ? colors.success : sentiment === "bearish" ? colors.error : colors.muted;
+  return (
+    <View
+      style={{
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: dotColor,
+        marginRight: 6,
+        marginTop: 2,
+      }}
+    />
+  );
+}
+
+// ─── News Skeleton ──────────────────────────────────────────────────────────
+
+function NewsSkeleton() {
+  return (
+    <View style={{ gap: 10 }}>
+      {[1, 2, 3].map((i) => (
+        <View key={i} style={{ borderRadius: 12, padding: 14, gap: 8 }}>
+          <Skeleton width="100%" height={16} borderRadius={6} />
+          <Skeleton width="70%" height={16} borderRadius={6} />
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
+            <Skeleton width={80} height={12} borderRadius={4} />
+            <Skeleton width={50} height={12} borderRadius={4} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ─── Main Screen ────────────────────────────────────────────────────────────
+
 export default function AssetDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -107,6 +151,11 @@ export default function AssetDetailScreen() {
   const { isWatchlisted, toggle: toggleWatchlist } = useWatchlist();
   const starred = isWatchlisted(id ?? "");
   const { chartData, isLoading: chartLoading } = useStockChart(id ?? "", activePeriod);
+
+  // Live news + sentiment
+  const newsQuery = useStockNews(id);
+  const newsData = newsQuery.data?.success ? newsQuery.data.data : null;
+  const newsLoading = newsQuery.isLoading;
 
   // Fallback to mock data if stock not found
   const mockAsset = GREEK_STOCKS.find((s) => s.id === id);
@@ -124,29 +173,17 @@ export default function AssetDetailScreen() {
   const marketCap = stock?.marketCap ?? "N/A";
 
   const isPositive = change >= 0;
-  const buyPercent = 68;
-  const sellPercent = 32;
 
-  const NEWS = [
-    {
-      id: "1",
-      title: `${name} reports strong Q4 earnings, beats estimates`,
-      source: "Capital.gr",
-      time: "2h ago",
-    },
-    {
-      id: "2",
-      title: `Analysts upgrade ${ticker} price target to €${(price * 1.15).toFixed(2)}`,
-      source: "Naftemporiki",
-      time: "5h ago",
-    },
-    {
-      id: "3",
-      title: `ATHEX: ${name} among top traded stocks today`,
-      source: "Reuters",
-      time: "8h ago",
-    },
-  ];
+  // Sentiment from live news or fallback
+  const sentimentData = newsData?.sentiment;
+  const buyPercent = sentimentData?.bullishPercent ?? 68;
+  const sellPercent = sentimentData?.bearishPercent ?? 32;
+  const neutralPercent = sentimentData?.neutralPercent ?? 0;
+  const sentimentLabel = sentimentData?.label ?? "Neutral";
+  const sentimentScore = sentimentData?.score ?? 0;
+
+  const articles = newsData?.articles ?? [];
+  const hasLiveNews = articles.length > 0;
 
   return (
     <ScreenContainer>
@@ -182,7 +219,7 @@ export default function AssetDetailScreen() {
                 toggleWatchlist(id ?? "");
               }}
               style={({ pressed }) => [
-                styles.shareButton,
+                styles.iconButton,
                 { backgroundColor: colors.surface },
                 pressed && { opacity: 0.6 },
               ]}
@@ -195,7 +232,7 @@ export default function AssetDetailScreen() {
             </Pressable>
             <Pressable
               style={({ pressed }) => [
-                styles.shareButton,
+                styles.iconButton,
                 { backgroundColor: colors.surface },
                 pressed && { opacity: 0.6 },
               ]}
@@ -263,7 +300,7 @@ export default function AssetDetailScreen() {
           })}
         </View>
 
-        {/* Key Stats — Live Data */}
+        {/* Key Stats */}
         <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.statsGrid}>
             {[
@@ -282,50 +319,188 @@ export default function AssetDetailScreen() {
           </View>
         </View>
 
-        {/* Community Sentiment */}
+        {/* AI Sentiment — Powered by Live News */}
         <View style={styles.sentimentSection}>
-          <Title3 style={{ marginBottom: 12 }}>Community Sentiment</Title3>
+          <View style={styles.sectionTitleRow}>
+            <Title3>Sentiment Analysis</Title3>
+            {hasLiveNews && (
+              <View style={[styles.aiBadge, { backgroundColor: colors.primaryAlpha }]}>
+                <Caption2 color="primary" style={{ fontFamily: FontFamily.bold, letterSpacing: 0.5 }}>
+                  AI · LIVE
+                </Caption2>
+              </View>
+            )}
+          </View>
+
           <View style={[styles.sentimentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.sentimentBar}>
-              <View style={[styles.sentimentFillBuy, { backgroundColor: colors.success, width: `${buyPercent}%` }]} />
-              <View style={[styles.sentimentFillSell, { backgroundColor: colors.error, width: `${sellPercent}%` }]} />
+            {/* Sentiment Score Header */}
+            <View style={styles.sentimentHeader}>
+              <View style={styles.sentimentLabelRow}>
+                <View
+                  style={[
+                    styles.sentimentIndicator,
+                    {
+                      backgroundColor:
+                        sentimentLabel === "Bullish"
+                          ? colors.success
+                          : sentimentLabel === "Bearish"
+                          ? colors.error
+                          : colors.warning,
+                    },
+                  ]}
+                />
+                <Headline
+                  style={{
+                    fontFamily: FontFamily.bold,
+                    color:
+                      sentimentLabel === "Bullish"
+                        ? colors.success
+                        : sentimentLabel === "Bearish"
+                        ? colors.error
+                        : colors.warning,
+                  }}
+                >
+                  {sentimentLabel}
+                </Headline>
+              </View>
+              <MonoSubhead style={{ color: colors.muted }}>
+                {sentimentScore > 0 ? "+" : ""}
+                {sentimentScore.toFixed(2)}
+              </MonoSubhead>
             </View>
+
+            {/* Three-way sentiment bar */}
+            <View style={styles.sentimentBar}>
+              {buyPercent > 0 && (
+                <View
+                  style={[
+                    styles.sentimentFillBuy,
+                    { backgroundColor: colors.success, width: `${buyPercent}%` },
+                  ]}
+                />
+              )}
+              {neutralPercent > 0 && (
+                <View
+                  style={{
+                    height: "100%",
+                    backgroundColor: colors.warning,
+                    width: `${neutralPercent}%`,
+                  }}
+                />
+              )}
+              {sellPercent > 0 && (
+                <View
+                  style={[
+                    styles.sentimentFillSell,
+                    { backgroundColor: colors.error, width: `${sellPercent}%` },
+                  ]}
+                />
+              )}
+            </View>
+
             <View style={styles.sentimentLabels}>
               <Footnote color="success" style={{ fontFamily: FontFamily.semibold }}>
-                {buyPercent}% Buy
+                {buyPercent}% Bullish
+              </Footnote>
+              <Footnote style={{ fontFamily: FontFamily.semibold, color: colors.warning }}>
+                {neutralPercent}% Neutral
               </Footnote>
               <Footnote color="error" style={{ fontFamily: FontFamily.semibold }}>
-                {sellPercent}% Sell
+                {sellPercent}% Bearish
               </Footnote>
             </View>
+
+            {hasLiveNews && (
+              <Caption2
+                color="muted"
+                style={{ fontFamily: FontFamily.medium, marginTop: 8, textAlign: "center" }}
+              >
+                Based on {articles.length} recent news articles
+              </Caption2>
+            )}
           </View>
         </View>
 
-        {/* News */}
+        {/* Live News Feed */}
         <View style={styles.newsSection}>
-          <Title3 style={{ marginBottom: 12 }}>Latest News</Title3>
-          {NEWS.map((item) => (
-            <Pressable
-              key={item.id}
-              style={({ pressed }) => [
+          <View style={styles.sectionTitleRow}>
+            <Title3>Latest News</Title3>
+            {hasLiveNews && (
+              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                {articles.length} articles
+              </Caption1>
+            )}
+          </View>
+
+          {newsLoading ? (
+            <NewsSkeleton />
+          ) : hasLiveNews ? (
+            articles.map((article, index) => (
+              <Pressable
+                key={`${article.url}-${index}`}
+                onPress={() => {
+                  if (article.url) {
+                    Linking.openURL(article.url).catch(() => {});
+                  }
+                }}
+                style={({ pressed }) => [
+                  styles.newsCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <View style={styles.newsContent}>
+                  {article.sentiment && <SentimentDot sentiment={article.sentiment} />}
+                  <View style={{ flex: 1 }}>
+                    <Subhead
+                      style={{ fontFamily: FontFamily.semibold, lineHeight: 20, marginBottom: 8 }}
+                      numberOfLines={2}
+                    >
+                      {article.title}
+                    </Subhead>
+                    <View style={styles.newsMeta}>
+                      <View style={styles.newsSourceRow}>
+                        <Caption1 color="primary" style={{ fontFamily: FontFamily.semibold }}>
+                          {article.source}
+                        </Caption1>
+                        {article.sentiment && (
+                          <Caption2
+                            style={{
+                              fontFamily: FontFamily.bold,
+                              color:
+                                article.sentiment === "bullish"
+                                  ? colors.success
+                                  : article.sentiment === "bearish"
+                                  ? colors.error
+                                  : colors.muted,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            {article.sentiment}
+                          </Caption2>
+                        )}
+                      </View>
+                      <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
+                        {article.relativeTime}
+                      </Caption1>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            ))
+          ) : (
+            <View
+              style={[
                 styles.newsCard,
-                { backgroundColor: colors.surface, borderColor: colors.border },
-                pressed && { opacity: 0.7 },
+                { backgroundColor: colors.surface, borderColor: colors.border, alignItems: "center", paddingVertical: 24 },
               ]}
             >
-              <Subhead style={{ fontFamily: FontFamily.semibold, lineHeight: 20, marginBottom: 8 }} numberOfLines={2}>
-                {item.title}
-              </Subhead>
-              <View style={styles.newsMeta}>
-                <Caption1 color="primary" style={{ fontFamily: FontFamily.semibold }}>
-                  {item.source}
-                </Caption1>
-                <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-                  {item.time}
-                </Caption1>
-              </View>
-            </Pressable>
-          ))}
+              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
+                No recent news found for {ticker}
+              </Footnote>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 120 }} />
@@ -390,7 +565,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  shareButton: {
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -435,6 +610,17 @@ const styles = StyleSheet.create({
     width: "50%",
     paddingVertical: 8,
   },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  aiBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
   sentimentSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -443,6 +629,22 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     padding: 16,
+  },
+  sentimentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  sentimentLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  sentimentIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   sentimentBar: {
     flexDirection: "row",
@@ -474,9 +676,18 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
   },
+  newsContent: {
+    flexDirection: "row",
+  },
   newsMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+  },
+  newsSourceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   ctaContainer: {
     position: "absolute",
