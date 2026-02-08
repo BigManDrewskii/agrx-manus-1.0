@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Initial CSS variable declarations for web.
+ * These prevent a flash of unstyled content (FOUC) before the JS ThemeProvider hydrates.
+ * Values MUST stay in sync with theme.config.js — the ThemeProvider will override them at runtime.
+ *
+ * Dark palette is modeled after the Coinbase Design System (CDS v8) gray spectrum.
+ */
+:root {
+  --color-primary: #0052FF;
+  --color-primaryAlpha: rgba(0,82,255,0.10);
+  --color-background: #F7F8F9;
+  --color-surface: #FFFFFF;
+  --color-surfaceSecondary: #EEF0F3;
+  --color-foreground: #0A0B0D;
+  --color-muted: #5B616E;
+  --color-onPrimary: #FFFFFF;
+  --color-border: #DEE1E7;
+  --color-success: #09854F;
+  --color-successAlpha: rgba(9,133,79,0.10);
+  --color-warning: #CF7100;
+  --color-warningAlpha: rgba(207,113,0,0.10);
+  --color-error: #CF2030;
+  --color-errorAlpha: rgba(207,32,48,0.10);
+  --color-accent: #4257E9;
+  --color-accentAlpha: rgba(66,87,233,0.10);
+  --color-gold: #CF9700;
+  --color-silver: #89909E;
+  --color-bronze: #B54F06;
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #578BFA;
+  --color-primaryAlpha: rgba(87,139,250,0.16);
+  --color-background: #0A0B0D;
+  --color-surface: #1A1C23;
+  --color-surfaceSecondary: #262830;
+  --color-foreground: #EEF0F3;
+  --color-muted: #89909E;
+  --color-onPrimary: #FFFFFF;
+  --color-border: #282A30;
+  --color-success: #27AD74;
+  --color-successAlpha: rgba(39,173,116,0.14);
+  --color-warning: #EBBA00;
+  --color-warningAlpha: rgba(235,186,0,0.14);
+  --color-error: #ED5966;
+  --color-errorAlpha: rgba(237,89,102,0.14);
+  --color-accent: #8A7BFA;
+  --color-accentAlpha: rgba(138,123,250,0.14);
+  --color-gold: #EBBA00;
+  --color-silver: #B1B7C3;
+  --color-bronze: #ED702F;
+}
+
+/*
+ * Smooth color transitions for theme switching on web.
+ * Only applies to color-related properties — no layout shift.
+ * The 200ms duration matches iOS system theme transition speed.
+ */
+* {
+  transition-property: color, background-color, border-color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+/*
+ * Disable transitions on elements that should snap instantly
+ * (e.g., SVG chart lines, animated elements).
+ */
+svg polyline,
+svg line,
+svg path,
+[data-no-transition] {
+  transition: none !important;
+}

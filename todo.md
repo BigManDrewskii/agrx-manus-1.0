@@ -1,0 +1,314 @@
+# AGRX MVP TODO
+
+- [x] Configure AGRX color palette and design tokens in theme.config.js
+- [x] Set up Inter and JetBrains Mono fonts
+- [x] Configure 5-tab navigation (Home, Markets, Trade, Portfolio, Social)
+- [x] Add icon mappings for all tab icons
+- [x] Build Home screen — portfolio value hero with P&L glow
+- [x] Build Home screen — mini sparkline chart
+- [x] Build Home screen — daily challenge card
+- [x] Build Home screen — trending stocks horizontal scroll
+- [x] Build Home screen — social feed preview
+- [x] Build Home screen — streak counter
+- [x] Build Markets screen — search bar with filter chips
+- [x] Build Markets screen — market status indicator
+- [x] Build Markets screen — asset list with sparklines
+- [x] Build Markets screen — categories section
+- [x] Build Asset Detail screen — price header and interactive chart
+- [x] Build Asset Detail screen — Buy/Sell CTAs
+- [x] Build Asset Detail screen — sentiment bar and news
+- [x] Build Trade bottom sheet — quick amounts and order flow
+- [x] Build Trade bottom sheet — swipe-to-confirm
+- [x] Build Trade bottom sheet — success animation and share prompt
+- [x] Build Portfolio screen — total value with P&L glow
+- [x] Build Portfolio screen — tab selector (All/Stocks/Options/Copied)
+- [x] Build Portfolio screen — holdings list
+- [x] Build Social screen — community feed
+- [x] Build Social screen — leaderboard
+- [x] Build Social screen — achievements/badges
+- [x] Build Demo mode toggle and persistent banner
+- [x] Build Onboarding flow (Welcome → Demo/Live choice)
+- [ ] Build P&L Share Card generation
+- [ ] Build Simple/Advanced mode toggle
+- [x] Generate custom app logo
+- [x] Update app.config.ts with AGRX branding
+- [x] Create checkpoint and deliver MVP
+- [x] Create server-side stock data router with YahooFinance API integration
+- [x] Build stock data service with caching and rate-limit handling
+- [x] Map ATHEX stock symbols to Yahoo Finance .AT suffixes
+- [x] Create tRPC endpoints: getQuote, getChart, getMultipleQuotes
+- [x] Build client-side React Query hooks for live stock data
+- [x] Update Home screen to use live data with loading/error states
+- [x] Update Markets screen to use live data with loading/error states
+- [x] Update Asset Detail screen to use live chart data
+- [x] Update Portfolio screen to use live prices for holdings
+- [x] Add pull-to-refresh for data refresh on key screens
+- [x] Write tests for the stock data service (7 integration tests passing)
+- [x] Audit full theme pipeline (theme.config.js → theme.ts → tailwind → CSS vars → useColors → components)
+- [x] Rebuild theme.config.js with comprehensive light/dark palettes (20 tokens: primary, background, surface, surfaceSecondary, foreground, muted, onPrimary, border, success, warning, error, accent, gold, silver, bronze + 5 alpha variants)
+- [x] Fix ThemeProvider: removed console.log, dynamic vars() from all tokens, proper CSS variable injection
+- [x] Ensure tailwind.config.js correctly consumes CSS variables
+- [x] Verify useColors hook returns correct palette per scheme
+- [x] Update all components to use token-based colors consistently (no hardcoded colors)
+- [x] Test light and dark mode switching end-to-end
+- [x] Remove all hardcoded color values from screens and components (0 violations in grep audit)
+- [x] Research Coinbase/Robinhood/Binance dark mode palettes for reference (CDS v8 gray spectrum)
+- [x] Audit current dark mode rendering across all screens
+- [x] Fine-tune dark background/surface/surfaceSecondary for OLED contrast (#0A0B0D → #1A1C23 → #262830)
+- [x] Fine-tune dark foreground/muted for readability (WCAG AA: #EEF0F3 fg, #89909E muted)
+- [x] Fine-tune dark border token for subtle separation (#282A30)
+- [x] Fine-tune dark primary/accent/success/warning/error (CDS dark spectrum: #578BFA, #27AD74, #ED5966, #EBBA00)
+- [x] Fine-tune dark alpha variants for proper translucency (14-16% opacity)
+- [x] Update global.css dark mode CSS variables to match new tokens
+- [x] Verify all screens render correctly in dark mode
+- [x] Run all tests including design system validation (58 passed + 19 WCAG contrast tests)
+- [x] BUG FIX: "No stocks found" when live API is unavailable (rate limit exhausted)
+- [x] Diagnose root cause: empty array from API is truthy, fallback never triggered
+- [x] Implement graceful fallback: check array.length > 0 instead of truthiness
+- [x] Ensure UI is never empty — DEMO DATA badge shown when using mock data
+- [x] Test fallback behavior end-to-end (verified via screenshot + 58 tests passing)
+- [x] Research complete ATHEX General Index constituent list (145 tickers from stockanalysis.com)
+- [x] Verify Yahoo Finance symbols for all ATHEX stocks (135 of 144 valid with .AT suffix)
+- [x] Update stockService.ts with all 135 verified symbols (18 blue-chip, 15 dividend, 102 growth)
+- [x] Update mock-data.ts GREEK_STOCKS to cover all 135 stocks with representative prices
+- [x] Test full API integration with complete ATHEX list (58 tests passing, 0 TS errors)
+- [x] Install Inter and JetBrains Mono fonts via @expo-google-fonts
+- [x] Configure font loading in root layout with splash screen hold
+- [x] Define typographic scale: 12 levels (LargeTitle→Caption2 + 4 mono variants)
+- [x] Create reusable Typography text components (14 named exports)
+- [x] Update all screens + shared components to use Typography components
+- [x] Test font rendering and run all tests (58 passed, 0 TS errors)
+- [x] Build theme preference context with light/dark/system toggle
+- [x] Persist theme preference with AsyncStorage
+- [x] Update ThemeProvider to respect manual theme override (ThemePreference type + resolveScheme)
+- [x] Build Settings screen with theme toggle section (radio buttons: System/Light/Dark)
+- [x] Build Settings screen with notification preferences section (4 toggles with AsyncStorage)
+- [x] Build Settings screen with account/about section (demo mode, version, legal links)
+- [x] Add Settings route accessible from Home screen gear icon
+- [x] Test theme switching end-to-end and run all tests (58 passed, 0 TS errors)
+- [x] Research real ATHEX sector classifications for all 135 stocks (15 sectors mapped)
+- [x] Add sector field to LiveStockQuote interface and shared lib/sectors.ts module
+- [x] Build sector filter chips UI on Markets screen (horizontal scroll with counts + emoji icons)
+- [x] Add "All" default filter, sector-based grouping, and sort options (Gainers/Losers/Volume/A→Z)
+- [x] Test sector filtering end-to-end (58 tests passed, 0 TS errors)
+- [x] Create WatchlistContext with AsyncStorage persistence
+- [x] Wire WatchlistProvider into root layout
+- [x] Add star/favorite toggle button to AssetRow component (with haptic feedback)
+- [x] Add "Watchlist" as a sector filter chip on Markets screen (gold star chip with count)
+- [x] Add star toggle to Asset Detail screen header (gold/muted star + haptics)
+- [ ] Add watchlist section to Home screen (if user has watchlisted stocks)
+- [x] Test watchlist feature end-to-end (58 tests passed, 0 TS errors)
+- [x] Research news APIs: Google News RSS (free, no key) + OpenRouter for sentiment
+- [x] Build server-side news service with Google News RSS, 15min cache, XML parser
+- [x] Create tRPC news router with getStockNews, getMarketNews, and refreshNews endpoints
+- [x] Build client-side useStockNews and useMarketNews hooks with 5min staleTime
+- [x] Update Asset Detail screen with live news feed, sentiment bar, and article links
+- [x] Compute dynamic sentiment via OpenRouter (Gemini 2.0 Flash) + keyword fallback
+- [x] Update sentiment bar on Asset Detail to reflect live news sentiment
+- [x] Add Market News section to Home screen (4 articles with source + time)
+- [x] Test news integration end-to-end (63 tests passed, 5 news-specific tests)
+- [x] Build ShareCard component with 9:16 canvas (stock name, P&L, mini chart, sentiment, AGRX branding)
+- [x] Build share card generation service (ViewShot capture to image)
+- [x] Integrate native share sheet (expo-sharing)
+- [x] Add share trigger to Trade success confirmation screen
+- [x] Add share trigger to Portfolio holdings (per-stock share button)
+- [x] Add share trigger to Asset Detail screen
+- [x] Add time frame selector (Today/This Week/This Month/All Time) on share card
+- [x] Test share card rendering and share flow end-to-end (84 tests passed, 21 share-card tests)
+- [x] BUG FIX: Theme switching causes visual glitches without full reload
+- [x] Audit theme pipeline: theme.config.js → theme.ts → ThemeProvider → CSS vars → NativeWind → useColors
+- [x] Fix ThemeProvider: key-based re-render, synchronous CSS var injection, proper NativeWind colorScheme.set()
+- [x] Fix root layout: reactive StatusBar (light/dark based on resolved scheme)
+- [x] Fix tab layout: key-based re-render on theme change for tab bar colors
+- [x] Add smooth CSS transitions (200ms) for web theme switching, disabled on SVG
+- [x] Verify all 25+ screens and components switch themes dynamically without reload
+- [x] Write 19 theme-switching tests covering pipeline integrity, provider, layout, and component reactivity
+- [x] Run full test suite: 103 tests passed, 0 TS errors
+- [x] Read backend docs (server/README.md) and understand push notification infrastructure
+- [x] Build server-side PriceAlertService (periodic price checks, threshold comparison, cooldown logic)
+- [x] Build server-side notification delivery via Expo Push Notifications API
+- [x] Create tRPC notificationRouter (registerDevice, getAlerts, addAlert, removeAlert, toggleAlert, updatePreferences)
+- [x] Build client-side NotificationProvider (permission request, push token registration, listeners)
+- [x] Build push token registration (Expo push token → server via tRPC)
+- [x] Build AddAlertModal (alert type selector, threshold input, smart placeholders)
+- [x] Build Price Alerts management screen (FlatList, toggle, delete, permission banner, empty state)
+- [x] Integrate price alert bell button on Asset Detail screen (active/inactive state)
+- [x] Add 'Manage Price Alerts' navigation to Settings screen
+- [x] Register price-alerts route in root layout
+- [x] Add bell.badge.fill icon mapping
+- [x] Write 71 push notification tests (service, router, context, UI integration)
+- [x] Run full test suite: 174 tests passed, 0 TS errors
+- [x] Audit notification context data model and Home screen header for integration points
+- [x] Extend NotificationContext with notification history array, persistence (AsyncStorage), and unread count
+- [x] Add markAsRead, markAllAsRead, removeFromHistory, clearHistory functions to context
+- [x] Build Notification History screen (grouped by Today/Yesterday/This Week/Earlier, alert details, timestamps, read/unread state)
+- [x] Add delete button on individual history items (with native confirmation dialog)
+- [x] Add "Read All" and "Clear" header actions
+- [x] Add bell icon with unread badge count (red dot, capped at 9+) to Home screen header
+- [x] Wire bell icon to navigate to Notification History screen
+- [x] Add Notification History link to Settings screen
+- [x] Register notification-history route in root layout
+- [x] Add icon mappings (trash, clock, newspaper, arrow.up, arrow.down, percent, etc.)
+- [x] Write 76 notification history tests (data model, persistence, grouping, rendering, actions, badge)
+- [x] Run full test suite: 250 tests passed, 0 TS errors
+- [x] Research React 19 official docs: new APIs, breaking changes, hooks rules, compiler, concurrent features
+- [x] Read skill-creator skill and create React 19 skill (SKILL.md + references + audit script)
+- [x] Create comprehensive React 19 skill with new-apis.md, compiler-rules.md, and audit-react19.sh
+- [x] Audit AGRX codebase against React 19 skill — identified all violations
+- [x] FIX: Hooks ordering crash in _layout.tsx (hooks after early return `if (!fontsLoaded) return null`)
+- [x] FIX: Context.Provider → direct Context rendering (theme-provider, demo-context, watchlist-context, notification-context)
+- [x] FIX: forwardRef → ref as regular prop (typography.tsx, share-card.tsx)
+- [x] FIX: React Compiler purity — moved Date() call from render body into useMemo (markets.tsx)
+- [x] Verified: no defaultProps, propTypes, string refs, legacy context, findDOMNode
+- [x] Verified: React Compiler enabled (app.config.ts experiments.reactCompiler: true)
+- [x] Run full test suite after React 19 fixes: 250 tests passed, 0 TS errors
+- [x] Audit DemoContext, Portfolio, Home, Trade screens to map all data flow dependencies
+- [x] Redesign DemoContext: holdings map (stockId → DemoHolding { shares, totalCost, avgPrice, ticker, name }), seeded from mock data, persisted with AsyncStorage
+- [x] Add executeTrade with balance validation (buy) and share validation (sell), returns { success, error }
+- [x] Add getPortfolioValue(livePrices) derivation to DemoContext
+- [x] Add getPortfolioPnL(livePrices) derivation (current value - total cost) to DemoContext
+- [x] Update Portfolio screen: derives holdings from DemoContext + live prices, no hardcoded mock data
+- [x] Update Home screen: totalAccountValue = portfolioValue + balance, P&L from getPortfolioPnL
+- [x] Update Home screen: removed PORTFOLIO_TOTAL_VALUE, PORTFOLIO_TOTAL_PNL, PORTFOLIO_PNL_PERCENT imports
+- [x] Update Trade screen: shows available balance (buy) / current shares (sell), balance-after preview
+- [x] Update Trade screen: error banner for insufficient funds/shares
+- [x] Write 42 unified data flow tests (DemoContext structure, Portfolio/Home/Trade integration, data flow integrity)
+- [x] Run full test suite: 292 tests passed, 0 TS errors
+- [x] Audit current Trade screen order sheet amount selection flow
+- [x] Replace preset-only grid with hero-style custom amount input (€ prefix, 40pt monoBold, decimal-pad keyboard)
+- [x] Keep quick-amount chips as horizontal scroll shortcuts (€5/10/25/50/100/250) that populate input
+- [x] Add input validation: min €1, max = balance (buy) or holding value (sell), 2 decimal places, no multiple dots
+- [x] Add MAX button to auto-fill maximum available amount with keyboard dismiss
+- [x] Update order preview to react to custom amount in real-time (shows only when valid)
+- [x] Update confirm button: dynamic text with amount/ticker, disabled state, validation feedback
+- [x] Handle keyboard: decimal-pad, returnKeyType done, keyboardShouldPersistTaps, dismiss on quick/max
+- [x] Disable quick chips that exceed max amount (opacity 0.4)
+- [x] Show balance-after in red when negative
+- [x] Write 48 custom trade amounts tests (input, validation, MAX, chips, preview, confirm, keyboard)
+- [x] Run full test suite: 340 tests passed, 0 TS errors
+- [x] BUG FIX: Stock price text cut off on mobile preview in Trade order sheet
+- [x] Audit Trade screen layout: identified 7 spacing/sizing issues (icon 56→40, price 24→20pt, hero 40→32pt, etc.)
+- [x] Compact asset info: 40px icon (was 56), horizontal layout (was centered/stacked), price 20pt with lineHeight 26
+- [x] Compact amount hero: 32pt font (was 40pt), 10px padding (was 16px), 1.5px border (was 2px)
+- [x] Reduced all vertical gaps: toggle 14px (was 20), asset 16px (was 20), amount 12px (was 16), chips 14px (was 20)
+- [x] Removed redundant section labels ("ENTER AMOUNT" and "QUICK AMOUNTS")
+- [x] Compact quick chips: 14px/7px padding (was 18/10), borderRadius 16 (was 20), font 13px
+- [x] Confirm button visible without scrolling: 50px height (was 56), 24px bottom padding (was 40)
+- [x] Verified on mobile preview: price fully visible, all content fits in viewport
+- [x] All 340 tests passing, 0 TS errors
+- [x] Deep audit Home screen UI: every element, spacing, hierarchy, visual weight
+- [x] Design Simple/Pro view mode system (Simple: clean, focused; Pro: full charts, XP, social)
+- [x] Build ViewModeContext with AsyncStorage persistence and Simple/Pro toggle
+- [x] Build ViewModeToggle component (animated segmented control with haptics)
+- [x] Refine Home screen UI: cleaner hero, tighter spacing, mode-aware sections
+- [x] Build Simple Home layout: portfolio hero (no sparkline), watchlist section, 2 news max, no XP/challenge/social
+- [x] Build Pro Home layout: full sparkline, XP bar, daily challenge, trending, 4 news, social feed
+- [x] Update Trade screen: Pro shows full order preview, Simple shows just balance-after
+- [x] Update Portfolio screen: Simple shows clean cards, Pro shows detailed table with avg cost/shares
+- [x] Add View Mode toggle section to Settings screen (with description per mode)
+- [x] Wire ViewModeProvider into root layout
+- [x] Run full test suite: 340 tests passed, 0 TS errors
+- [x] Build SwipeToConfirm component (draggable thumb, progress fill, haptic feedback, completion animation)
+- [x] Integrate SwipeToConfirm into Trade screen replacing tap-to-confirm button
+- [x] Write tests for SwipeToConfirm component and integration
+- [x] Audit trade screen buy/sell order sheet UI — identify spacing, chip layout, and visual issues
+- [x] Research Robinhood/Coinbase trade screen patterns for modern reference
+- [x] Redesign quick amount chips for cleaner, modern look
+- [x] Refine overall trade order sheet layout, spacing, and visual hierarchy
+- [x] Run tests and verify 0 regressions after UI refinement
+- [x] Read skill-creator guide to understand skill structure
+- [x] Deep audit all current animations across every screen and component
+- [x] Research iOS HIG spring curves, Stripe/Coinbase motion patterns, best-in-class mobile animation
+- [x] Design AGRX animation language spec (timing, easing, spring configs, categories)
+- [x] Build agrx-motion-language skill: SKILL.md + 3 reference docs (animations-module, animated-pressable, application-guide)
+- [x] Create lib/animations.ts — single source of truth for springs, timing, press feedback constants
+- [x] Create AnimatedPressable component — spring-based press feedback with 5 variants (button/card/chip/icon/toggle)
+- [x] Replace all Pressable/TouchableOpacity across 17 files with AnimatedPressable
+- [x] Run tests and verify 0 regressions after animation changes (395 passed)
+- [x] Audit DemoContext trade data model — DemoTrade already has id, stockId, ticker, name, type, amount, shares, price, timestamp
+- [x] Design Trade History screen layout (date grouping, per-trade P&L, buy/sell indicators)
+- [x] DemoContext already persists trades in AsyncStorage — no changes needed
+- [x] Build Trade History screen: FlatList with date grouping (Today/Yesterday/This Week/Earlier)
+- [x] Build trade row UI: side indicator (green buy/red sell), ticker, shares, price, per-trade P&L vs live prices
+- [x] Add summary card: total volume, net P&L, trade count breakdown (buys/sells)
+- [x] Add empty state with clock icon and Start Trading CTA
+- [x] Wire navigation: Portfolio holdings header "History" chip
+- [x] Register trade-history route in root layout (slide_from_right)
+- [x] Write 38 trade history tests (structure, grouping, row display, P&L, summary, empty state, routing, design system)
+- [x] Run full test suite: 433 tests passed, 0 TS errors
+- [x] Apply AGRX motion language to Trade History screen
+- [x] Add staggered FadeInDown.duration(250).delay(index*30) entering animations to trade list items
+- [x] Add FadeInDown.duration(250).delay(60) entering animation to summary card
+- [x] Add FadeIn.duration(200) entering animation to section headers
+- [x] Add FadeIn.duration(200) entering animation to header
+- [x] Add FadeIn.duration(300) entering animation to empty state
+- [x] Import STAGGER_DELAY and STAGGER_MAX from lib/animations.ts for consistent stagger timing
+- [x] Verify TypeScript compiles (0 errors) and all tests pass (433 passed)
+- [x] Apply AGRX motion language to Home screen (header FadeIn, hero FadeInDown+60ms, quick actions +120ms, challenge +150ms, watchlist +180ms, trending +240ms, news +300ms, social +360ms)
+- [x] Apply AGRX motion language to Markets screen (header FadeIn, search +60ms, sector chips +120ms, sort row +180ms)
+- [x] Apply AGRX motion language to Portfolio screen (header FadeIn, hero +60ms, balance +120ms, holdings header +180ms, holdings staggered +210ms, dividends +360ms)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after animation rollout
+- [x] Apply AGRX motion language to Trade screen (stock picker: header FadeIn, search +60ms, label +120ms; order sheet: header, toggle +60ms, asset card +120ms, amount +180ms, chips +240ms; success: icon FadeIn+300ms, text +100ms, amount +150ms/+200ms)
+- [x] Apply AGRX motion language to Social screen (header FadeIn, tabs +60ms, PostCard/LeaderboardRow/AchievementCard all staggered FadeInDown with STAGGER_DELAY)
+- [x] Apply AGRX motion language to Asset Detail screen (header FadeIn, price +60ms, chart +120ms, periods +180ms, stats +240ms, sentiment +300ms, news +360ms)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after animation rollout
+- [x] Apply AGRX motion language to Settings screen (header FadeIn, 5 sections staggered FadeInDown at 60ms intervals, footer FadeIn+360ms)
+- [x] Apply AGRX motion language to Onboarding screen (skip button FadeIn+300ms, bottom section FadeInUp+400ms)
+- [x] Apply AGRX motion language to Price Alerts screen (header FadeIn, permission banner FadeInDown+60ms, empty state FadeIn+120ms)
+- [x] Apply AGRX motion language to Notification History screen (header FadeIn, actions FadeInDown+60ms, empty state FadeIn+120ms)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after final animation rollout
+- [x] Audit current P&L number display and XP bar implementations across Home and Portfolio
+- [x] Build AnimatedNumber component (useSharedValue + withSpring interpolation, formatted output via AnimatedTextInput)
+- [x] Apply AnimatedNumber to Home screen total balance and P&L values
+- [x] Apply AnimatedNumber to Portfolio screen total value and P&L values (both Simple and Pro heroes)
+- [x] Build AnimatedPnLNumber variant with color/sign/arrow formatting for P&L displays
+- [x] Animate XP bar fill width with SPRING_RESPONSIVE + animated XP counter with SPRING_BOUNCY
+- [x] Run tests and verify 0 regressions after animated value transitions (433 passed)
+- [x] Apply AnimatedPnLNumber to each stock row's gain/loss in Portfolio holdings list (both Simple and Pro modes)
+- [x] Apply AnimatedNumber to per-stock live value (€ amount) in both modes
+- [x] Remove unused PnLText import from portfolio.tsx
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Animate live price on Asset Detail screen with AnimatedNumber (spring-interpolated € price, 36px hero)
+- [x] Animate P&L values on Asset Detail screen with AnimatedPnLNumber (change amount + change percent)
+- [x] Removed unused MonoLargeTitle and PnLText imports
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Animate stock prices on Markets screen with AnimatedNumber (via AssetRow component — affects Markets, Home watchlist, and all stock lists)
+- [x] Animate P&L percentages on Markets screen with AnimatedPnLNumber (via AssetRow component)
+- [x] Removed unused PnLText and MonoSubhead imports from asset-row.tsx
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Apply AnimatedNumber to TrendingCard price display
+- [x] Apply AnimatedPnLNumber to TrendingCard P&L percentage
+- [x] Removed unused PnLText and MonoSubhead imports from trending-card.tsx
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Audit all remaining PnLText imports and usages — found 3 instances: index.tsx (1), social.tsx (2)
+- [x] Migrate index.tsx social feed PnLText → AnimatedPnLNumber
+- [x] Migrate social.tsx PostCard and LeaderboardRow PnLText → AnimatedPnLNumber
+- [x] pnl-text.tsx now has zero imports (component definition retained as dead code)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Visual audit all screens for cramped/unbalanced layouts
+- [x] Fix spacing issues on Home screen (header +4px, hero +4px top, quickActions +8px, newsCard +2px, avatar +4px)
+- [x] Fix spacing issues on Markets screen (sectorContainer +4px, sortRow +4px)
+- [x] Fix spacing issues on Portfolio screen (header +6px, holdingsHeader +4px)
+- [x] Fix spacing issues on Trade screen (sheetScroll +16px, orderPreview +4px)
+- [x] Fix spacing issues on Social screen (header +6px, achievementCard +2px)
+- [x] Fix spacing issues on Asset Detail screen (periodRow gap +2px)
+- [x] Fix spacing issues on secondary screens (Trade History summaryCard +6px)
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass
+- [x] Add filter/sort controls to Trade History screen (All/Buys/Sells filter + Newest/Oldest/Largest/Smallest sort)
+- [x] Auto-seed watchlist with 6 popular ATHEX blue-chip stocks for first-time users
+- [x] Delete unused pnl-text.tsx component (zero imports)
+- [x] Add filter-list and swap-vert icon mappings
+- [x] Refine Portfolio screen UI — audit and improve layout, spacing, typography, cards
+- [x] Improve Portfolio header visual hierarchy and balance (subtitle with holding count, 20px padding)
+- [x] Refine Portfolio hero section (P&L pill with tinted bg, uppercase label, responsive sparkline width)
+- [x] Improve Portfolio holdings cards/rows (grouped card container with hairline dividers, larger icons)
+- [x] Refine Portfolio empty state (circular icon container 80px, button with icon, better spacing)
+- [x] Polish Portfolio balance row (surface bg, 14px padding) / balance pill (wallet icon, Cash Available label)
+- [x] Ensure consistent visual quality across Simple and Pro modes
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass after Portfolio refinements
+- [x] Add sector allocation bar + legend to Portfolio Pro mode
+- [x] Restructure dividend section with left-aligned ticker+date layout
+- [x] Fix Portfolio Pro mode: ticker text wrapping — switched to two-row layout (top: icon+ticker+value, bottom: shares+sparkline+share)
+- [x] Fix Portfolio Pro mode: share info text wrapping — moved to dedicated bottom row with full width
+- [x] Fix Portfolio Pro mode: holdings row layout — two-row card design gives each element breathing room
+- [x] Fix Portfolio Pro mode: sparkline + share button moved to bottom row, value stays top-right
