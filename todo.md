@@ -264,3 +264,7 @@
 - [x] Build AnimatedPnLNumber variant with color/sign/arrow formatting for P&L displays
 - [x] Animate XP bar fill width with SPRING_RESPONSIVE + animated XP counter with SPRING_BOUNCY
 - [x] Run tests and verify 0 regressions after animated value transitions (433 passed)
+- [x] Apply AnimatedPnLNumber to each stock row's gain/loss in Portfolio holdings list (both Simple and Pro modes)
+- [x] Apply AnimatedNumber to per-stock live value (€ amount) in both modes
+- [x] Remove unused PnLText import from portfolio.tsx
+- [x] Verify TypeScript compiles (0 errors) and all 433 tests pass

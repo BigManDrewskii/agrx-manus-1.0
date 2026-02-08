@@ -11,7 +11,6 @@ import { useRouter } from "expo-router";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { PnLText } from "@/components/ui/pnl-text";
 import { AnimatedNumber, AnimatedPnLNumber } from "@/components/ui/animated-number";
 import { Sparkline } from "@/components/ui/sparkline";
 import { LiveBadge } from "@/components/ui/live-badge";
@@ -391,10 +390,18 @@ export default function PortfolioScreen() {
                         </Caption1>
                       </View>
                       <View style={styles.simpleCardValue}>
-                        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
-                          €{enriched.liveValue.toFixed(2)}
-                        </MonoSubhead>
-                        <PnLText value={enriched.livePnlPercent} size="sm" showArrow={true} />
+                        <AnimatedNumber
+                          value={enriched.liveValue}
+                          prefix="€"
+                          decimals={2}
+                          style={{
+                            fontSize: 15,
+                            lineHeight: 20,
+                            fontFamily: FontFamily.monoMedium,
+                            color: colors.foreground,
+                          }}
+                        />
+                        <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
                       </View>
                     </View>
                   </AnimatedPressable>
@@ -437,10 +444,19 @@ export default function PortfolioScreen() {
                         />
                       </View>
                       <View style={styles.holdingRight}>
-                        <MonoSubhead style={{ fontFamily: FontFamily.monoMedium, marginBottom: 2 }}>
-                          €{enriched.liveValue.toFixed(2)}
-                        </MonoSubhead>
-                        <PnLText value={enriched.livePnlPercent} size="sm" showArrow={false} />
+                        <AnimatedNumber
+                          value={enriched.liveValue}
+                          prefix="€"
+                          decimals={2}
+                          style={{
+                            fontSize: 15,
+                            lineHeight: 20,
+                            fontFamily: FontFamily.monoMedium,
+                            color: colors.foreground,
+                            marginBottom: 2,
+                          }}
+                        />
+                        <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
                       </View>
                     </AnimatedPressable>
                     {/* Share button for this holding */}
