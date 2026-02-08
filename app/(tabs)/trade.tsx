@@ -1,3 +1,8 @@
+/**
+ * Trade Screen — Buy and sell stocks with demo trading
+ *
+ * Refactored to use extracted feature components for better maintainability.
+ */
 import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
@@ -5,36 +10,31 @@ import {
   FlatList,
   StyleSheet,
   ScrollView,
-  Platform,
   Keyboard,
 } from "react-native";
-import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
-import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useRouter } from "expo-router";
-import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { SearchBarWithClear } from "@/components/features/markets";
+import { BuySellToggle, AmountInput, QuickAmountChips, OrderPreview, TradeSuccessScreen } from "@/components/features/trading";
+import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { AssetRow } from "@/components/ui/asset-row";
 import { LiveBadge } from "@/components/ui/live-badge";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { StockListSkeleton } from "@/components/ui/skeleton";
+import { SwipeToConfirm } from "@/components/ui/swipe-to-confirm";
+import { ShareCardModal } from "@/components/ui/share-card-modal";
+import { useColors } from "@/hooks/use-colors";
 import { useStockQuotes } from "@/hooks/use-stocks";
 import { useDemo } from "@/lib/demo-context";
 import { useViewMode } from "@/lib/viewmode-context";
-import { ShareCardModal } from "@/components/ui/share-card-modal";
-import { SwipeToConfirm } from "@/components/ui/swipe-to-confirm";
 import type { ShareCardData } from "@/components/ui/share-card";
 import {
   Title1,
-  Title3,
-  Headline,
-  Callout,
   Subhead,
   Footnote,
+  Callout,
   Caption1,
-  MonoLargeTitle,
-  MonoHeadline,
-  MonoBody,
   MonoSubhead,
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
@@ -189,46 +189,14 @@ export default function TradeScreen() {
     const shares = (parsedAmount / selectedAsset.price).toFixed(4);
     return (
       <ScreenContainer>
-        <View style={styles.successContainer}>
-          <View style={[styles.successIcon, { backgroundColor: colors.successAlpha }]}>
-            <IconSymbol name="checkmark" size={48} color={colors.success} />
-          </View>
-          <Title1 style={{ marginBottom: 8 }}>Trade Executed!</Title1>
-          <Callout color="muted" style={{ textAlign: "center", marginBottom: 8 }}>
-            You {isBuy ? "bought" : "sold"} {shares} shares of {selectedAsset.ticker}
-          </Callout>
-          <MonoLargeTitle style={{ marginBottom: 32 }}>
-            €{parsedAmount.toFixed(2)}
-          </MonoLargeTitle>
-
-          {/* Share Button — Primary CTA */}
-          <AnimatedPressable
-            variant="button"
-            onPress={() => setShowShareModal(true)}
-            style={[
-              styles.shareTradeButton,
-              { backgroundColor: colors.primary },
-            ]}
-          >
-            <IconSymbol name="square.and.arrow.up" size={18} color={colors.onPrimary} />
-            <Callout color="onPrimary" style={{ fontFamily: FontFamily.semibold }}>
-              Share with friends
-            </Callout>
-          </AnimatedPressable>
-
-          {/* Done Button — Secondary */}
-          <AnimatedPressable
-            variant="icon"
-            onPress={handleDismissSuccess}
-            style={styles.doneButton}
-          >
-            <Subhead color="muted" style={{ fontFamily: FontFamily.medium }}>
-              Done
-            </Subhead>
-          </AnimatedPressable>
-        </View>
-
-        {/* Share Card Modal */}
+        <TradeSuccessScreen
+          isBuy={isBuy}
+          shares={shares}
+          amount={parsedAmount}
+          ticker={selectedAsset.ticker}
+          onShare={() => setShowShareModal(true)}
+          onDone={handleDismissSuccess}
+        />
         {shareCardData && (
           <ShareCardModal
             visible={showShareModal}
@@ -254,7 +222,7 @@ export default function TradeScreen() {
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          {/* ── Header ─────────────────────────────────────────── */}
+          {/* Header */}
           <View style={styles.sheetHeader}>
             <AnimatedPressable
               variant="icon"
@@ -277,41 +245,10 @@ export default function TradeScreen() {
             <View style={{ width: 32 }} />
           </View>
 
-          {/* ── Buy / Sell Toggle ───────────────────────────────── */}
-          <View style={[styles.toggleContainer, { backgroundColor: colors.surfaceSecondary }]}>
-            <AnimatedPressable
-              variant="toggle"
-              onPress={() => { setIsBuy(true); setTradeError(null); }}
-              style={[
-                styles.toggleButton,
-                isBuy && [styles.toggleActive, { backgroundColor: colors.success }],
-              ]}
-            >
-              <Footnote
-                color={isBuy ? "onPrimary" : "muted"}
-                style={{ fontFamily: FontFamily.semibold }}
-              >
-                Buy
-              </Footnote>
-            </AnimatedPressable>
-            <AnimatedPressable
-              variant="toggle"
-              onPress={() => { setIsBuy(false); setTradeError(null); }}
-              style={[
-                styles.toggleButton,
-                !isBuy && [styles.toggleActive, { backgroundColor: colors.error }],
-              ]}
-            >
-              <Footnote
-                color={!isBuy ? "onPrimary" : "muted"}
-                style={{ fontFamily: FontFamily.semibold }}
-              >
-                Sell
-              </Footnote>
-            </AnimatedPressable>
-          </View>
+          {/* Buy / Sell Toggle */}
+          <BuySellToggle isBuy={isBuy} onChange={(buy) => { setIsBuy(buy); setTradeError(null); }} />
 
-          {/* ── Asset Info Card ─────────────────────────────────── */}
+          {/* Asset Info Card */}
           <View style={[styles.assetCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.assetIconSmall, { backgroundColor: colors.surfaceSecondary }]}>
               <Footnote color="primary" style={{ fontFamily: FontFamily.bold }}>
@@ -324,9 +261,9 @@ export default function TradeScreen() {
               </Subhead>
             </View>
             <View style={styles.assetPriceBlock}>
-              <MonoHeadline style={{ fontSize: 17, lineHeight: 22 }}>
+              <MonoSubhead style={{ fontSize: 17, lineHeight: 22 }}>
                 €{selectedAsset.price.toFixed(2)}
-              </MonoHeadline>
+              </MonoSubhead>
               <MonoSubhead
                 color={selectedAsset.changePercent >= 0 ? "success" : "error"}
                 style={{ fontSize: 12, textAlign: "right" }}
@@ -337,63 +274,17 @@ export default function TradeScreen() {
             </View>
           </View>
 
-          {/* ── Amount Hero ────────────────────────────────────── */}
-          <AnimatedPressable
-            variant="card"
-            onPress={() => amountInputRef.current?.focus()}
-            style={[
-              styles.amountHero,
-              {
-                borderColor: amountText
-                  ? (validationError ? colors.error : (isBuy ? colors.success : colors.error))
-                  : colors.border,
-              },
-            ]}
-          >
-            <View style={styles.amountHeroInner}>
-              <MonoLargeTitle
-                color={amountText ? (validationError ? "error" : "foreground") : "muted"}
-                style={styles.eurSign}
-              >
-                €
-              </MonoLargeTitle>
-              <TextInput
-                ref={amountInputRef}
-                style={[
-                  styles.amountInput,
-                  {
-                    color: validationError ? colors.error : colors.foreground,
-                    fontFamily: FontFamily.monoBold,
-                  },
-                ]}
-                value={amountText}
-                onChangeText={handleAmountChange}
-                placeholder="0.00"
-                placeholderTextColor={colors.muted}
-                keyboardType="decimal-pad"
-                returnKeyType="done"
-                onSubmitEditing={Keyboard.dismiss}
-                maxLength={9}
-                autoFocus={false}
-              />
-            </View>
+          {/* Amount Hero */}
+          <AmountInput
+            ref={amountInputRef}
+            value={amountText}
+            onChange={handleAmountChange}
+            validationError={validationError}
+            isBuy={isBuy}
+            onMax={handleMax}
+          />
 
-            {/* MAX pill */}
-            <AnimatedPressable
-              variant="chip"
-              onPress={handleMax}
-              style={[
-                styles.maxButton,
-                { backgroundColor: colors.primaryAlpha ?? colors.primary + "20" },
-              ]}
-            >
-              <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 11 }}>
-                MAX
-              </Caption1>
-            </AnimatedPressable>
-          </AnimatedPressable>
-
-          {/* Available balance — right below amount */}
+          {/* Available balance */}
           <View style={styles.availableRow}>
             {isBuy ? (
               <Footnote color="muted">
@@ -425,71 +316,22 @@ export default function TradeScreen() {
             </View>
           )}
 
-          {/* ── Quick Amount Chips ──────────────────────────────── */}
-          <View style={styles.quickChipsContainer}>
-            {QUICK_AMOUNTS.map((amount) => {
-              const isSelected = parsedAmount === amount;
-              const isDisabled = amount > maxAmount;
-              return (
-                <AnimatedPressable
-                  key={amount}
-                  variant="chip"
-                  disabled={isDisabled}
-                  onPress={() => handleQuickAmount(amount)}
-                  style={[
-                    styles.quickChip,
-                    {
-                      backgroundColor: isSelected
-                        ? (isBuy ? colors.success : colors.error)
-                        : colors.surface,
-                      borderColor: isSelected
-                        ? (isBuy ? colors.success : colors.error)
-                        : colors.border,
-                    },
-                  ]}
-                >
-                  <MonoBody
-                    color={isSelected ? "onPrimary" : "foreground"}
-                    style={{
-                      fontSize: 13,
-                      fontFamily: isSelected ? FontFamily.monoBold : FontFamily.monoMedium,
-                    }}
-                  >
-                    €{amount}
-                  </MonoBody>
-                </AnimatedPressable>
-              );
-            })}
-          </View>
+          {/* Quick Amount Chips */}
+          <QuickAmountChips
+            amounts={QUICK_AMOUNTS}
+            selectedAmount={parsedAmount}
+            maxAmount={maxAmount}
+            isBuy={isBuy}
+            onSelect={handleQuickAmount}
+          />
 
-          {/* ── Order Preview ───────────────────────────────────── */}
+          {/* Order Preview */}
           {isValidAmount && isPro && (
-            <View style={[styles.orderPreview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={styles.orderRow}>
-                <Footnote color="muted">Est. shares</Footnote>
-                <MonoSubhead style={{ fontSize: 13 }}>
-                  {(parsedAmount / selectedAsset.price).toFixed(4)}
-                </MonoSubhead>
-              </View>
-              <View style={styles.orderRow}>
-                <Footnote color="muted">Price (live)</Footnote>
-                <MonoSubhead style={{ fontSize: 13 }}>€{selectedAsset.price.toFixed(2)}</MonoSubhead>
-              </View>
-              <View style={styles.orderRow}>
-                <Footnote color="muted">Commission</Footnote>
-                <MonoSubhead color="success" style={{ fontSize: 13 }}>€0.00</MonoSubhead>
-              </View>
-              <View style={[styles.orderDivider, { backgroundColor: colors.border }]} />
-              <View style={styles.orderRow}>
-                <Footnote color="muted">Balance after</Footnote>
-                <MonoSubhead
-                  color={balanceAfter >= 0 ? "foreground" : "error"}
-                  style={{ fontSize: 13 }}
-                >
-                  €{balanceAfter.toFixed(2)}
-                </MonoSubhead>
-              </View>
-            </View>
+            <OrderPreview
+              amount={parsedAmount}
+              price={selectedAsset.price}
+              balanceAfter={balanceAfter}
+            />
           )}
           {isValidAmount && isSimple && (
             <View style={styles.simplePreviewRow}>
@@ -513,10 +355,10 @@ export default function TradeScreen() {
             </View>
           )}
 
-          {/* Spacer pushes swipe-to-confirm to bottom */}
+          {/* Spacer */}
           <View style={{ flex: 1, minHeight: 16 }} />
 
-          {/* ── Swipe to Confirm ────────────────────────────────── */}
+          {/* Swipe to Confirm */}
           <SwipeToConfirm
             label={isValidAmount
               ? `Slide to ${isBuy ? "Buy" : "Sell"} €${parsedAmount.toFixed(2)} ${selectedAsset.ticker}`
@@ -541,24 +383,12 @@ export default function TradeScreen() {
       </Animated.View>
 
       {/* Search */}
-      <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.searchContainer}>
-        <View
-          style={[
-            styles.searchBar,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
-          <IconSymbol name="magnifyingglass" size={18} color={colors.muted} />
-          <TextInput
-            style={[styles.searchInput, { color: colors.foreground, fontFamily: FontFamily.medium }]}
-            placeholder="Search for a stock to trade..."
-            placeholderTextColor={colors.muted}
-            value={search}
-            onChangeText={setSearch}
-            returnKeyType="done"
-          />
-        </View>
-      </Animated.View>
+      <SearchBarWithClear
+        value={search}
+        onChange={setSearch}
+        placeholder="Search for a stock to trade..."
+        animationDelay={60}
+      />
 
       {/* Quick Trade Label */}
       <Animated.View entering={FadeIn.duration(200).delay(120)} style={styles.quickLabel}>
@@ -610,7 +440,7 @@ export default function TradeScreen() {
 }
 
 const styles = StyleSheet.create({
-  // ─── Stock Picker ─────────────────────────────────────────────
+  // Stock Picker
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -618,23 +448,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 12,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    height: 44,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
   },
   quickLabel: {
     paddingHorizontal: 16,
@@ -648,7 +461,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
 
-  // ─── Order Sheet ──────────────────────────────────────────────
+  // Order Sheet
   sheetScroll: {
     flexGrow: 1,
     paddingBottom: 24,
@@ -673,41 +486,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-
-  // Toggle
-  toggleContainer: {
-    flexDirection: "row",
-    marginHorizontal: 16,
-    borderRadius: 12,
-    padding: 3,
-    marginBottom: 16,
-  },
-  toggleButton: {
-    flex: 1,
-    paddingVertical: 9,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  toggleActive: {
-    // shadow for the active toggle pill
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-      },
-      android: { elevation: 2 },
-      web: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-      },
-    }),
-  },
-
-  // Asset info card
   assetCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -732,43 +510,6 @@ const styles = StyleSheet.create({
   assetPriceBlock: {
     alignItems: "flex-end",
   },
-
-  // Amount input
-  amountHero: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginHorizontal: 16,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  amountHeroInner: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    flex: 1,
-  },
-  eurSign: {
-    fontSize: 32,
-    lineHeight: 40,
-  },
-  amountInput: {
-    fontSize: 32,
-    lineHeight: 40,
-    flex: 1,
-    paddingVertical: 0,
-    paddingHorizontal: 4,
-    ...Platform.select({
-      web: { outlineStyle: "none" as any },
-    }),
-  },
-  maxButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
   availableRow: {
     marginTop: 8,
     marginBottom: 4,
@@ -784,45 +525,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
   },
-
-  // Quick amount chips — flex-wrap row (not horizontal scroll)
-  quickChipsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginTop: 16,
-    marginBottom: 16,
-  },
-  quickChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    minWidth: 56,
-    alignItems: "center",
-  },
-
-  // Order preview
-  orderPreview: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 16,
-  },
-  orderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 5,
-  },
-  orderDivider: {
-    height: StyleSheet.hairlineWidth,
-    marginVertical: 4,
-  },
-
-  // Simple mode preview
   simplePreviewRow: {
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
@@ -831,8 +533,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 4,
   },
-
-  // Error banner
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -842,34 +542,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-  },
-
-  // ─── Success Screen ───────────────────────────────────────────
-  successContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 32,
-  },
-  successIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  shareTradeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 28,
-    marginBottom: 16,
-  },
-  doneButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
   },
 });
