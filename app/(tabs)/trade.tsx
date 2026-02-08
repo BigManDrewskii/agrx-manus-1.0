@@ -1,9 +1,12 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   TextInput,
   FlatList,
   StyleSheet,
+  ScrollView,
+  Platform,
+  Keyboard,
 } from "react-native";
 import { Pressable } from "react-native";
 import { useRouter } from "expo-router";
@@ -15,15 +18,12 @@ import { LiveBadge } from "@/components/ui/live-badge";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes } from "@/hooks/use-stocks";
 import { useDemo } from "@/lib/demo-context";
-import { QUICK_AMOUNTS } from "@/lib/mock-data";
 import { ShareCardModal } from "@/components/ui/share-card-modal";
 import type { ShareCardData } from "@/components/ui/share-card";
 import {
   Title1,
-  Title2,
   Title3,
   Headline,
-  Body,
   Callout,
   Subhead,
   Footnote,
@@ -34,6 +34,8 @@ import {
   MonoSubhead,
 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
+
+const QUICK_AMOUNTS = [5, 10, 25, 50, 100, 250];
 
 interface SelectedStock {
   id: string;
@@ -51,13 +53,49 @@ export default function TradeScreen() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedAsset, setSelectedAsset] = useState<SelectedStock | null>(null);
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const [amountText, setAmountText] = useState("");
   const [isBuy, setIsBuy] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [tradeError, setTradeError] = useState<string | null>(null);
+  const amountInputRef = useRef<TextInput>(null);
   const { stocks, isLoading, isLive, lastUpdated } = useStockQuotes();
-  const { executeTrade, state: demoState, canBuy, canSell, getHolding } = useDemo();
+  const { executeTrade, state: demoState, getHolding } = useDemo();
+
+  // Parse amount from text input
+  const parsedAmount = useMemo(() => {
+    const num = parseFloat(amountText);
+    if (isNaN(num) || num <= 0) return 0;
+    return Math.round(num * 100) / 100; // 2 decimal places
+  }, [amountText]);
+
+  // Compute current holding for sell validation
+  const currentHolding = selectedAsset ? getHolding(selectedAsset.id) : undefined;
+  const currentShares = currentHolding?.shares ?? 0;
+  const currentHoldingValue = selectedAsset ? currentShares * selectedAsset.price : 0;
+
+  // Max amount available
+  const maxAmount = useMemo(() => {
+    if (isBuy) {
+      return Math.floor(demoState.balance * 100) / 100;
+    }
+    return Math.floor(currentHoldingValue * 100) / 100;
+  }, [isBuy, demoState.balance, currentHoldingValue]);
+
+  // Validation
+  const validationError = useMemo(() => {
+    if (parsedAmount === 0) return null; // No input yet
+    if (parsedAmount < 1) return "Minimum trade amount is €1.00";
+    if (isBuy && parsedAmount > demoState.balance) {
+      return `Insufficient balance (€${demoState.balance.toFixed(2)} available)`;
+    }
+    if (!isBuy && parsedAmount > currentHoldingValue) {
+      return `Insufficient shares (€${currentHoldingValue.toFixed(2)} available)`;
+    }
+    return null;
+  }, [parsedAmount, isBuy, demoState.balance, currentHoldingValue]);
+
+  const isValidAmount = parsedAmount >= 1 && !validationError;
 
   const filteredStocks = useMemo(() => {
     if (search.trim()) {
@@ -71,15 +109,47 @@ export default function TradeScreen() {
     return stocks.slice(0, 8);
   }, [stocks, search]);
 
+  const handleAmountChange = useCallback((text: string) => {
+    // Allow only digits and one decimal point, max 2 decimal places
+    const cleaned = text.replace(/[^0-9.]/g, "");
+    // Prevent multiple decimal points
+    const parts = cleaned.split(".");
+    if (parts.length > 2) return;
+    // Limit decimal places to 2
+    if (parts.length === 2 && parts[1].length > 2) return;
+    // Prevent leading zeros (except "0." for decimals)
+    if (parts[0].length > 1 && parts[0].startsWith("0") && parts[0] !== "0") {
+      return;
+    }
+    // Limit to reasonable max (999999.99)
+    if (parts[0].length > 6) return;
+    setAmountText(cleaned);
+    setTradeError(null);
+  }, []);
+
+  const handleQuickAmount = useCallback((amount: number) => {
+    setAmountText(amount.toString());
+    setTradeError(null);
+    Keyboard.dismiss();
+  }, []);
+
+  const handleMax = useCallback(() => {
+    if (maxAmount > 0) {
+      setAmountText(maxAmount.toFixed(2));
+      setTradeError(null);
+      Keyboard.dismiss();
+    }
+  }, [maxAmount]);
+
   const handleConfirm = useCallback(() => {
-    if (!selectedAsset || !selectedAmount) return;
+    if (!selectedAsset || !isValidAmount) return;
     setTradeError(null);
     const result = executeTrade({
       stockId: selectedAsset.id,
       ticker: selectedAsset.ticker,
       name: selectedAsset.name,
       type: isBuy ? "buy" : "sell",
-      amount: selectedAmount,
+      amount: parsedAmount,
       price: selectedAsset.price,
     });
     if (result.success) {
@@ -87,41 +157,36 @@ export default function TradeScreen() {
     } else {
       setTradeError(result.error ?? "Trade failed");
     }
-  }, [selectedAsset, selectedAmount, isBuy, executeTrade]);
+  }, [selectedAsset, isValidAmount, parsedAmount, isBuy, executeTrade]);
 
   const handleDismissSuccess = useCallback(() => {
     setShowSuccess(false);
     setSelectedAsset(null);
-    setSelectedAmount(null);
+    setAmountText("");
     setTradeError(null);
   }, []);
 
-  // Compute current holding for sell validation
-  const currentHolding = selectedAsset ? getHolding(selectedAsset.id) : undefined;
-  const currentShares = currentHolding?.shares ?? 0;
-  const currentHoldingValue = selectedAsset ? currentShares * selectedAsset.price : 0;
-
   // Build share card data from the current trade
   const shareCardData: ShareCardData | null = useMemo(() => {
-    if (!selectedAsset || !selectedAmount) return null;
-    const shares = selectedAmount / selectedAsset.price;
+    if (!selectedAsset || !parsedAmount) return null;
+    const shares = parsedAmount / selectedAsset.price;
     return {
       ticker: selectedAsset.ticker,
       companyName: selectedAsset.name,
       price: selectedAsset.price,
-      pnlAmount: 0, // Just executed, no P&L yet
+      pnlAmount: 0,
       pnlPercent: selectedAsset.changePercent,
       sparkline: selectedAsset.sparkline,
       timeFrame: "Today" as const,
       tradeType: isBuy ? ("buy" as const) : ("sell" as const),
-      tradeAmount: selectedAmount,
+      tradeAmount: parsedAmount,
       shares,
     };
-  }, [selectedAsset, selectedAmount, isBuy]);
+  }, [selectedAsset, parsedAmount, isBuy]);
 
   // ─── Success Screen ─────────────────────────────────────────────
-  if (showSuccess && selectedAsset && selectedAmount) {
-    const shares = (selectedAmount / selectedAsset.price).toFixed(4);
+  if (showSuccess && selectedAsset && parsedAmount) {
+    const shares = (parsedAmount / selectedAsset.price).toFixed(4);
     return (
       <ScreenContainer>
         <View style={styles.successContainer}>
@@ -133,7 +198,7 @@ export default function TradeScreen() {
             You {isBuy ? "bought" : "sold"} {shares} shares of {selectedAsset.ticker}
           </Callout>
           <MonoLargeTitle style={{ marginBottom: 32 }}>
-            €{selectedAmount.toFixed(2)}
+            €{parsedAmount.toFixed(2)}
           </MonoLargeTitle>
 
           {/* Share Button — Primary CTA */}
@@ -179,189 +244,294 @@ export default function TradeScreen() {
 
   // ─── Order Sheet ────────────────────────────────────────────────
   if (selectedAsset) {
+    const balanceAfter = isBuy
+      ? demoState.balance - parsedAmount
+      : demoState.balance + parsedAmount;
+
     return (
       <ScreenContainer>
-        <View style={styles.sheetHeader}>
-          <Pressable
-            onPress={() => {
-              setSelectedAsset(null);
-              setSelectedAmount(null);
-            }}
-            style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-          >
-            <IconSymbol name="xmark" size={22} color={colors.muted} />
-          </Pressable>
-          <View style={styles.sheetTitleRow}>
-            <Title3>{selectedAsset.ticker}</Title3>
-            <LiveBadge isLive={isLive} />
-          </View>
-          <View style={{ width: 22 }} />
-        </View>
-
-        {/* Buy/Sell Toggle */}
-        <View style={[styles.toggleContainer, { backgroundColor: colors.surface }]}>
-          <Pressable
-            onPress={() => setIsBuy(true)}
-            style={({ pressed }) => [
-              styles.toggleButton,
-              isBuy && { backgroundColor: colors.success },
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <Subhead
-              color={isBuy ? "onPrimary" : "muted"}
-              style={{ fontFamily: FontFamily.semibold }}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.sheetHeader}>
+            <Pressable
+              onPress={() => {
+                setSelectedAsset(null);
+                setAmountText("");
+                setTradeError(null);
+              }}
+              style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             >
-              Buy
-            </Subhead>
-          </Pressable>
-          <Pressable
-            onPress={() => setIsBuy(false)}
-            style={({ pressed }) => [
-              styles.toggleButton,
-              !isBuy && { backgroundColor: colors.error },
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <Subhead
-              color={!isBuy ? "onPrimary" : "muted"}
-              style={{ fontFamily: FontFamily.semibold }}
+              <IconSymbol name="xmark" size={22} color={colors.muted} />
+            </Pressable>
+            <View style={styles.sheetTitleRow}>
+              <Title3>{selectedAsset.ticker}</Title3>
+              <LiveBadge isLive={isLive} />
+            </View>
+            <View style={{ width: 22 }} />
+          </View>
+
+          {/* Buy/Sell Toggle */}
+          <View style={[styles.toggleContainer, { backgroundColor: colors.surface }]}>
+            <Pressable
+              onPress={() => { setIsBuy(true); setTradeError(null); }}
+              style={({ pressed }) => [
+                styles.toggleButton,
+                isBuy && { backgroundColor: colors.success },
+                pressed && { opacity: 0.8 },
+              ]}
             >
-              Sell
-            </Subhead>
-          </Pressable>
-        </View>
-
-        {/* Asset Info with Live Price */}
-        <View style={styles.assetInfo}>
-          <View style={[styles.assetIcon, { backgroundColor: colors.surfaceSecondary }]}>
-            <Headline color="primary">{selectedAsset.ticker.slice(0, 2)}</Headline>
+              <Subhead
+                color={isBuy ? "onPrimary" : "muted"}
+                style={{ fontFamily: FontFamily.semibold }}
+              >
+                Buy
+              </Subhead>
+            </Pressable>
+            <Pressable
+              onPress={() => { setIsBuy(false); setTradeError(null); }}
+              style={({ pressed }) => [
+                styles.toggleButton,
+                !isBuy && { backgroundColor: colors.error },
+                pressed && { opacity: 0.8 },
+              ]}
+            >
+              <Subhead
+                color={!isBuy ? "onPrimary" : "muted"}
+                style={{ fontFamily: FontFamily.semibold }}
+              >
+                Sell
+              </Subhead>
+            </Pressable>
           </View>
-          <Title3 style={{ marginBottom: 4 }}>{selectedAsset.name}</Title3>
-          <MonoHeadline style={{ fontSize: 24, marginBottom: 2 }}>
-            €{selectedAsset.price.toFixed(2)}
-          </MonoHeadline>
-          <MonoSubhead color={selectedAsset.changePercent >= 0 ? "success" : "error"}>
-            {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
-            {Math.abs(selectedAsset.changePercent).toFixed(2)}% today
-          </MonoSubhead>
-          {/* Balance / Holdings Info */}
-          <View style={[styles.balanceInfo, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            {isBuy ? (
-              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
-                Available: <MonoSubhead color="foreground">€{demoState.balance.toFixed(2)}</MonoSubhead>
-              </Footnote>
-            ) : (
-              <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
-                You own: <MonoSubhead color="foreground">{currentShares.toFixed(currentShares % 1 === 0 ? 0 : 4)} shares</MonoSubhead>
-                {currentShares > 0 && (
-                  <Footnote color="muted"> (€{currentHoldingValue.toFixed(2)})</Footnote>
-                )}
-              </Footnote>
-            )}
-          </View>
-        </View>
 
-        {/* Quick Amounts */}
-        <View style={styles.amountsContainer}>
-          <Caption1
-            color="muted"
-            style={{
-              fontFamily: FontFamily.semibold,
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              marginBottom: 12,
-            }}
-          >
-            Select amount
-          </Caption1>
-          <View style={styles.amountsGrid}>
-            {QUICK_AMOUNTS.map((amount) => {
-              const isSelected = selectedAmount === amount;
-              return (
-                <Pressable
-                  key={amount}
-                  onPress={() => setSelectedAmount(amount)}
-                  style={({ pressed }) => [
-                    styles.amountButton,
-                    {
-                      backgroundColor: isSelected ? colors.primary : colors.surfaceSecondary,
-                      borderColor: isSelected ? colors.primary : colors.border,
-                    },
-                    pressed && { opacity: 0.7 },
-                  ]}
+          {/* Asset Info with Live Price */}
+          <View style={styles.assetInfo}>
+            <View style={[styles.assetIcon, { backgroundColor: colors.surfaceSecondary }]}>
+              <Headline color="primary">{selectedAsset.ticker.slice(0, 2)}</Headline>
+            </View>
+            <Title3 style={{ marginBottom: 4 }}>{selectedAsset.name}</Title3>
+            <MonoHeadline style={{ fontSize: 24, marginBottom: 2 }}>
+              €{selectedAsset.price.toFixed(2)}
+            </MonoHeadline>
+            <MonoSubhead color={selectedAsset.changePercent >= 0 ? "success" : "error"}>
+              {selectedAsset.changePercent >= 0 ? "▲" : "▼"}{" "}
+              {Math.abs(selectedAsset.changePercent).toFixed(2)}% today
+            </MonoSubhead>
+          </View>
+
+          {/* Custom Amount Input */}
+          <View style={styles.amountInputSection}>
+            <Caption1
+              color="muted"
+              style={{
+                fontFamily: FontFamily.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 12,
+              }}
+            >
+              Enter amount
+            </Caption1>
+
+            {/* Hero Amount Display */}
+            <Pressable
+              onPress={() => amountInputRef.current?.focus()}
+              style={[
+                styles.amountHero,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: amountText ? (validationError ? colors.error : colors.primary) : colors.border,
+                },
+              ]}
+            >
+              <View style={styles.amountHeroInner}>
+                <MonoLargeTitle
+                  color={amountText ? (validationError ? "error" : "foreground") : "muted"}
+                  style={{ fontSize: 40, lineHeight: 48 }}
                 >
-                  <MonoBody
-                    color={isSelected ? "onPrimary" : "foreground"}
-                    style={{ fontFamily: isSelected ? FontFamily.monoBold : FontFamily.monoMedium }}
-                  >
-                    €{amount}
-                  </MonoBody>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
+                  €
+                </MonoLargeTitle>
+                <TextInput
+                  ref={amountInputRef}
+                  style={[
+                    styles.amountInput,
+                    {
+                      color: validationError ? colors.error : colors.foreground,
+                      fontFamily: FontFamily.monoBold,
+                    },
+                  ]}
+                  value={amountText}
+                  onChangeText={handleAmountChange}
+                  placeholder="0.00"
+                  placeholderTextColor={colors.muted}
+                  keyboardType="decimal-pad"
+                  returnKeyType="done"
+                  onSubmitEditing={Keyboard.dismiss}
+                  maxLength={9}
+                  autoFocus={false}
+                />
+              </View>
 
-        {/* Order Preview */}
-        {selectedAmount && (
-          <View style={[styles.orderPreview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <View style={styles.orderRow}>
-              <Subhead color="muted">Estimated shares</Subhead>
-              <MonoSubhead>{(selectedAmount / selectedAsset.price).toFixed(4)}</MonoSubhead>
+              {/* MAX button */}
+              <Pressable
+                onPress={handleMax}
+                style={({ pressed }) => [
+                  styles.maxButton,
+                  { backgroundColor: colors.primaryAlpha ?? colors.primary + "20" },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
+                  MAX
+                </Caption1>
+              </Pressable>
+            </Pressable>
+
+            {/* Available balance / holdings info */}
+            <View style={styles.availableRow}>
+              {isBuy ? (
+                <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
+                  Available: <MonoSubhead color="foreground">€{demoState.balance.toFixed(2)}</MonoSubhead>
+                </Footnote>
+              ) : (
+                <Footnote color="muted" style={{ fontFamily: FontFamily.medium }}>
+                  You own: <MonoSubhead color="foreground">{currentShares.toFixed(currentShares % 1 === 0 ? 0 : 4)} shares</MonoSubhead>
+                  {currentShares > 0 && (
+                    <Footnote color="muted"> (€{currentHoldingValue.toFixed(2)})</Footnote>
+                  )}
+                </Footnote>
+              )}
             </View>
-            <View style={styles.orderRow}>
-              <Subhead color="muted">Market price (live)</Subhead>
-              <MonoSubhead>€{selectedAsset.price.toFixed(2)}</MonoSubhead>
-            </View>
-            <View style={styles.orderRow}>
-              <Subhead color="muted">Commission</Subhead>
-              <MonoSubhead color="success">€0.00</MonoSubhead>
-            </View>
-            {isBuy && (
-              <View style={styles.orderRow}>
-                <Subhead color="muted">Balance after</Subhead>
-                <MonoSubhead>€{(demoState.balance - selectedAmount).toFixed(2)}</MonoSubhead>
+
+            {/* Validation Error */}
+            {validationError && (
+              <View style={[styles.validationError, { backgroundColor: colors.errorAlpha }]}>
+                <IconSymbol name="xmark" size={12} color={colors.error} />
+                <Caption1 color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
+                  {validationError}
+                </Caption1>
               </View>
             )}
           </View>
-        )}
 
-        {/* Trade Error */}
-        {tradeError && (
-          <View style={[styles.errorBanner, { backgroundColor: colors.errorAlpha }]}>
-            <IconSymbol name="xmark" size={14} color={colors.error} />
-            <Footnote color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
-              {tradeError}
-            </Footnote>
-          </View>
-        )}
-
-        {/* Confirm Button */}
-        <View style={styles.confirmContainer}>
-          <Pressable
-            onPress={handleConfirm}
-            disabled={!selectedAmount}
-            style={({ pressed }) => [
-              styles.confirmButton,
-              {
-                backgroundColor: selectedAmount
-                  ? isBuy ? colors.success : colors.error
-                  : colors.surfaceSecondary,
-              },
-              pressed && selectedAmount ? { transform: [{ scale: 0.97 }], opacity: 0.9 } : undefined,
-            ]}
-          >
-            <Callout
-              color={selectedAmount ? "onPrimary" : "muted"}
-              style={{ fontFamily: FontFamily.bold }}
+          {/* Quick Amount Chips */}
+          <View style={styles.quickChipsSection}>
+            <Caption1
+              color="muted"
+              style={{
+                fontFamily: FontFamily.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 10,
+              }}
             >
-              {selectedAmount
-                ? `${isBuy ? "Buy" : "Sell"} €${selectedAmount} of ${selectedAsset.ticker}`
-                : "Select an amount"}
-            </Callout>
-          </Pressable>
-        </View>
+              Quick amounts
+            </Caption1>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickChipsRow}
+            >
+              {QUICK_AMOUNTS.map((amount) => {
+                const isSelected = parsedAmount === amount;
+                const isDisabled = amount > maxAmount;
+                return (
+                  <Pressable
+                    key={amount}
+                    onPress={() => !isDisabled && handleQuickAmount(amount)}
+                    style={({ pressed }) => [
+                      styles.quickChip,
+                      {
+                        backgroundColor: isSelected ? colors.primary : colors.surface,
+                        borderColor: isSelected ? colors.primary : colors.border,
+                        opacity: isDisabled ? 0.4 : 1,
+                      },
+                      pressed && !isDisabled && { opacity: 0.7 },
+                    ]}
+                  >
+                    <MonoBody
+                      color={isSelected ? "onPrimary" : "foreground"}
+                      style={{
+                        fontSize: 14,
+                        fontFamily: isSelected ? FontFamily.monoBold : FontFamily.monoMedium,
+                      }}
+                    >
+                      €{amount}
+                    </MonoBody>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          {/* Order Preview */}
+          {isValidAmount && (
+            <View style={[styles.orderPreview, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.orderRow}>
+                <Subhead color="muted">Estimated shares</Subhead>
+                <MonoSubhead>{(parsedAmount / selectedAsset.price).toFixed(4)}</MonoSubhead>
+              </View>
+              <View style={styles.orderRow}>
+                <Subhead color="muted">Market price (live)</Subhead>
+                <MonoSubhead>€{selectedAsset.price.toFixed(2)}</MonoSubhead>
+              </View>
+              <View style={styles.orderRow}>
+                <Subhead color="muted">Commission</Subhead>
+                <MonoSubhead color="success">€0.00</MonoSubhead>
+              </View>
+              <View style={[styles.orderDivider, { backgroundColor: colors.border }]} />
+              <View style={styles.orderRow}>
+                <Subhead color="muted">Balance after</Subhead>
+                <MonoSubhead color={balanceAfter >= 0 ? "foreground" : "error"}>
+                  €{balanceAfter.toFixed(2)}
+                </MonoSubhead>
+              </View>
+            </View>
+          )}
+
+          {/* Trade Error from server */}
+          {tradeError && (
+            <View style={[styles.errorBanner, { backgroundColor: colors.errorAlpha }]}>
+              <IconSymbol name="xmark" size={14} color={colors.error} />
+              <Footnote color="error" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
+                {tradeError}
+              </Footnote>
+            </View>
+          )}
+
+          {/* Spacer to push confirm button down */}
+          <View style={{ flex: 1, minHeight: 20 }} />
+
+          {/* Confirm Button */}
+          <View style={styles.confirmContainer}>
+            <Pressable
+              onPress={handleConfirm}
+              disabled={!isValidAmount}
+              style={({ pressed }) => [
+                styles.confirmButton,
+                {
+                  backgroundColor: isValidAmount
+                    ? isBuy ? colors.success : colors.error
+                    : colors.surfaceSecondary,
+                },
+                pressed && isValidAmount ? { transform: [{ scale: 0.97 }], opacity: 0.9 } : undefined,
+              ]}
+            >
+              <Callout
+                color={isValidAmount ? "onPrimary" : "muted"}
+                style={{ fontFamily: FontFamily.bold }}
+              >
+                {isValidAmount
+                  ? `${isBuy ? "Buy" : "Sell"} €${parsedAmount.toFixed(2)} of ${selectedAsset.ticker}`
+                  : amountText ? "Fix amount to continue" : "Enter an amount"}
+              </Callout>
+            </Pressable>
+          </View>
+        </ScrollView>
       </ScreenContainer>
     );
   }
@@ -500,7 +670,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 12,
     padding: 4,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   toggleButton: {
     flex: 1,
@@ -510,7 +680,7 @@ const styles = StyleSheet.create({
   },
   assetInfo: {
     alignItems: "center",
-    paddingBottom: 24,
+    paddingBottom: 20,
   },
   assetIcon: {
     width: 56,
@@ -520,22 +690,71 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  amountsContainer: {
+  // Custom Amount Input
+  amountInputSection: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  amountHero: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 16,
+    borderWidth: 2,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  amountHeroInner: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    flex: 1,
+  },
+  amountInput: {
+    fontSize: 40,
+    lineHeight: 48,
+    flex: 1,
+    paddingVertical: 0,
+    paddingHorizontal: 4,
+    ...Platform.select({
+      web: { outlineStyle: "none" as any },
+    }),
+  },
+  maxButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  availableRow: {
+    marginTop: 10,
+    paddingHorizontal: 4,
+  },
+  validationError: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  // Quick Amount Chips
+  quickChipsSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
   },
-  amountsGrid: {
+  quickChipsRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
+    gap: 8,
+    paddingRight: 16,
   },
-  amountButton: {
-    width: "30%",
-    paddingVertical: 14,
-    borderRadius: 12,
+  quickChip: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
     borderWidth: 1,
-    alignItems: "center",
   },
+  // Order Preview
   orderPreview: {
     marginHorizontal: 16,
     borderRadius: 16,
@@ -548,23 +767,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 8,
   },
-  confirmContainer: {
-    paddingHorizontal: 16,
-    marginTop: "auto",
-    paddingBottom: 40,
-  },
-  confirmButton: {
-    height: 56,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  balanceInfo: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
+  orderDivider: {
+    height: 1,
+    marginVertical: 4,
   },
   errorBanner: {
     flexDirection: "row",
@@ -575,6 +780,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
+  },
+  confirmContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  confirmButton: {
+    height: 56,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   // Success screen
   successContainer: {

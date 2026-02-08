@@ -174,3 +174,15 @@
 - [x] Update Trade screen: error banner for insufficient funds/shares
 - [x] Write 42 unified data flow tests (DemoContext structure, Portfolio/Home/Trade integration, data flow integrity)
 - [x] Run full test suite: 292 tests passed, 0 TS errors
+- [x] Audit current Trade screen order sheet amount selection flow
+- [x] Replace preset-only grid with hero-style custom amount input (€ prefix, 40pt monoBold, decimal-pad keyboard)
+- [x] Keep quick-amount chips as horizontal scroll shortcuts (€5/10/25/50/100/250) that populate input
+- [x] Add input validation: min €1, max = balance (buy) or holding value (sell), 2 decimal places, no multiple dots
+- [x] Add MAX button to auto-fill maximum available amount with keyboard dismiss
+- [x] Update order preview to react to custom amount in real-time (shows only when valid)
+- [x] Update confirm button: dynamic text with amount/ticker, disabled state, validation feedback
+- [x] Handle keyboard: decimal-pad, returnKeyType done, keyboardShouldPersistTaps, dismiss on quick/max
+- [x] Disable quick chips that exceed max amount (opacity 0.4)
+- [x] Show balance-after in red when negative
+- [x] Write 48 custom trade amounts tests (input, validation, MAX, chips, preview, confirm, keyboard)
+- [x] Run full test suite: 340 tests passed, 0 TS errors
