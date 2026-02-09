@@ -15,6 +15,9 @@ export function Collapsible({ children, title }: PropsWithChildren & { title: st
         variant="card"
         onPress={() => setIsOpen((value) => !value)}
         style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        accessibilityLabel={`${isOpen ? "Collapse" : "Expand"} ${title}`}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isOpen }}
       >
         <IconSymbol
           name="chevron.right"

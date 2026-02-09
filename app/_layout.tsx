@@ -10,6 +10,8 @@ import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider, useThemeContext } from "@/lib/theme-provider";
 import { useAppFonts } from "@/hooks/use-app-fonts";
+import { ThemeProvider as CDSThemeProvider } from "@coinbase/cds-mobile/system";
+import { defaultTheme } from "@coinbase/cds-mobile/themes/defaultTheme";
 
 // Keep splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -53,9 +55,23 @@ function InnerLayout() {
         <Stack.Screen name="notification-history" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="trade-history" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="oauth/callback" />
+        <Stack.Screen name="test-cds" options={{ animation: "slide_from_right" }} />
       </Stack>
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </>
+  );
+}
+
+/**
+ * Wraps all providers with CDS ThemeProvider, syncing color scheme.
+ */
+function CDSThemeWrapper({ children }: { children: React.ReactNode }) {
+  const { colorScheme } = useThemeContext();
+
+  return (
+    <CDSThemeProvider theme={defaultTheme} activeColorScheme={colorScheme === "dark" ? "dark" : "light"}>
+      {children}
+    </CDSThemeProvider>
   );
 }
 
@@ -148,20 +164,24 @@ export default function RootLayout() {
   if (shouldOverrideSafeArea) {
     return (
       <ThemeProvider>
-        <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-          <SafeAreaFrameContext value={frame}>
-            <SafeAreaInsetsContext value={insets}>
-              {content}
-            </SafeAreaInsetsContext>
-          </SafeAreaFrameContext>
-        </SafeAreaProvider>
+        <CDSThemeWrapper>
+          <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+            <SafeAreaFrameContext value={frame}>
+              <SafeAreaInsetsContext value={insets}>
+                {content}
+              </SafeAreaInsetsContext>
+            </SafeAreaFrameContext>
+          </SafeAreaProvider>
+        </CDSThemeWrapper>
       </ThemeProvider>
     );
   }
 
   return (
     <ThemeProvider>
-      <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+      <CDSThemeWrapper>
+        <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+      </CDSThemeWrapper>
     </ThemeProvider>
   );
 }

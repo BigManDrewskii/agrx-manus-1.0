@@ -160,6 +160,9 @@ export default function SettingsScreen() {
                     borderBottomColor: colors.border,
                   },
                 ]}
+                accessibilityLabel={opt.label}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected }}
               >
                 <View style={styles.rowLeft}>
                   <Body>{opt.icon}</Body>

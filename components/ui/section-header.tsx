@@ -18,6 +18,8 @@ export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderPro
         <AnimatedPressable
           variant="icon"
           onPress={onAction}
+          accessibilityLabel={actionLabel}
+          accessibilityRole="button"
         >
           <Subhead color="primary" style={{ fontFamily: FontFamily.semibold, fontSize: 14 }}>
             {actionLabel}

@@ -1,3 +1,8 @@
+/**
+ * Portfolio Screen — Demo portfolio with Simple/Pro variants
+ *
+ * Refactored to use extracted feature components for better maintainability.
+ */
 import React, { useState, useCallback, useMemo } from "react";
 import {
   ScrollView,
@@ -6,36 +11,31 @@ import {
   RefreshControl,
   Dimensions,
 } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import { STAGGER_DELAY, STAGGER_MAX } from "@/lib/animations";
 import { useRouter } from "expo-router";
-import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { AnimatedNumber, AnimatedPnLNumber } from "@/components/ui/animated-number";
-import { Sparkline } from "@/components/ui/sparkline";
 import { LiveBadge } from "@/components/ui/live-badge";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { StockListSkeleton } from "@/components/ui/skeleton";
 import { useStockQuotes, useRefreshCache } from "@/hooks/use-stocks";
 import { ShareCardModal } from "@/components/ui/share-card-modal";
 import type { ShareCardData } from "@/components/ui/share-card";
-import { useDemo, type DemoHolding, type LivePriceMap } from "@/lib/demo-context";
+import { useDemo, type LivePriceMap } from "@/lib/demo-context";
 import { useViewMode } from "@/lib/viewmode-context";
 import { GREEK_STOCKS, PORTFOLIO_SPARKLINE } from "@/lib/mock-data";
-import { getSector, SECTOR_ICONS, type Sector } from "@/lib/sectors";
+import { getSector, type Sector } from "@/lib/sectors";
 import {
-  Title1,
-  Title3,
-  Headline,
-  Subhead,
-  Footnote,
-  Caption1,
-  Caption2,
-  MonoLargeTitle,
-  MonoSubhead,
-} from "@/components/ui/typography";
-import { FontFamily } from "@/constants/typography";
+  PortfolioHeader,
+  PortfolioHeroSimple,
+  PortfolioHeroPro,
+  BalanceRow,
+  BalancePill,
+  HoldingsHeader,
+  EmptyPortfolioState,
+  HoldingCardSimple,
+  HoldingCardPro,
+  SectorAllocationBar,
+  DividendSection,
+} from "@/components/features/portfolio";
 import * as Haptics from "expo-haptics";
 import { Platform } from "react-native";
 
@@ -43,15 +43,26 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 const SPARKLINE_WIDTH = Math.min(SCREEN_WIDTH - 64, 340);
 
 interface EnrichedHolding {
-  holding: DemoHolding;
+  holding: {
+    stockId: string;
+    ticker: string;
+    name: string;
+    shares: number;
+    totalCost: number;
+  };
   livePrice: number;
-  liveChange: number;
-  liveChangePercent: number;
   liveValue: number;
   livePnl: number;
   livePnlPercent: number;
   liveSparkline: number[];
   avgCost: number;
+}
+
+interface SectorAllocationItem {
+  sector: Sector;
+  value: number;
+  percent: number;
+  icon: string;
 }
 
 export default function PortfolioScreen() {
@@ -89,10 +100,14 @@ export default function PortfolioScreen() {
       const livePnlPercent = costBasis > 0 ? (livePnl / costBasis) * 100 : 0;
 
       return {
-        holding: h,
+        holding: {
+          stockId: h.stockId,
+          ticker: h.ticker,
+          name: h.name,
+          shares: h.shares,
+          totalCost: h.totalCost,
+        },
         livePrice: currentPrice,
-        liveChange: liveStock?.change ?? mockAsset?.change ?? 0,
-        liveChangePercent: liveStock?.changePercent ?? mockAsset?.changePercent ?? 0,
         liveValue,
         livePnl,
         livePnlPercent,
@@ -106,10 +121,9 @@ export default function PortfolioScreen() {
   const portfolioTotal = getPortfolioValue(livePriceMap);
   const portfolioCost = getPortfolioCost();
   const { pnl: portfolioPnl, pnlPercent: portfolioPnlPercent } = getPortfolioPnL(livePriceMap);
-  const isPositive = portfolioPnl >= 0;
 
   // Sector allocation for Pro mode
-  const sectorAllocation = useMemo(() => {
+  const sectorAllocation: SectorAllocationItem[] = useMemo(() => {
     if (enrichedHoldings.length === 0) return [];
     const totalValue = enrichedHoldings.reduce((sum, e) => sum + e.liveValue, 0);
     if (totalValue === 0) return [];
@@ -125,7 +139,7 @@ export default function PortfolioScreen() {
         sector: sector as Sector,
         value,
         percent: (value / totalValue) * 100,
-        icon: SECTOR_ICONS[sector as Sector] ?? "🔀",
+        icon: "", // Icon is displayed by sector name, not needed here
       }))
       .sort((a, b) => b.percent - a.percent);
   }, [enrichedHoldings]);
@@ -197,359 +211,113 @@ export default function PortfolioScreen() {
           />
         }
       >
-        {/* ═══════════════════════════════════════════════════════════════════
-            HEADER
-            ═══════════════════════════════════════════════════════════════════ */}
-        <Animated.View entering={FadeIn.duration(200)} style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Title1 style={{ letterSpacing: -0.5 }}>Portfolio</Title1>
-            {hasHoldings && (
-              <Caption1 color="muted" style={{ marginTop: 2, fontFamily: FontFamily.medium }}>
-                {enrichedHoldings.length} holding{enrichedHoldings.length !== 1 ? "s" : ""}
-              </Caption1>
-            )}
-          </View>
-          <View style={styles.headerRight}>
-            {hasHoldings && (
-              <AnimatedPressable
-                variant="icon"
-                onPress={handleSharePortfolio}
-                style={[
-                  styles.headerIconButton,
-                  { backgroundColor: colors.surfaceSecondary },
-                ]}
-              >
-                <IconSymbol name="square.and.arrow.up" size={18} color={colors.primary} />
-              </AnimatedPressable>
-            )}
-            <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
-          </View>
-        </Animated.View>
+        {/* Header */}
+        <PortfolioHeader
+          holdingCount={enrichedHoldings.length}
+          hasHoldings={hasHoldings}
+          isLive={isLive}
+          lastUpdated={lastUpdated}
+          onShare={handleSharePortfolio}
+        />
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            SIMPLE MODE: HERO
-            ═══════════════════════════════════════════════════════════════════ */}
+        {/* Simple Mode: Hero */}
         {isSimple && (
-          <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.simpleHero}>
-            <Caption1
-              color="muted"
-              style={{ fontFamily: FontFamily.semibold, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}
-            >
-              Total Value
-            </Caption1>
-            <AnimatedNumber
-              value={portfolioTotal}
-              prefix="€"
-              decimals={2}
-              style={{
-                fontSize: 38,
-                lineHeight: 46,
-                fontFamily: "JetBrainsMono_700Bold",
-                color: colors.foreground,
-              }}
-            />
-            <View style={[styles.heroPnlRow, { marginTop: 8 }]}>
-              <View style={[styles.pnlPill, { backgroundColor: isPositive ? colors.successAlpha : colors.errorAlpha }]}>
-                <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-                <View style={[styles.pnlDot, { backgroundColor: colors.muted }]} />
-                <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-              </View>
-            </View>
-          </Animated.View>
+          <PortfolioHeroSimple
+            totalValue={portfolioTotal}
+            pnl={portfolioPnl}
+            pnlPercent={portfolioPnlPercent}
+          />
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            PRO MODE: HERO WITH SPARKLINE
-            ═══════════════════════════════════════════════════════════════════ */}
+        {/* Pro Mode: Hero with Sparkline */}
         {isPro && (
-          <Animated.View entering={FadeInDown.duration(250).delay(60)} style={styles.proHero}>
-            <Caption1
-              color="muted"
-              style={{ fontFamily: FontFamily.semibold, letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 6 }}
-            >
-              Total Value
-            </Caption1>
-            <AnimatedNumber
-              value={portfolioTotal}
-              prefix="€"
-              decimals={2}
-              style={{
-                fontSize: 42,
-                lineHeight: 50,
-                fontFamily: "JetBrainsMono_700Bold",
-                color: colors.foreground,
-              }}
-            />
-            <View style={[styles.heroPnlRow, { marginTop: 8 }]}>
-              <View style={[styles.pnlPill, { backgroundColor: isPositive ? colors.successAlpha : colors.errorAlpha }]}>
-                <AnimatedPnLNumber value={portfolioPnl} format="currency" size="lg" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-                <View style={[styles.pnlDot, { backgroundColor: colors.muted }]} />
-                <AnimatedPnLNumber value={portfolioPnlPercent} format="percent" size="lg" showArrow={false} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-              </View>
-            </View>
-            {hasHoldings && (
-              <View style={styles.sparklineContainer}>
-                <Sparkline
-                  data={PORTFOLIO_SPARKLINE}
-                  width={SPARKLINE_WIDTH}
-                  height={64}
-                  positive={isPositive}
-                  strokeWidth={2}
-                />
-              </View>
-            )}
-          </Animated.View>
+          <PortfolioHeroPro
+            totalValue={portfolioTotal}
+            pnl={portfolioPnl}
+            pnlPercent={portfolioPnlPercent}
+            hasHoldings={hasHoldings}
+            sparkline={PORTFOLIO_SPARKLINE}
+            sparklineWidth={SPARKLINE_WIDTH}
+          />
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            BALANCE ROW — PRO
-            ═══════════════════════════════════════════════════════════════════ */}
+        {/* Balance Row — Pro */}
         {isPro && (
-          <Animated.View
-            entering={FadeInDown.duration(250).delay(120)}
-            style={[styles.balanceRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <View style={styles.balanceItem}>
-              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 4 }}>
-                Cash Balance
-              </Caption1>
-              <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
-                €{state.balance.toLocaleString("el-GR", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </MonoSubhead>
-            </View>
-            <View style={[styles.balanceDivider, { backgroundColor: colors.border }]} />
-            <View style={styles.balanceItem}>
-              <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, marginBottom: 4 }}>
-                Invested
-              </Caption1>
-              <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
-                €{portfolioCost.toLocaleString("el-GR", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </MonoSubhead>
-            </View>
-          </Animated.View>
+          <BalanceRow
+            cashBalance={state.balance}
+            invested={portfolioCost}
+          />
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            BALANCE PILL — SIMPLE
-            ═══════════════════════════════════════════════════════════════════ */}
+        {/* Balance Pill — Simple */}
         {isSimple && (
-          <Animated.View
-            entering={FadeInDown.duration(250).delay(120)}
-            style={[styles.simpleBalancePill, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <View style={styles.balancePillLeft}>
-              <IconSymbol name="briefcase.fill" size={16} color={colors.muted} />
-              <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>Cash Available</Caption1>
-            </View>
-            <MonoSubhead style={{ fontFamily: FontFamily.monoMedium }}>
-              €{state.balance.toLocaleString("el-GR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </MonoSubhead>
-          </Animated.View>
+          <BalancePill
+            cashBalance={state.balance}
+          />
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            HOLDINGS SECTION
-            ═══════════════════════════════════════════════════════════════════ */}
-        <Animated.View entering={FadeInDown.duration(250).delay(180)} style={styles.holdingsHeader}>
-          <Caption1
-            color="muted"
-            style={{
-              fontFamily: FontFamily.semibold,
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-            }}
-          >
-            Holdings
-          </Caption1>
-          {state.trades.length > 0 && (
-            <AnimatedPressable
-              variant="chip"
-              onPress={() => router.push("/trade-history" as any)}
-              style={[styles.historyChip, { backgroundColor: colors.surfaceSecondary }]}
-            >
-              <IconSymbol name="clock" size={12} color={colors.muted} />
-              <Caption1 color="muted" style={{ fontFamily: FontFamily.semibold }}>
-                History
-              </Caption1>
-            </AnimatedPressable>
-          )}
-        </Animated.View>
+        {/* Holdings Section */}
+        <HoldingsHeader
+          hasTrades={state.trades.length > 0}
+        />
 
         {/* Holdings List */}
         <View style={styles.holdingsContainer}>
           {isLoading ? (
             <StockListSkeleton count={4} />
           ) : !hasHoldings ? (
-            /* ── Empty State ── */
-            <View style={styles.emptyState}>
-              <View style={[styles.emptyIconContainer, { backgroundColor: colors.surfaceSecondary }]}>
-                <IconSymbol name="chart.bar.fill" size={36} color={colors.muted} />
-              </View>
-              <Headline style={{ marginTop: 20, marginBottom: 8 }}>
-                No Holdings Yet
-              </Headline>
-              <Footnote
-                color="muted"
-                style={{ textAlign: "center", maxWidth: 280, lineHeight: 20 }}
-              >
-                Start trading to build your portfolio. Your holdings and performance will appear here.
-              </Footnote>
-              <AnimatedPressable
-                variant="button"
-                onPress={() => router.push("/(tabs)/trade")}
-                style={[styles.startTradingButton, { backgroundColor: colors.primary }]}
-              >
-                <IconSymbol name="plus.circle.fill" size={18} color={colors.onPrimary} />
-                <Subhead style={{ color: colors.onPrimary, fontFamily: FontFamily.semibold }}>
-                  Start Trading
-                </Subhead>
-              </AnimatedPressable>
-            </View>
+            <EmptyPortfolioState
+              onStartTrading={() => router.push("/(tabs)/trade")}
+            />
           ) : (
             <>
-              {/* ── Simple Mode: Cards ── */}
+              {/* Simple Mode: Cards */}
               {isSimple && (
                 <View style={[styles.simpleCardList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   {enrichedHoldings.map((enriched, index) => (
-                    <Animated.View
+                    <HoldingCardSimple
                       key={enriched.holding.stockId}
-                      entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
-                    >
-                      <AnimatedPressable
-                        variant="card"
-                        onPress={() =>
-                          router.push({
-                            pathname: "/asset/[id]" as any,
-                            params: { id: enriched.holding.stockId },
-                          })
-                        }
-                        style={[
-                          styles.simpleCardRow,
-                          index < enrichedHoldings.length - 1 && {
-                            borderBottomWidth: StyleSheet.hairlineWidth,
-                            borderBottomColor: colors.border,
-                          },
-                        ]}
-                      >
-                        <View style={[styles.simpleCardIcon, { backgroundColor: colors.primaryAlpha }]}>
-                          <Caption1 color="primary" style={{ fontFamily: FontFamily.bold, fontSize: 13 }}>
-                            {enriched.holding.ticker.slice(0, 2)}
-                          </Caption1>
-                        </View>
-                        <View style={styles.simpleCardInfo}>
-                          <Subhead style={{ fontFamily: FontFamily.semibold }}>
-                            {enriched.holding.ticker}
-                          </Subhead>
-                          <Caption1 color="muted" numberOfLines={1}>
-                            {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 2)} shares
-                          </Caption1>
-                        </View>
-                        <View style={styles.simpleCardValue}>
-                          <AnimatedNumber
-                            value={enriched.liveValue}
-                            prefix="€"
-                            decimals={2}
-                            style={{
-                              fontSize: 15,
-                              lineHeight: 20,
-                              fontFamily: FontFamily.monoMedium,
-                              color: colors.foreground,
-                            }}
-                          />
-                          <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-                        </View>
-                      </AnimatedPressable>
-                    </Animated.View>
+                      ticker={enriched.holding.ticker}
+                      shares={enriched.holding.shares}
+                      liveValue={enriched.liveValue}
+                      livePnlPercent={enriched.livePnlPercent}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/asset/[id]" as any,
+                          params: { id: enriched.holding.stockId },
+                        })
+                      }
+                      isLast={index === enrichedHoldings.length - 1}
+                      index={index}
+                    />
                   ))}
                 </View>
               )}
 
-              {/* ── Pro Mode: Detailed Rows ── */}
+              {/* Pro Mode: Detailed Rows */}
               {isPro && (
                 <View style={[styles.proCardList, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   {enrichedHoldings.map((enriched, index) => (
-                    <Animated.View
+                    <HoldingCardPro
                       key={enriched.holding.stockId}
-                      entering={FadeInDown.duration(250).delay(210 + Math.min(index, STAGGER_MAX) * STAGGER_DELAY)}
-                    >
-                      <AnimatedPressable
-                        variant="card"
-                        onPress={() =>
-                          router.push({
-                            pathname: "/asset/[id]" as any,
-                            params: { id: enriched.holding.stockId },
-                          })
-                        }
-                        style={[
-                          styles.holdingPressable,
-                          index < enrichedHoldings.length - 1 && {
-                            borderBottomWidth: StyleSheet.hairlineWidth,
-                            borderBottomColor: colors.border,
-                          },
-                        ]}
-                      >
-                        {/* Top row: icon + ticker + value */}
-                        <View style={styles.holdingTopRow}>
-                          <View style={[styles.holdingIcon, { backgroundColor: colors.primaryAlpha }]}>
-                            <Caption1 color="primary" style={{ fontFamily: FontFamily.bold }}>
-                              {enriched.holding.ticker.slice(0, 2)}
-                            </Caption1>
-                          </View>
-                          <View style={styles.holdingNameCol}>
-                            <Subhead style={{ fontFamily: FontFamily.semibold }} numberOfLines={1}>
-                              {enriched.holding.ticker}
-                            </Subhead>
-                            <Caption1 color="muted" numberOfLines={1} style={{ fontFamily: FontFamily.medium }}>
-                              {enriched.holding.name}
-                            </Caption1>
-                          </View>
-                          <View style={styles.holdingValueCol}>
-                            <AnimatedNumber
-                              value={enriched.liveValue}
-                              prefix="€"
-                              decimals={2}
-                              style={{
-                                fontSize: 15,
-                                lineHeight: 20,
-                                fontFamily: FontFamily.monoMedium,
-                                color: colors.foreground,
-                              }}
-                            />
-                            <AnimatedPnLNumber value={enriched.livePnlPercent} format="percent" size="sm" showArrow={true} successColor={colors.success} errorColor={colors.error} mutedColor={colors.muted} />
-                          </View>
-                        </View>
-                        {/* Bottom row: shares info + sparkline + share btn */}
-                        <View style={styles.holdingBottomRow}>
-                          <Caption1 color="muted" style={{ fontFamily: FontFamily.medium }}>
-                            {enriched.holding.shares.toFixed(enriched.holding.shares % 1 === 0 ? 0 : 2)} shares · avg €{enriched.avgCost.toFixed(2)}
-                          </Caption1>
-                          <View style={styles.holdingBottomRight}>
-                            <Sparkline
-                              data={enriched.liveSparkline}
-                              width={48}
-                              height={18}
-                              positive={enriched.livePnl >= 0}
-                            />
-                            <AnimatedPressable
-                              variant="icon"
-                              onPress={() => handleShareHolding(enriched)}
-                              style={[styles.holdingShareButton, { backgroundColor: colors.surfaceSecondary }]}
-                            >
-                              <IconSymbol name="square.and.arrow.up" size={13} color={colors.muted} />
-                            </AnimatedPressable>
-                          </View>
-                        </View>
-                      </AnimatedPressable>
-                    </Animated.View>
+                      ticker={enriched.holding.ticker}
+                      name={enriched.holding.name}
+                      shares={enriched.holding.shares}
+                      avgCost={enriched.avgCost}
+                      liveValue={enriched.liveValue}
+                      livePnlPercent={enriched.livePnlPercent}
+                      liveSparkline={enriched.liveSparkline}
+                      livePnl={enriched.livePnl}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/asset/[id]" as any,
+                          params: { id: enriched.holding.stockId },
+                        })
+                      }
+                      onShare={() => handleShareHolding(enriched)}
+                      isLast={index === enrichedHoldings.length - 1}
+                      index={index}
+                    />
                   ))}
                 </View>
               )}
@@ -557,100 +325,16 @@ export default function PortfolioScreen() {
           )}
         </View>
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            SECTOR ALLOCATION — PRO ONLY
-            ═══════════════════════════════════════════════════════════════════ */}
+        {/* Sector Allocation — Pro Only */}
         {isPro && hasHoldings && sectorAllocation.length > 0 && (
-          <Animated.View entering={FadeInDown.duration(250).delay(330)} style={styles.allocationSection}>
-            <Caption1
-              color="muted"
-              style={{
-                fontFamily: FontFamily.semibold,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-                paddingHorizontal: 16,
-                marginBottom: 12,
-              }}
-            >
-              Allocation
-            </Caption1>
-
-            {/* Allocation bar */}
-            <View style={[styles.allocationBar, { backgroundColor: colors.surfaceSecondary }]}>
-              {sectorAllocation.map((item, i) => {
-                const barColors = [colors.primary, colors.success, colors.accent, colors.warning, colors.error, colors.muted];
-                const barColor = barColors[i % barColors.length];
-                return (
-                  <View
-                    key={item.sector}
-                    style={{
-                      flex: item.percent,
-                      height: "100%" as any,
-                      backgroundColor: barColor,
-                      borderTopLeftRadius: i === 0 ? 4 : 0,
-                      borderBottomLeftRadius: i === 0 ? 4 : 0,
-                      borderTopRightRadius: i === sectorAllocation.length - 1 ? 4 : 0,
-                      borderBottomRightRadius: i === sectorAllocation.length - 1 ? 4 : 0,
-                    }}
-                  />
-                );
-              })}
-            </View>
-
-            {/* Allocation legend */}
-            <View style={styles.allocationLegend}>
-              {sectorAllocation.map((item, i) => {
-                const barColors = [colors.primary, colors.success, colors.accent, colors.warning, colors.error, colors.muted];
-                const barColor = barColors[i % barColors.length];
-                return (
-                  <View key={item.sector} style={styles.allocationLegendItem}>
-                    <View style={[styles.allocationDot, { backgroundColor: barColor }]} />
-                    <Caption1 color="muted" style={{ fontFamily: FontFamily.medium, flex: 1 }}>
-                      {item.sector}
-                    </Caption1>
-                    <Caption1 style={{ fontFamily: FontFamily.monoMedium }}>
-                      {item.percent.toFixed(1)}%
-                    </Caption1>
-                  </View>
-                );
-              })}
-            </View>
-          </Animated.View>
+          <SectorAllocationBar
+            sectorAllocation={sectorAllocation}
+          />
         )}
 
-        {/* ═══════════════════════════════════════════════════════════════════
-            UPCOMING DIVIDENDS — PRO ONLY
-            ═══════════════════════════════════════════════════════════════════ */}
+        {/* Upcoming Dividends — Pro Only */}
         {isPro && hasHoldings && (
-          <Animated.View entering={FadeInDown.duration(250).delay(390)} style={styles.dividendSection}>
-            <Caption1
-              color="muted"
-              style={{
-                fontFamily: FontFamily.semibold,
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-                marginBottom: 12,
-              }}
-            >
-              Upcoming Dividends
-            </Caption1>
-            <View style={[styles.dividendCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={[styles.dividendRow, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]}>
-                <View style={styles.dividendLeft}>
-                  <Subhead style={{ fontFamily: FontFamily.semibold }}>OPAP</Subhead>
-                  <Caption2 color="muted">Mar 15, 2026</Caption2>
-                </View>
-                <MonoSubhead color="success" style={{ fontFamily: FontFamily.monoMedium }}>€0.60/share</MonoSubhead>
-              </View>
-              <View style={styles.dividendRow}>
-                <View style={styles.dividendLeft}>
-                  <Subhead style={{ fontFamily: FontFamily.semibold }}>PPC</Subhead>
-                  <Caption2 color="muted">Apr 02, 2026</Caption2>
-                </View>
-                <MonoSubhead color="success" style={{ fontFamily: FontFamily.monoMedium }}>€0.85/share</MonoSubhead>
-              </View>
-            </View>
-          </Animated.View>
+          <DividendSection />
         )}
 
         {/* Bottom Spacer for Tab Bar */}
@@ -673,274 +357,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
-
-  // ── Header ──
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  headerLeft: {
-    gap: 0,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingTop: 4,
-  },
-  headerIconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // ── Simple Hero ──
-  simpleHero: {
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 24,
-  },
-
-  // ── Pro Hero ──
-  proHero: {
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 24,
-  },
-
-  // ── P&L Row (shared) ──
-  heroPnlRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  pnlPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 2,
-  },
-  pnlDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    marginHorizontal: 6,
-  },
-
-  sparklineContainer: {
-    marginTop: 20,
-  },
-
-  // ── Pro Balance Row ──
-  balanceRow: {
-    flexDirection: "row",
-    marginHorizontal: 20,
-    marginBottom: 20,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  balanceItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  balanceDivider: {
-    width: 1,
-    marginVertical: 2,
-  },
-
-  // ── Simple Balance Pill ──
-  simpleBalancePill: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: 20,
-    marginBottom: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  balancePillLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  // ── Holdings Header ──
-  holdingsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  historyChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
   holdingsContainer: {
     paddingTop: 0,
   },
-
-  // ── Simple Card List (grouped card) ──
   simpleCardList: {
     marginHorizontal: 20,
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
   },
-  simpleCardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  simpleCardIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  simpleCardInfo: {
-    flex: 1,
-  },
-  simpleCardValue: {
-    alignItems: "flex-end",
-  },
-
-  // ── Pro Card List (grouped card) ──
   proCardList: {
     marginHorizontal: 20,
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
-  },
-  holdingPressable: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  holdingTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  holdingNameCol: {
-    flex: 1,
-    marginLeft: 12,
-    marginRight: 12,
-  },
-  holdingValueCol: {
-    alignItems: "flex-end",
-  },
-  holdingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  holdingBottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-    paddingLeft: 52,
-  },
-  holdingBottomRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  holdingShareButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  // ── Empty State ──
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 56,
-    paddingHorizontal: 24,
-  },
-  emptyIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  startTradingButton: {
-    marginTop: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 24,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  // ── Allocation (Pro) ──
-  allocationSection: {
-    marginTop: 28,
-  },
-  allocationBar: {
-    marginHorizontal: 20,
-    height: 8,
-    borderRadius: 4,
-    flexDirection: "row",
-    overflow: "hidden",
-  },
-  allocationLegend: {
-    marginHorizontal: 20,
-    marginTop: 14,
-    gap: 10,
-  },
-  allocationLegendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  allocationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-
-  // ── Dividends (Pro) ──
-  dividendSection: {
-    paddingHorizontal: 20,
-    marginTop: 28,
-  },
-  dividendCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  dividendRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  dividendLeft: {
-    gap: 2,
   },
 });

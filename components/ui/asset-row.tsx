@@ -3,10 +3,11 @@ import { View, StyleSheet, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
 import { useColors } from "@/hooks/use-colors";
-import { Sparkline } from "./sparkline";
+import { CDSSparkline } from "./cds-sparkline";
 import { AnimatedNumber, AnimatedPnLNumber } from "./animated-number";
 import { Subhead, Caption1 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
+import { Spacing, Radius } from "@/constants/spacing";
 import { IconSymbol } from "./icon-symbol";
 import type { Asset } from "@/lib/mock-data";
 
@@ -74,11 +75,13 @@ export function AssetRow({
       {/* Center: Sparkline */}
       {showSparkline && (
         <View style={styles.center}>
-          <Sparkline
+          <CDSSparkline
             data={asset.sparkline}
             width={56}
             height={24}
             positive={asset.change >= 0}
+            showGradient={true}
+            smooth={true}
           />
         </View>
       )}
@@ -104,14 +107,23 @@ export function AssetRow({
           <AnimatedPressable
             variant="icon"
             onPress={handleStarPress}
-            hitSlop={12}
-            style={styles.starButton}
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+            style={[styles.starButton, { minWidth: 44, minHeight: 44 }]}
+            accessibilityLabel={`${isWatchlisted ? "Remove from" : "Add to"} watchlist`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isWatchlisted }}
+            accessibilityHint={isWatchlisted
+              ? "Removes this stock from your watchlist"
+              : "Adds this stock to your watchlist"
+            }
           >
-            <IconSymbol
-              name="star.fill"
-              size={18}
-              color={isWatchlisted ? colors.gold : colors.border}
-            />
+            <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+              <IconSymbol
+                name="star.fill"
+                size={20}
+                color={isWatchlisted ? colors.gold : colors.border}
+              />
+            </View>
           </AnimatedPressable>
         )}
       </View>
@@ -123,8 +135,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: Spacing[4],
+    paddingHorizontal: Spacing[4],
     borderBottomWidth: 0.5,
   },
   left: {
@@ -135,16 +147,16 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: Radius.full,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 12,
+    marginRight: Spacing[3],
   },
   nameContainer: {
     flex: 1,
   },
   center: {
-    marginHorizontal: 12,
+    marginHorizontal: Spacing[3],
   },
   rightGroup: {
     flexDirection: "row",
@@ -155,6 +167,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   starButton: {
-    padding: 4,
+    padding: Spacing[1],
   },
 });

@@ -53,6 +53,9 @@ export function ViewModeToggle({ compact = false }: ViewModeToggleProps) {
                 { backgroundColor: colors.surface },
               ],
             ]}
+            accessibilityLabel={m.label}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: isActive }}
           >
             <Caption1
               style={{

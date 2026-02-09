@@ -50,7 +50,16 @@ export function XPBar() {
           />
         </View>
       </View>
-      <View style={[styles.bar, { backgroundColor: colors.surfaceSecondary }]}>
+      <View
+        style={[styles.bar, { backgroundColor: colors.surfaceSecondary }]}
+        accessibilityLabel={`Level ${state.level}, ${xpInLevel} out of 100 experience points`}
+        accessibilityRole="progressbar"
+        accessibilityValue={{
+          min: 0,
+          max: 100,
+          now: xpInLevel,
+        }}
+      >
         <Animated.View
           style={[
             styles.fill,

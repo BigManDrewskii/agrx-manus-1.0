@@ -146,6 +146,8 @@ export default function PriceAlertsScreen() {
             styles.deleteButton,
             { backgroundColor: colors.error + "15" },
           ]}
+          accessibilityLabel={`Delete ${item.stockName} alert`}
+          accessibilityRole="button"
         >
           <Caption1 style={{ color: colors.error, fontFamily: FontFamily.semibold }}>
             Delete

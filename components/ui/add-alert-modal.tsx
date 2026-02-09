@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { AnimatedPressable } from "@/components/ui/animated-pressable";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useNotifications } from "@/lib/notification-context";
 import {
   Title3,
@@ -144,7 +145,14 @@ export function AddAlertModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.overlay}
       >
-        <AnimatedPressable variant="card" style={styles.backdrop} onPress={onClose} haptic={false} />
+        <AnimatedPressable
+          variant="card"
+          style={styles.backdrop}
+          onPress={onClose}
+          haptic={false}
+          accessibilityLabel="Close modal"
+          accessibilityRole="button"
+        />
         <View
           style={[
             styles.sheet,
@@ -153,6 +161,8 @@ export function AddAlertModal({
               borderColor: colors.border,
             },
           ]}
+          accessible={true}
+          accessibilityLabel="Set price alert modal"
         >
           {/* Handle */}
           <View style={styles.handleContainer}>
@@ -172,7 +182,7 @@ export function AddAlertModal({
           </View>
 
           {/* Alert Type Selector */}
-          <View style={styles.typeSelector}>
+          <View style={styles.typeSelector} accessibilityRole="radiogroup">
             {ALERT_TYPES.map((opt) => {
               const isSelected = selectedType === opt.type;
               return (
@@ -190,6 +200,10 @@ export function AddAlertModal({
                       borderWidth: isSelected ? 1.5 : StyleSheet.hairlineWidth,
                     },
                   ]}
+                  accessibilityLabel={opt.label}
+                  accessibilityHint={opt.description}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
                 >
                   <Body style={{ fontSize: 20 }}>{opt.icon}</Body>
                   <Subhead
@@ -202,6 +216,14 @@ export function AddAlertModal({
                   >
                     {opt.label}
                   </Subhead>
+                  {isSelected && (
+                    <IconSymbol
+                      name="checkmark"
+                      size={14}
+                      color={colors.primary}
+                      style={{ position: "absolute", top: 8, right: 8 }}
+                    />
+                  )}
                   <Caption1 color="muted" style={{ textAlign: "center" }}>
                     {opt.description}
                   </Caption1>
@@ -258,6 +280,9 @@ export function AddAlertModal({
                 keyboardType="decimal-pad"
                 returnKeyType="done"
                 autoFocus
+                accessibilityLabel={selectedType === "percent_change"
+                  ? "Percentage threshold"
+                  : "Target price"}
               />
             </View>
           </View>

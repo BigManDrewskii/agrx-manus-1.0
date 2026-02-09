@@ -97,6 +97,8 @@ export function ShareCardModal({
               { backgroundColor: colors.surface },
               pressed && { opacity: 0.6 },
             ]}
+            accessibilityLabel="Close modal"
+            accessibilityRole="button"
           >
             <IconSymbol name="xmark" size={20} color={colors.foreground} />
           </Pressable>
@@ -110,7 +112,7 @@ export function ShareCardModal({
         </View>
 
         {/* Time Frame Selector */}
-        <View style={styles.timeFrameRow}>
+        <View style={styles.timeFrameRow} accessibilityRole="radiogroup">
           {TIME_FRAMES.map((tf) => {
             const isActive = tf === selectedTimeFrame;
             return (
@@ -126,6 +128,9 @@ export function ShareCardModal({
                   },
                   pressed && { opacity: 0.6 },
                 ]}
+                accessibilityLabel={tf}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isActive }}
               >
                 <Caption1
                   style={{
@@ -136,6 +141,14 @@ export function ShareCardModal({
                 >
                   {tf}
                 </Caption1>
+                {isActive && (
+                  <IconSymbol
+                    name="checkmark"
+                    size={10}
+                    color="#578BFA"
+                    style={{ position: "absolute", top: 4, right: 4 }}
+                  />
+                )}
               </Pressable>
             );
           })}
@@ -152,6 +165,9 @@ export function ShareCardModal({
               pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
               isSharing && { opacity: 0.6 },
             ]}
+            accessibilityLabel="Share card"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isSharing }}
           >
             {isSharing ? (
               <ActivityIndicator color="#FFFFFF" size="small" />

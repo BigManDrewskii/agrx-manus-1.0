@@ -19,6 +19,7 @@
     "qr": "node scripts/generate_qr.mjs"
   },
   "dependencies": {
+    "@coinbase/cds-mobile": "^8.43.0",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo/vector-icons": "^15.0.3",

@@ -37,6 +37,18 @@ interface AnimatedPressableProps {
   hitSlop?: number | { top?: number; bottom?: number; left?: number; right?: number };
   /** Optional test ID */
   testID?: string;
+  /** Accessibility label for screen readers */
+  accessibilityLabel?: string;
+  /** Accessibility hint for additional context */
+  accessibilityHint?: string;
+  /** Accessibility role (default: 'button') */
+  accessibilityRole?: "button" | "none" | "text" | "radio";
+  /** Accessibility state */
+  accessibilityState?: {
+    disabled?: boolean;
+    selected?: boolean;
+    expanded?: boolean;
+  };
 }
 
 const HAPTIC_MAP: Record<PressVariant, Haptics.ImpactFeedbackStyle | null> = {
@@ -59,6 +71,10 @@ export function AnimatedPressable({
   hapticStyle,
   hitSlop,
   testID,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole = "button",
+  accessibilityState,
 }: AnimatedPressableProps) {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -128,6 +144,11 @@ export function AnimatedPressable({
         testID={testID}
         hitSlop={hitSlop}
         style={[animatedStyle, disabled && { opacity: 0.4 }, style]}
+        accessible={accessibilityRole !== "none"}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint={accessibilityHint}
+        accessibilityRole={accessibilityRole}
+        accessibilityState={accessibilityState ?? { disabled: disabled ? true : undefined }}
       >
         {children}
       </Animated.View>
