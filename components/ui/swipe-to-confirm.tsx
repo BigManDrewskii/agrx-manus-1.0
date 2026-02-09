@@ -17,12 +17,13 @@ import * as Haptics from "expo-haptics";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { FontFamily } from "@/constants/typography";
+import { Spacing, Size } from "@/constants/spacing";
 import { Callout, Caption1 } from "@/components/ui/typography";
 
 // ─── Constants ──────────────────────────────────────────────────────────
-const THUMB_SIZE = 52;
-const TRACK_HEIGHT = 56;
-const TRACK_PADDING = 2;
+const THUMB_SIZE = Size.button.lg.height; // 52px
+const TRACK_HEIGHT = Size.button.lg.height + 4; // 56px
+const TRACK_PADDING = Spacing[1]; // 4px / 2 = 2px
 const COMPLETION_THRESHOLD = 0.85; // 85% of track to trigger
 const HAPTIC_MILESTONES = [0.25, 0.5, 0.75]; // light haptic at these points
 
@@ -345,8 +346,8 @@ export function SwipeToConfirm({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingHorizontal: Spacing[4],
+    paddingBottom: Spacing[6],
   },
   track: {
     height: TRACK_HEIGHT,
@@ -366,13 +367,13 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     position: "absolute",
-    left: THUMB_SIZE + TRACK_PADDING + 8,
-    right: 16,
+    left: THUMB_SIZE + TRACK_PADDING + Spacing[2],
+    right: Spacing[4],
     alignItems: "center",
   },
   chevronContainer: {
     position: "absolute",
-    right: 16,
+    right: Spacing[4],
     alignItems: "center",
     justifyContent: "center",
   },

@@ -6,6 +6,8 @@ import { Sparkline } from "./sparkline";
 import { AnimatedNumber, AnimatedPnLNumber } from "./animated-number";
 import { Subhead, Caption1, Caption2 } from "@/components/ui/typography";
 import { FontFamily } from "@/constants/typography";
+import { Spacing, Radius } from "@/constants/spacing";
+import { TrendingCardWidth } from "@/constants/layout";
 import type { Asset } from "@/lib/mock-data";
 
 interface TrendingCardProps {
@@ -76,31 +78,32 @@ export function TrendingCard({ asset, onPress }: TrendingCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    width: 148,
-    borderRadius: 16,
+    width: TrendingCardWidth,
+    maxWidth: 180,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: 14,
-    marginRight: 12,
+    padding: Spacing[4],
+    marginRight: Spacing[3],
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: Spacing[3],
   },
   iconCircle: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: Radius.full,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: Spacing[2],
   },
   headerText: {
     flex: 1,
   },
   sparklineContainer: {
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: Spacing[3],
   },
   footer: {
     flexDirection: "row",

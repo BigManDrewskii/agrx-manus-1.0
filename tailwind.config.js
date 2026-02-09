@@ -1,4 +1,5 @@
 const { themeColors } = require("./theme.config");
+const { Spacing, Radius, Size } = require("./constants/spacing");
 const plugin = require("tailwindcss/plugin");
 
 const tailwindColors = Object.fromEntries(
@@ -22,6 +23,8 @@ module.exports = {
   theme: {
     extend: {
       colors: tailwindColors,
+      spacing: Spacing,
+      borderRadius: Radius,
       fontFamily: {
         sans: ["Inter_400Regular"],
         "sans-medium": ["Inter_500Medium"],
